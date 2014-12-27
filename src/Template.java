@@ -96,15 +96,7 @@ public class Template {
 	public static final String G6 = "%g6";
 	public static final String G7 = "%g7";
 	
-	//Local Registers
-	public static final String L0 = "%l0";
-	public static final String L1 = "%l1";
-	public static final String L2 = "%l2";
-	public static final String L3 = "%l3";
-	public static final String L4 = "%l4";
-	public static final String L5 = "%l5";
-	public static final String L6 = "%l6";
-	public static final String L7 = "%l7";
+	
 	
 	//FuncArg Registers
 	public static final String I0 = "%i0";

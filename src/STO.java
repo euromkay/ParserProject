@@ -12,7 +12,7 @@ abstract class STO
 	private boolean isModifiable;
 	private boolean statik;
 
-	private String address = DEFAULT;
+	private Address address;
 	private String offset = null;
 	boolean ret = false;
 	
@@ -21,7 +21,7 @@ abstract class STO
 		s.type = type.newType();
 		s.isAddressable = isAddressable;
 		s.isModifiable = isModifiable;
-		s.address = new String(address);
+		s.address = address;
 		if(offset != null)
 			s.offset = offset;
 		s.ret = ret;
@@ -143,17 +143,16 @@ abstract class STO
 	public abstract STO newSTO();
 
 
-	public static final String DEFAULT = "*(&#$*(";
 	
 
-	public void setAddress(String string){
-		address = new String(string);
+	public void setAddress(Address a){
+		address = a;
 	}
 	
-	public String getAddress() {
+	public Address getAddress() {
 		if(address == null)
 			return null;
-		return new String(address);
+		return address;
 	}
 
 	public void setOffset(String i){
@@ -233,13 +232,15 @@ abstract class STO
 		
 	}
 
-	public void store(String l0, Writer writer) {
-		
-		
-	}
+
 	
 	public void writeComment(){
 		
+	}
+
+	public void store(STO from, Writer writer) {
+		from.writeVal(Template.L7, writer);
+		writer.store(Template.L1, Template.L0);
 	}
 
 	

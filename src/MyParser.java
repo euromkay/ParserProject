@@ -12,7 +12,8 @@ class MyParser extends parser {
 	private String m_strLastLexeme;
 	private boolean m_bSyntaxError = true;
 	private int m_nSavedLineNum;
-
+	private AddressManager am = new AddressManager();
+	
 	private SymbolTable symTab;
 
 	// ----------------------------------------------------------------
@@ -23,7 +24,7 @@ class MyParser extends parser {
 		symTab = new SymbolTable();
 		m_errors = errors;
 		m_nNumErrors = 0;
-		writer = new Writer(symTab);
+		writer = new Writer(symTab, am);
 	}
 
 	// ----------------------------------------------------------------
@@ -240,7 +241,7 @@ class MyParser extends parser {
 			//Maybe t should be VoidType
 			VarSTO sto = new VarSTO(id, t);
 			symTab.insert(sto);
-			sto.setAddress(id);
+			sto.setAddress(new Address(id));
 		}
 	}
 
@@ -1095,53 +1096,61 @@ class MyParser extends parser {
 		
 			//Initialize Default Null Value
 			for(STO ef : stos){
-				VarSTO lSto = (VarSTO) ef;
-				lSto.writeComment();
+				VarSTO lSTO = (VarSTO) ef;
 				
-				ef.setAddress(ef.getName());
+				ef.setAddress(new Address(ef.getName()));
 				
 				writer.write(Template.ALIGN, "4");
 				
 				String skip;
-				if(isFloat(lSto))
+				if(isFloat(lSTO))
 					skip = Template.FLOAT_VAR_DECL;
-				else if (lSto.getType() instanceof CompositeType)
+				else if (lSTO.getType() instanceof CompositeType)
 					skip = Template.SKIP;
 				else
 					skip = Template.INT_VAR_DECL;
 
 				writer.writeLater = true;
 				String val = "0";
-				if(lSto.getInit() != null){
-					writer.set(lSto.getName(), Template.L0);
-					
-					if(isIntToFloat(lSto, lSto.getInit())){
-						lSto.getInit().writeVal(Template.F0, writer);
-						writer.fitos(Template.F0, Template.F0);
-						writer.store(Template.F0, Template.L0);
+				//if theres some sort of initializatoin
+				if(lSTO.getInit() != null){
+					STO rSTO = lSTO.getInit();
+					if(isIntToFloat(lSTO, lSTO.getInit())){
+						fitos(lSTO, rSTO);
 					}else{
-						writeVal(lSto.getInit(),Template.L0);
-						writer.store(Template.L6, Template.L0);
+						store(lSTO, rSTO);
 					}
-				}else if(lSto.getType() instanceof CompositeType){
-					val = lSto.getType().getSize().toString();
-					writer.set(lSto.getName(), Template.L0);
-					writer.set("4", Template.L1);
-					writer.set("0", Template.L2);
-					for(int i = 0; i < lSto.getType().getSize(); i+=4){
-						writer.store(Template.L2, Template.L0);
-						writer.addOp(Template.L0, Template.L1, Template.L0, false);
+				//clear out anything with size greater than 4, so structs and arrays
+				}else{
+					Type lType = lSTO.getType();
+					if(lType instanceof CompositeType){
+						val = lSTO.getType().getSize().toString();
+						Address lAdd = am.getAddress();
+						Address _4 = am.getAddress(), _0 = am.getAddress(); 
+						
+						writer.set("4", _4);
+						writer.set("0", _0);
+						for(int i = 0; i < lSTO.getType().getSize(); i+=4){
+							writer.store(lAdd, _0);
+							writer.addOp(lAdd, _4, lAdd);
+						}
+						
+						lAdd.release();
+						_4.release();
+						_0.release();
+						
 					}
+					
 					//if(e.getType() instanceof )
 				}
 
 				writer.writeLater = false;
-				writer.write(skip, lSto.getName(), val);
+				writer.write(skip, lSTO.getName(), val);
 			}
 		
 			writer.newLine();
 		}else{
-			WriteSpace(params);
+
 			for(STO s : stos){
 				VarSTO lVar = (VarSTO) s;
 				if(lVar.isStatic()){
@@ -1188,13 +1197,12 @@ class MyParser extends parser {
 					writer.newLine();
 				}else{
 					if(lVar.getInit() != null){ //initalized
-						lVar.writeAddress(Template.L0, writer);
+						lVar.writeAddress(Template.L1, writer);
 						STO rVar = lVar.getInit();
 						if(isIntToFloat(lVar, rVar)){
-							fitos(rVar, Template.L0);
+							fitos(rVar, lVar);
 						}else{
-							rVar.writeVal(Template.L1, writer);
-							writer.store(Template.L1, Template.L0);
+							store(rVar, lVar);
 						}
 						writer.newLine();
 					}	
@@ -1205,6 +1213,10 @@ class MyParser extends parser {
 		}
 		
 		return params;
+	}
+	
+	private void store(STO to, STO from){
+		to.store(from, writer);
 	}
 	
 	private boolean isFloat(STO s){
@@ -1223,10 +1235,11 @@ class MyParser extends parser {
 		return f.getType() instanceof FloatType && i.getType() instanceof IntType;
 	}
 
-	private void fitos(STO sto, String address){
-		sto.writeVal(Template.F0, writer);
+	private void fitos(STO int_, STO float_){
+		int_.writeVal(Template.F0, writer);
 		writer.fitos(Template.F0, Template.F0);
-		writer.store(Template.F0, address);
+		writeAddress(float_, Template.L1);
+		writer.store(Template.F0, Template.L1);
 	}
 	
 	public Integer getCodeBlockVars(Vector<VarSTO> paramList){

@@ -124,9 +124,10 @@ public class Writer {
     private static final String SEPARATOR = "\t";
     
     
-    SymbolTable symTab;
+    private SymbolTable symTab;
+    private AddressManager am;
     
-    public Writer(SymbolTable m_symtab){
+    public Writer(SymbolTable m_symtab, AddressManager am){
     	this("rc.s");
     	symTab = m_symtab;
     	writeUsefulAsciz();
@@ -318,7 +319,8 @@ public class Writer {
 		
 	}
 
-	public void set(String a1, String a2) {
+	public void set(String a1, Address add2) {
+		String a2 = add2.toString();
 		if(a1.startsWith("%") && a2.startsWith("%")){ // means both registers. can't set from reg to reg
 			write(Template.MOV, a1, a2);
 		}
@@ -326,8 +328,8 @@ public class Writer {
 			write(Template.SET, a1, a2);
 	}
 	
-	public void store(String a1, String a2){
-		write(Template.STORE, a1, a2);
+	public void store(Address a1, Address a2){
+		write(Template.STORE, a1.toString(), a2.toString());
 	}
 
 	public void label(String string) {
@@ -376,26 +378,14 @@ public class Writer {
 		return !isGlobal();
 	}
 
-	public void addOp(String a1, String a2, String res, Boolean f_flag) {
-		if(isInt(a1)){
-			String temp = a1;
-			a1 = a2;
-			a2 = temp;
-		}
-		if(f_flag)
-			write(Template.FADD, a1, a2, res);
-		else
-			write(Template.ADD, a1, a2, res);		
+	public void addOp(Address a1, Address a2, Address res) {
+		write(Template.ADD, a1.toString(), a2.toString(), res.toString());		
 	}
 	
-	private boolean isInt(String s){
-		try{
-			Integer.parseInt(s);
-			return true;
-		}catch(Exception e){
-			return false;
-		}
+	public void fAdd(Address a1, Address a2, Address result){
+		write(Template.FADD, a1.toString(), a2.toString(), result.toString());
 	}
+	
 	
 	public void minusOp(String a1, String a2, String res, Boolean f_flag) {
 		if(f_flag)
@@ -507,8 +497,9 @@ public class Writer {
 			write(Template.DEC, a1);
 			return;
 		}
-		set("1", Template.L3);
-		store(Template.L3, s.getAddress());
+		Address _1 = am.getAddress();
+		set("1", _1);
+		store(_1, s.getAddress());
 		ld(s.getAddress(), Template.F22);
 		fitos(Template.F22, Template.F22);
 		minusOp(a1, Template.F22, a1, floawt);
