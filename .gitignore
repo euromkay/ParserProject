@@ -41,3 +41,11 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+.classpath
+.project
+*.class
+rc.s
+bin/RCdbg.sh
+bin/RC.sh
+bin/rc.cup
+.settings/org.eclipse.jdt.core.prefs
