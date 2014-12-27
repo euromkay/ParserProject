@@ -1,0 +1,67 @@
+<!-- SEE THE INSTRUCTIONS below for how to use this file with Eclipse --> 
+
+<project name="131Project" default="compile" basedir=".">
+    <property name="src" location="${basedir}\src" />
+    <property name="bin" location="${basedir}\bin" />
+	 <property name="lib" location="${basedir}\lib" />
+    <property name="javacup" location="${basedir}/java-cup-v11a.jar" />
+    <description>  Ant build file for CSE 131 Project  </description>
+
+    <!-- Check that the rc.cup file has been updated before generating a new parser --> 
+    <uptodate property="parser.notRequired" srcfile="${src}\rc.cup" targetfile="${src}\parser.java"/>
+
+    <target name="compile" unless="parser.notRequired">
+        <java jar="${javacup}" input="${src}\rc.cup" dir="${src}" fork="true" failonerror="true"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${bin}"/>
+        <delete file="${src}\parser.java"/>
+    	<delete file="${src}\sym.java"/>
+    </target>
+	
+</project>
+
+
+<!--
+Instructions for using Eclipse to work on the project:
+
+1. Copy the starterCode from the public/ directory to a desired location
+2. Copy this build.xml from the public directory into your starterCode
+3. Make a new directory in your starterCode called "lib"
+4. Copy the javacup jar (~/../public/Tools/java-cup-v11a.jar) into the "lib" directory
+5. In Eclipse, select File > New > Java Project
+    (A) Uncheck the box for "Use default location"
+    (B) Click Browse to select your starterCode directory
+    (C) Change the "Project name" to something else
+    (D) Click Finish
+5. Go to your Project Properties (right-click on project then Properties or Project > Properties)
+    (A) Select Builders from the list on the left
+    (B) Click New...
+        (a) Select Ant Builder
+        (b) Change the name to Parser Builder
+        (c) Click Browse Workspace for the "Buildfile" section and just choose the build.xml in your project
+        (d) Click Browse Workspace for the "Base directory" section and just choose your main project directory
+        (e) Go to the Refresh tab and check the "Refresh resource upon completion" checkbox
+             - And select "The project containing the selected resource"
+        (f) Go to the Targets tab and set "Auto Build" and "Clean" to the targets "compile" and "clean", respectively
+        (g) Click OK
+     (C) Now, in the list of builders, select the newly created Parser Builder and move it up one, above the Java Builder
+     (D) Click OK, and you should see the javacup parser run automatically (and anytime you update rc.cup)
+6. Right-click on rc.cip in the list of files in Eclipse, and select Open With > Text Editor.
+7. Change something in rc.cup and save it, to test that things are working.
+8. The starterCode project should now have no errors (maybe harmless warnings though)
+9. RUNNING: In Eclipse, select Run > Run Configurations...
+   (A) From the list, double-click Java Application
+   (B) Rename this config to "RC"
+   (C) For "Project", just click Browse and select your project
+   (D) For "Main class", click Browse and select the RC class from the list
+   (E) Click on the Arguments tab
+       (a) For the Program arguments section, click the Variables... button
+       (b) From the list, choose "string_prompt" and click OK
+       (c) Now change it to look like this (you can copy and paste this in):
+            ${string_prompt:name of .rc file to compile:.rc}
+       (d) Click Run
+       (e) When you get the prompt for .rc file, type in example.rc (a file in the starterCode)
+       (f) Click OK. You should see "Compile: success"!
+-->
