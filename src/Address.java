@@ -1,6 +1,7 @@
 
 public class Address implements Comparable<Address> {
 
+	public static final Address G0 = new Address("%g0");
 	private String s;
 	private AddressManager am;
 	
@@ -25,5 +26,9 @@ public class Address implements Comparable<Address> {
 	
 	public String toString(){
 		return s;
+	}
+
+	public boolean isLocal() {
+		return s.startsWith("%");
 	}
 }

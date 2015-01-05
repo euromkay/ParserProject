@@ -164,32 +164,35 @@ abstract class STO
 	}
 	
 
-	public String writeAddress(String string, Writer writer) {
+	public Address writeAddress(Address a1, Writer writer) {
+		Address tempAdd = writer.getAddressManager().getAddress();
 		if(getAddress().equals("STRUCT")){
 			VarSTO struct = (VarSTO) ((VarSTO) this).getInit();
-			struct.writeAddress(string, writer);
-			writer.set(offset.toString(), Template.L7);
-			writer.addOp(string, Template.L7, string, false);
+			struct.writeAddress(a1, writer);
+			writer.set(offset.toString(), tempAdd);
+			writer.addOp(a1, tempAdd, a1);
 		}else if(getAddress().equals("ARRAY")){
 			VarSTO array = (VarSTO) ((VarSTO) this).getInit();
 			VarSTO number = (VarSTO) ((VarSTO) this).getInit2();
-			array.writeAddress(string, writer);
-			number.writeVal(Template.L7, writer);
+			array.writeAddress(a1, writer);
+			number.writeVal(tempAdd, writer);
 			for(int i = 0; i < ((ArrayType) array.getType()).t.getSize(); i++)
-				writer.addOp(string, Template.L7, string, false);
-		}
-		else if(getAddress().equals(DEFAULT)){
-			writeStructField(writer, string);
-		}else if(!getAddress().startsWith("%")){
-			writer.set(getAddress(), string);
+				writer.addOp(a1, tempAdd, a1, false);
+		/*}else if(getAddress().equals(DEFAULT)){
+			writeStructField(writer, a1);*/
+		}else if(!getAddress().isLocal()){
+			writer.set(getAddress(), a1);
 		}else if(isParameter(writer.symTab.getFunc()) && this instanceof VarSTO && (((VarSTO) this).isRef())){
-			writer.set(address, string);
+			writer.set(address, a1);
 		}else{
-			writer.minusOp(Template.FP, offset.toString(), string, false);
+			writer.minusOp(Template.FP, offset.toString(), a1, false);
 		}
 		
-		return string;
+		tempAdd.release();
+		
+		return a1;
 	}
+	
 	public String stringField = "";
 	private void writeStructField(Writer w, String result){
 		Vector<STO> v = w.symTab.m_stkScopes.get(1).getVector();
@@ -222,8 +225,8 @@ abstract class STO
 	}
 	
 
-	public void writeVal(String res, Writer writer) {
-		String a = address;
+	public void writeVal(Address res, Writer writer) {
+		Address a = address;
 		if(!getAddress().startsWith("%")){
 			a = Template.L6;
 			writeAddress(a, writer);

@@ -1155,14 +1155,18 @@ class MyParser extends parser {
 				VarSTO lVar = (VarSTO) s;
 				if(lVar.isStatic()){
 					String name = "." + symTab.getFunc().getName() + "_" + lVar.getName();
-					lVar.setAddress(name);
 					String nameBool = name + "_bool";
+					final String alreadyInitialized = name + "_finish";
+
+					lVar.setAddress(new Address(name));
 					
 					writer.newLine();
-					writer.set(nameBool, Template.L0);
-					writer.load(Template.L0, Template.L0);
-					writer.cmp(Template.L0, Template.G0);
-					final String alreadyInitialized = name + "_finish";
+					Address varInitialized = am.getAddress();
+					writer.set(nameBool, varInitialized);
+					writer.load(varInitialized, varInitialized);
+					writer.cmp(varInitialized, Address.G0);
+					varInitialized.release();
+					
 					writer.bne(alreadyInitialized);
 					writer.newLine();
 					
@@ -1179,31 +1183,32 @@ class MyParser extends parser {
 					writer.write(type, nameBool, "0");
 					
 					writer.changeSection(Writer.TEXT);
-					lVar.writeAddress(Template.L0, writer);
 					if(lVar.getInit() != null){
 						STO rVar = lVar.getInit();
-						if(isIntToFloat(lVar, rVar)){
-							fitos(rVar, Template.L0);
-						}else{
-							rVar.writeVal(Template.L1, writer);
-							writer.store(Template.L1, Template.L0);
-						}
+						if(isIntToFloat(lVar, rVar))
+							fitos(rVar, lVar);
+						else
+							store(lVar, rVar);
+						
 					}
 					
-					writer.set(nameBool, Template.L0);
-					writer.set("1", Template.L6);
-					writer.store(Template.L6, Template.L0);
+					Address bAdd = am.getAddress(), _1 = am.getAddress();
+					
+					writer.set(nameBool, bAdd);
+					writer.set("1", _1);
+					writer.store(_1, bAdd);
 					writer.label(alreadyInitialized);
 					writer.newLine();
+					
+					bAdd.release();   _1.release();
 				}else{
 					if(lVar.getInit() != null){ //initalized
-						lVar.writeAddress(Template.L1, writer);
 						STO rVar = lVar.getInit();
-						if(isIntToFloat(lVar, rVar)){
+						if(isIntToFloat(lVar, rVar))
 							fitos(rVar, lVar);
-						}else{
-							store(rVar, lVar);
-						}
+						else
+							store(lVar, rVar);
+						
 						writer.newLine();
 					}	
 				}
@@ -1223,12 +1228,12 @@ class MyParser extends parser {
 		return s.getType() instanceof FloatType;
 	}
 	
-	private void writeAddress(STO sto, String address){
-		sto.writeAddress(address, writer);
+	private void writeAddress(STO sto, Address a1){
+		sto.writeAddress(a1, writer);
 	}
 	
-	private void writeVal(STO sto, String address) {
-		sto.writeVal(address, writer);
+	private void writeVal(STO sto, Address a1) {
+		sto.writeVal(a1, writer);
 	}
 
 	private boolean isIntToFloat(STO f, STO i){
@@ -1236,10 +1241,13 @@ class MyParser extends parser {
 	}
 
 	private void fitos(STO int_, STO float_){
-		int_.writeVal(Template.F0, writer);
-		writer.fitos(Template.F0, Template.F0);
-		writeAddress(float_, Template.L1);
-		writer.store(Template.F0, Template.L1);
+		Address fReg = new Address("%f0");
+		Address tempAdd = am.getAddress();
+		writeVal(int_, fReg);
+		writer.fitos(fReg, fReg);
+		writeAddress(float_, tempAdd);
+		writer.store(fReg, tempAdd);
+		tempAdd.release();
 	}
 	
 	public Integer getCodeBlockVars(Vector<VarSTO> paramList){
@@ -1266,7 +1274,7 @@ class MyParser extends parser {
 		writer.newLine();
 		writer.label(fname);
 		
-		writer.set("SAVE." + fname, Template.G1); 
+		writer.set("SAVE." + fname, new Address("%g1")); 
 		writer.write(Template.SAVE, Template.SP, Template.G1, Template.SP);
 		writer.newLine();
 		
@@ -1278,10 +1286,11 @@ class MyParser extends parser {
 			VarSTO sto = (VarSTO) paramList.get(i);
 			if(sto.isRef() || sto.getType() instanceof ArrayType || sto.getType() instanceof StructType){
 				if(sto.getType() instanceof ArrayType){
-					sto.setRef(true);
+					ArrayType aType = (ArrayType) sto.getType();
+					//sto.setRef(true);
 					VarSTO v = new VarSTO("", new IntType());
 					writer.addSTO(v);
-					writer.set(((ArrayType) sto.getType()).getLength().toString(), Template.L0);
+					writer.set(aType.getLength().toString(), Template.L0);
 					writer.store(Template.L0, v.getAddress());
 					sto.setInit(v);
 				}

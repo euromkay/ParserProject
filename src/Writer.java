@@ -127,6 +127,10 @@ public class Writer {
     private SymbolTable symTab;
     private AddressManager am;
     
+    public AddressManager getAddressManager(){
+    	return am;
+    }
+    
     public Writer(SymbolTable m_symtab, AddressManager am){
     	this("rc.s");
     	symTab = m_symtab;
@@ -309,12 +313,12 @@ public class Writer {
 	}
 
 	//bracketed a1, nonbrack a2
-	public void ld(String a1, String a2) {
-		write(Template.LOAD, a1, a2);
+	public void ld(Address a1, Address a2) {
+		write(Template.LOAD, a1.toString(), a2.toString());
 		
 	}
 	
-	public void load(String a1, String a2) {
+	public void load(Address a1, Address a2) {
 		ld(a1, a2);
 		
 	}
@@ -351,22 +355,25 @@ public class Writer {
 		write(Template.NOP);
 	}
 	
-	public void ba(String string) {
-		write(Template.BA, string);
+	public void ba(Address a1) {
+		write(Template.BA, a1.toString());
 		write(Template.NOP);
 	}
 	
-	public void cmp(String s1, String s2, boolean flag) {
-		if(flag){
-			write(Template.FCMPS, s1, s2);
-			write(Template.NOP);
-		}
+	public void cmp(Address a1, Address a2, boolean flag) {
+		if(flag)
+			fcmp(a1, a2);
 		else
-			write(Template.CMP, s1, s2);
+			fcmp(a1, a2);
 	}
 
-	public void cmp(String s1, String s2){
-		cmp(s1, s2, false);
+	public void fcmp(Address a1, Address a2){
+		write(Template.FCMPS, a1.toString(), a2.toString());
+		write(Template.NOP);
+	}
+	
+	public void cmp(Address s1, Address s2){
+		write(Template.CMP, s1.toString(), s2.toString());
 	}
 	
 	public void fset(String f31, String f0) {
@@ -421,8 +428,8 @@ public class Writer {
 		return localVarSpace.toString();
 	}
 
-	public void fitos(String f0, String f1) {
-		write(Template.FITOS, f0, f1);
+	public void fitos(Address f0, Address f1) {
+		write(Template.FITOS, f0.toString(), f1.toString());
 	}
 
 	public void fstoi(String f0, String f1) {
