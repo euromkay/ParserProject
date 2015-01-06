@@ -206,17 +206,17 @@ class MyParser extends parser {
 		ArrayType exprType = (ArrayType) arr.getType();
 		Type iterType = iter.getType();
 		if(iter.isRef()){
-			if(!iterType.isEquivalent(exprType.getType())){
+			if(!iterType.isEquivalent(exprType.getSubtype())){
 				m_nNumErrors++;
-				error = Formatter.toString(ErrorMsg.error12r_Foreach, exprType.getType().getName(), iter.getName(), iterType.getName());
+				error = Formatter.toString(ErrorMsg.error12r_Foreach, exprType.getSubtype().getName(), iter.getName(), iterType.getName());
 				m_errors.print(error);
 				return new ErrorSTO(error);
 			}
 		}
 		else{
-			if(!iterType.isAssignable(exprType.getType())){
+			if(!iterType.isAssignable(exprType.getSubtype())){
 				m_nNumErrors++;
-				error = Formatter.toString(ErrorMsg.error12v_Foreach, exprType.getType().getName(), iter.getName(), iterType.getName());
+				error = Formatter.toString(ErrorMsg.error12v_Foreach, exprType.getSubtype().getName(), iter.getName(), iterType.getName());
 				m_errors.print(error);
 				return new ErrorSTO(error);
 			}
@@ -784,7 +784,7 @@ class MyParser extends parser {
 		
 		if(e instanceof ConstSTO && a.getType() instanceof ArrayType){
 			ConstSTO es = (ConstSTO) e;
-			int aLength = ((ArrayType) a.getType()).getLength();
+			int aLength = Integer.parseInt(((ArrayType) a.getType()).getLength());
 			if(es.getIntValue() > aLength || aLength < 0){
 				m_nNumErrors++;
 				String error = Formatter.toString(ErrorMsg.error11b_ArrExp, es.getIntValue(), aLength);
@@ -795,7 +795,7 @@ class MyParser extends parser {
 		}
 		
 		ArrointType tt = (ArrointType) a.getType();
-		return new VarSTO("", tt.getType());
+		return new VarSTO("", tt.getSubtype());
 	}
 
 	// ----------------------------------------------------------------
@@ -900,7 +900,7 @@ class MyParser extends parser {
 		}
 		else{
 			PointerType pt = (PointerType) des.getType();
-			return new VarSTO(des.getName(), pt.getType());
+			return new VarSTO(des.getName(), pt.getSubtype());
 		}
 		
 	}
@@ -932,14 +932,14 @@ class MyParser extends parser {
 		}
 		PointerType pt = (PointerType) sto.getType();
 		
-		if(!(pt.getType() instanceof StructType)){
+		if(!(pt.getSubtype() instanceof StructType)){
 			error = Formatter.toString(ErrorMsg.error15_ReceiverArrow, sto.getType().getName());
 			m_nNumErrors++;
 			m_errors.print(error);
 			return new ErrorSTO(error);
 		}
 		
-		StructType struct = (StructType) pt.getType();
+		StructType struct = (StructType) pt.getSubtype();
 		
 		for(STO e : struct.getFields()){
 			if(e.getName().equals(id))
@@ -1135,9 +1135,7 @@ class MyParser extends parser {
 							writer.addOp(lAdd, _4, lAdd);
 						}
 						
-						lAdd.release();
-						_4.release();
-						_0.release();
+						
 						
 					}
 					
@@ -1165,7 +1163,6 @@ class MyParser extends parser {
 					writer.set(nameBool, varInitialized);
 					writer.load(varInitialized, varInitialized);
 					writer.cmp(varInitialized, Address.G0);
-					varInitialized.release();
 					
 					writer.bne(alreadyInitialized);
 					writer.newLine();
@@ -1199,8 +1196,8 @@ class MyParser extends parser {
 					writer.store(_1, bAdd);
 					writer.label(alreadyInitialized);
 					writer.newLine();
-					
-					bAdd.release();   _1.release();
+
+
 				}else{
 					if(lVar.getInit() != null){ //initalized
 						STO rVar = lVar.getInit();
@@ -1247,7 +1244,6 @@ class MyParser extends parser {
 		writer.fitos(fReg, fReg);
 		writeAddress(float_, tempAdd);
 		writer.store(fReg, tempAdd);
-		tempAdd.release();
 	}
 	
 	public Integer getCodeBlockVars(Vector<VarSTO> paramList){
@@ -1282,24 +1278,29 @@ class MyParser extends parser {
 			initializeGlobals();
 		
 		String s = "%i";
+		Address length_a = am.getAddress();
+		
 		for(int i = 0; i < paramList.size(); i++){
 			VarSTO sto = (VarSTO) paramList.get(i);
+			Address param_a = new Address(s + (i + offset));
 			if(sto.isRef() || sto.getType() instanceof ArrayType || sto.getType() instanceof StructType){
 				if(sto.getType() instanceof ArrayType){
 					ArrayType aType = (ArrayType) sto.getType();
-					//sto.setRef(true);
+					sto.setRef(true);
+					
 					VarSTO v = new VarSTO("", new IntType());
 					writer.addSTO(v);
-					writer.set(aType.getLength().toString(), Template.L0);
-					writer.store(Template.L0, v.getAddress());
+					
+					writer.set(aType.getLength(), length_a);
+					v.store(length_a, writer);
 					sto.setInit(v);
 				}
 				if(sto.getType() instanceof StructType)
 					sto.setRef(true);
-				sto.setAddress(s + (i + offset));
+				sto.setAddress(param_a);
 			}else{
 				writer.addSTO(sto);
-				writer.store(s+(i+offset), sto.getAddress());
+				sto.store(param_a, writer);
 			}
 		}
 		
@@ -1307,24 +1308,29 @@ class MyParser extends parser {
 	}
 	
 	private void initializeGlobals(){
-		writer.set(Writer.GLOBAL_INIT, Template.L0);
-		writer.load(Template.L0, Template.L0);
-		writer.cmp(Template.L0, Template.G0);
+		Address globalInit_a = am.getAddress();
+		
+		writer.set(Writer.GLOBAL_INIT, globalInit_a);
+		writer.load(globalInit_a, globalInit_a);
+		writer.cmp(globalInit_a, Address.G0);
 		final String alreadyInitialized = ".globalFinish";
 		writer.bne(alreadyInitialized);
 		writer.writeGlobalInits();
 		writer.newLine();
-		writer.set(Writer.GLOBAL_INIT, Template.L0);
-		writer.set("1", Template.L1);
-		writer.store(Template.L1, Template.L0);
+		
+		Address _1_a = am.getAddress();
+		writer.set(Writer.GLOBAL_INIT, globalInit_a);
+		writer.set("1", _1_a);
+		writer.store(_1_a, globalInit_a);
 		writer.label(alreadyInitialized);
 		writer.newLine();
+		
 	}
 
 	
 	public void WriteID(STO s_, String s){
 		if(s_ instanceof FuncSTO)
-			s_.setAddress(s);
+			s_.setAddress(new Address(s));
 		return;/*
 		if(s_ instanceof FuncSTO)
 			return;
@@ -1334,17 +1340,7 @@ class MyParser extends parser {
 		//writer.store(dest, TEMP_FP);*/
 	}
 	
-	public void WriteID_GLOBAL(String s){
-		STO sto = symTab.accessGlobal(s);
-		String dest;
-		if(sto.getType() instanceof FloatType)
-			dest = Template.F0;
-		else
-			dest = Template.L7;
-		writer.set(s, Template.L0);
-		writer.ld(Template.L0, dest);
-		//writer.store(dest, TEMP_FP);
-	}
+	
 	
 	public void WriteFuncDeclFinish(String fname) {
 		//writer.functionFinish();
@@ -1360,98 +1356,83 @@ class MyParser extends parser {
 		writer.localVarSpace = 0;
 	}
 
-	public void WriteAssignExpr(STO s_left, STO right) {
-		if(s_left.isError())
+	public void WriteAssignExpr(STO left, STO right_s) {
+		if(left.isError())
 			return;
-		VarSTO left = (VarSTO) s_left;
-		String lAdd =Template.L0;
-		left.writeAddress(lAdd, writer);
-		String rAdd;
+		VarSTO left_s = (VarSTO) left;
+		Address left_a = am.getAddress();
+		left.writeAddress(left_a, writer);
+		Address right_a;
 		
 		
-		if(left.getType() instanceof FloatType && right.getType() instanceof IntType){
-			rAdd = Template.F1;
-			writer.ld(right.getAddress(), Template.F0);
-			writer.fitos(Template.F0, rAdd);
+		if(isIntToFloat(left_s, right_s)){
+			right_a = new Address("%f0");
+			fitos(right_s, left_s);
 		}else{
-			rAdd = Template.L5;
-			if(right.getType() instanceof ArrayType)
-				right.writeAddress(rAdd, writer);
-			else if(right instanceof FuncSTO){
-				writer.set(right.getName(), rAdd);
+			right_a = am.getAddress();
+			if(right_s.getType() instanceof ArrayType)
+				right_s.writeAddress(right_a, writer);
+			else if(right_s instanceof FuncSTO){
+				writer.set(right_s.getName(), right_a);
 			}else
-				right.writeVal(rAdd, writer);
+				right_s.writeVal(right_a, writer);
 		}
-		writer.store(rAdd, lAdd);
-		if(right instanceof FuncSTO){
-			left.setInit(right);
-			left.setInit2(((FuncSTO)right).getInit());
+		writer.store(right_a, left_a);
+
+		if(right_s instanceof FuncSTO){
+			left_s.setInit(right_s);
+			left_s.setInit2(((FuncSTO)right_s).getInit());
 		}
 		
-		writer.comment(left.getName() + " = " + right.getName());
+		writer.comment(left_s.getName() + " = " + right_s.getName());
 	}
 
 	
-	public void WriteIntLiteral(STO _1){
-		
-		if(writer.isGlobal() || writer.getSection() != Writer.TEXT)
-			writer.writeLater = true;
-		writer.set(_1.getName(), Template.L7);
-		writer.addSTO(_1);
-		writer.store(Template.L7, _1.getAddress());
-		
-		writer.writeLater = false;
+	public void WriteIntLiteral(STO s){
+		Address a = am.getAddress();
+		writer.set(s.getName(), a);
+		writer.addSTO(s);
+		s.store(a, writer);
 	}
 	
-	int literalCount;
+	public int literalCount;
 	
-	public void WriteFloatLiteral(STO _1) {
-		if(writer.isGlobal() || writer.getSection() != Writer.TEXT)
-			writer.writeLater = true;
+	public void WriteFloatLiteral(STO s) {
 			
-		writer.addSTO(_1);
+		writer.addSTO(s);
 		int section = writer.getSection();
 		writer.changeSection(Writer.RODATA);
-		String label = "_float" + literalCount++;
-		writer.write(Template.FLOAT_VAR_DECL, label, _1.getName());
+		String label = "_float_" + s.getName() + literalCount++;
+		writer.write(Template.FLOAT_VAR_DECL, label, s.getName());
 		writer.newLine();
 	
+		Address a = am.getAddress();
 		writer.changeSection(section);
-		writer.set(label, Template.L7);
-		writer.load(Template.L7, Template.L7);
-		writer.store(Template.L7, _1.getAddress());
-		
-		writer.writeLater = false;
-		
+		writer.set(label, a);
+		writer.load(a, a);
+		s.store(a, writer);
 	}
 
-	public void WriteBoolLiteral(STO _1, boolean b) {
+	public static final String TRUE_S = "1", FALSE_S = "0";
+	
+	public void WriteBoolLiteral(STO s, String value) {
 		
 		//assured its local now
-		String s;
-		if(b)
-			s = "1";
-		else
-			s = "0";
-	
-		if(writer.isGlobal())
-			writer.writeLater = true;
-		writer.addSTO(_1);
-		writer.set(s, Template.L7);
-		writer.store(Template.L7, _1.getAddress());
-		writer.writeLater = false;
+		
+		Address a = am.getAddress();
+		writer.addSTO(s);
+		writer.set(value, a);
+		s.store(a, writer);
 	}
 	
-	public String WriteStringLiteral(String _1) {
-		int section = writer.getSection();
+	public void WriteStringLiteral(String s) {
 		writer.changeSection(Writer.RODATA);
-		String s = "_string" + literalCount++;
-		writer.write(Template.ASCIZ, s, "\""+_1+"\"");
+		String label = "_string" + literalCount++;
+		writer.write(Template.ASCIZ, label, "\""+s+"\"");
 		writer.newLine();
 		
-		writer.changeSection(section);
+		writer.changeSection(Writer.TEXT);
 		
-		return s;
 	}
 	
 
@@ -1460,176 +1441,108 @@ class MyParser extends parser {
 		return writer.isGlobal();
 	}
 	
-	private static final String BRANCH = ".branch";
+	public static final String BRANCH = ".branch";
 	public void COut(STO s){
 		
 		Type t = s.getType();
-		if(t instanceof StringType){
-			writer.set(Template.STRFORMAT, Template.O0);
-			writer.set("_string"+(literalCount-1) ,Template.O1);
-		}
-		else if(t instanceof IntType){
-			writer.set(Template.INTFORMAT, Template.O0);
-			s.writeVal(Template.O1, writer);
-		} else if(t instanceof PointerType){
-			writer.set(Template.INTFORMAT, Template.O0);
-			s.writeVal(Template.O1, writer);
-		} else if(t instanceof BoolType){
-			writer.set(Template.STRFORMAT, Template.O0);
-			s.writeVal(Template.L0, writer);
-			writer.cmp(Template.L0, Template.G0);
-			writer.bne(BRANCH + literalCount);
-			
-			//print false
-			writer.set(Template.BOOLF, Template.O1);
-			writer.ba(BRANCH+literalCount+".DONE");
-			writer.label(BRANCH + literalCount);
-			writer.set(Template.BOOLT, Template.O1);
-			
-			writer.label(BRANCH+literalCount++ + ".DONE");	
-		}
-		else{
-			s.writeVal(Template.F0, writer);
+		if(t instanceof FloatType){
+			s.writeVal(Address.F0, writer);
 			writer.call("printFloat");
-			return;
+		}else{
+			if(t instanceof BoolType){
+				writer.set(Template.STRFORMAT, Address.O0);
+				Address a = am.getAddress();
+				s.writeVal(a, writer);
+				writer.cmp(a, Address.G0);
+				writer.bne(BRANCH + literalCount);
+				
+				//print false
+				writer.set(Template.BOOLF, Address.O1);
+				writer.ba(BRANCH+literalCount+".DONE");
+				writer.label(BRANCH + literalCount);
+				writer.set(Template.BOOLT, Address.O1);
+				
+				writer.label(BRANCH+literalCount++ + ".DONE");	
+			}else if(t instanceof StringType){
+				writer.set(Template.STRFORMAT, Address.O0);
+				writer.set("_string"+(literalCount-1), Address.O1);
+			}else {
+				writer.set(Template.INTFORMAT, Address.O0);
+				s.writeVal(Address.O1, writer);
+			}
+			writer.call("printf");
 		}
-		writer.call("printf");
-		//nops included
 	}
 
 	public void WriteENDL() {
-		writer.set(Template.STRFORMAT, Template.O0);
-		writer.set("_endl", Template.O1);
+		writer.set(Template.STRFORMAT, Address.O0);
+		writer.set("_endl", Address.O1);
 		writer.call("printf");		
 	}
 
 	public void WriteBinaryExpr(STO a, Operator o, STO b, STO result){
 		writer.addSTO(result); // takes care of addressing it
-		String a1, a2;
-		String res;
-		Boolean f_flag = false, bNeed = true, aNeed = true, lNeed = true;
+		
+		Address a1, a2, res_a;
+		Boolean f_flag = false;
 	
 		Type aType = a.getType(), bType = b.getType();
 		
 		if(aType instanceof FloatType || bType instanceof FloatType ){
-			a1 = Template.F0;
-			a2 = Template.F1;
-			res = Template.F3;
+			a1  = Address.F0;
+			a2  = Address.F1;
+			res_a = Address.F0;
 			f_flag = true;
+
+			a.writeVal(a1, writer);
+			b.writeVal(a2, writer);
 			
 			if(aType instanceof IntType){
-				a.writeVal(Template.F0, writer);
-				writer.fitos(Template.F0, Template.F0);
-				aNeed = false;
+				writer.fitos(a1, a1);
 			}
 			if(bType instanceof IntType){
-				b.writeVal(Template.F1, writer);
-				writer.fitos(Template.F1, Template.F1);
-				bNeed = false;
+				writer.fitos(a2, a2);
 			}		
 		}
 		else{
-			a1 = Template.O0;
-			a2 = Template.O1;
-			res = Template.O0;
-		}
-		if(aNeed)
+			a1 = Address.O0;
+			a2 = Address.O1;
+			res_a = Address.O0;
+			
 			a.writeVal(a1, writer);
-		if(bNeed && a != b)
-			b.writeVal(a2, writer);
+			if(a != b)
+				b.writeVal(a2, writer);
+		}
+		o.writeSparc(a, b, result, a1, a2, res_a, f_flag, this);
 		
-		if(o.getName().equals(Operator.PLUS)){
-			writer.addOp(a1, a2, res, f_flag);
-		}
-		else if(o.getName().equals(Operator.MINUS)){
-			writer.minusOp(a1, a2, res, f_flag);
-		}
-		else if(o.getName().equals(Operator.STAR)){
-			writer.multiOp(a1, a2, res, f_flag);
-		}
-		else if(o.getName().equals(Operator.SLASH)){
-			writer.divOp(a1, a2, res, f_flag);
-		}
-		else if(o.getName().equals(Operator.MOD)){
-			writer.modOp(a1, a2, res, f_flag);
-		}
-		else if(o.getName().equals(Operator.U_MINUS)){
-			writer.negOp(a1, res, f_flag);		
-		}
-		else if(o.getName().equals(Operator.U_PLUS)){
-			if(a.getType() instanceof FloatType)
-				res = a1;
-		}
-		else if(o.getName().equals(Operator.BAR)){
-			writer.orOp(a1, a2, res);
-		}
-		else if(o.getName().equals(Operator.AMPERSAND)){
-			writer.andOp(a1, a2, res);
-		}
-		else if(o.getName().equals(Operator.CARET)){
-			writer.xorOp(a1, a2, res);
-		}else if(o.getName().equals(Operator.MINUS_POST)){
-			lNeed = false;
-			writer.store(a1, result.getAddress());
-			incDecHelper(a, a1, DEC, f_flag);
-			a.writeAddress(Template.L0, writer);
-			writer.store(a1, Template.L0);
-		}else if(o.getName().equals(Operator.PLUS_POST)){
-			lNeed = false;
-			writer.store(a1, result.getAddress());
-			incDecHelper(a, a1, INC, f_flag);
-			a.writeAddress(Template.L0, writer);
-			writer.store(a1, Template.L0);
-		}else if(o.getName().equals(Operator.MINUS_PRE)){
-			lNeed = false;
-			incDecHelper(a, a1, DEC, f_flag);
-			writer.store(a1, result.getAddress());
-			a.writeAddress(Template.L0, writer);
-			writer.store(a1, Template.L0);
-		}else if(o.getName().equals(Operator.PLUS_PRE)){
-			lNeed = false;	
-			incDecHelper(a, a1, INC, f_flag);
-			a.writeAddress(Template.L0, writer);
-			writer.store(a1, Template.L0);
-			writer.store(a1, result.getAddress());	
-		}else{
-			res = Template.L3;
-			writer.cmp(a1, a2, f_flag);
-			
-			writer.write(o.getTemplate(f_flag), BRANCH + literalCount);
-			writer.write(Template.NOP);
-			writer.newLine();
-			
-			writer.set("0", res);
-			writer.ba(BRANCH + literalCount + ".DONE");
-			writer.newLine();
-			writer.label(BRANCH + literalCount);
-			writer.set("1", res);
-			writer.label(BRANCH + literalCount + ".DONE");
-			literalCount++;	
-		}
 		
-		if(lNeed)
-			writer.store(res, result.getAddress());
+			
+		
+		
 		
 	}
-	private static final boolean INC = true, DEC = false;
-	private void incDecHelper(STO s, String addr, boolean inc, boolean fFlag){
+	public static final boolean INC = true;
+	public static final boolean DEC = false;
+	public static void incDecHelper(STO s, Address a, boolean inc, boolean fFlag, Writer writer){
 		
 		if(s.getType() instanceof FloatType || s.getType() instanceof IntType){
 			if(inc)
-				writer.inc(addr, fFlag);
+				writer.inc(a, fFlag);
 			else
-				writer.dec(addr, fFlag);
+				writer.dec(a, fFlag);
 		}
 		else{
 			PointerType t = (PointerType) s.getType();
-			writer.set(t.getType().getSize().toString(), Template.L2);
+			Address size_a = writer.getAddressManager().getAddress();
+			Address sto_a = writer.getAddressManager().getAddress();
+			
+			
+			writer.set(t.getSubtype().getSize().toString(), size_a);
 			s.writeVal(Template.L3, writer);
 			if(inc)
-				writer.addOp(Template.L2, Template.L3, addr, false);
+				writer.addOp(Template.L2, Template.L3, a, false);
 			else
-				writer.minusOp(Template.L3, Template.L2, addr, false);
+				writer.minusOp(Template.L3, Template.L2, a, false);
 			
 		}
 		
@@ -1947,7 +1860,7 @@ class MyParser extends parser {
 	}
 
 	public void WriteArrowDeref(STO structSTO, String _3, STO result) {
-		StructType t = (StructType) ((PointerType) structSTO.getType()).getType();
+		StructType t = (StructType) ((PointerType) structSTO.getType()).getSubtype();
 		Integer size = 0;
 		for(STO member: t.getFields()){
 			if(member.getName().equals(_3))
@@ -2073,9 +1986,12 @@ class MyParser extends parser {
 	
 	public void WriteNull(STO s){
 		writer.addSTO(s);
-		s.writeAddress(Template.L1, writer);
-		writer.store(Template.G0, Template.L1);
+		s.store(Address.G0, writer);
 		
+	}
+
+	public Writer getWriter() {
+		return writer;
 	}
 	
 	

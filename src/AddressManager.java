@@ -17,6 +17,8 @@ public class AddressManager {
 	private ArrayList<Address> locals = new ArrayList<Address>();
 	
 	public void add(Address address) {
+		if(!address.toString().startsWith("%l"))
+			return;
 		locals.add(address);
 		sort();
 	}

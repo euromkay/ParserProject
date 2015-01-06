@@ -355,8 +355,8 @@ public class Writer {
 		write(Template.NOP);
 	}
 	
-	public void ba(Address a1) {
-		write(Template.BA, a1.toString());
+	public void ba(String s) {
+		write(Template.BA, s);
 		write(Template.NOP);
 	}
 	
@@ -389,34 +389,41 @@ public class Writer {
 		write(Template.ADD, a1.toString(), a2.toString(), res.toString());		
 	}
 	
-	public void fAdd(Address a1, Address a2, Address result){
+	public void fAddOp(Address a1, Address a2, Address result){
 		write(Template.FADD, a1.toString(), a2.toString(), result.toString());
 	}
 	
-	
-	public void minusOp(String a1, String a2, String res, Boolean f_flag) {
-		if(f_flag)
-			write(Template.FSUB, a1, a2, res);
+	public void addOp(Address a1, Address a2, Address res, boolean f){
+		if(f)
+			fAddOp(a1, a2, res);
 		else
-			write(Template.SUB, a1, a2, res);		
+			addOp(a1, a2, res);
 	}
 	
-	public void multiOp(String a1, String a2, String res, Boolean f_flag) {
+	
+	public void minusOp(Address a1, Address a2, Address res, Boolean f_flag) {
 		if(f_flag)
-			write(Template.FMUL, a1, a2, res);
+			write(Template.FSUB, a1.toString(), a2.toString(), res.toString());
+		else
+			write(Template.SUB, a1.toString(), a2.toString(), res.toString());		
+	}
+	
+	public void multiOp(Address a1, Address a2, Address res, Boolean f_flag) {
+		if(f_flag)
+			write(Template.FMUL, a1.toString(), a2.toString(), res.toString());
 		else
 			call(".mul");
 		
 	}
 	
-	public void divOp(String a1, String a2, String res, Boolean f_flag) {
+	public void divOp(Address a1, Address a2, Address res, Boolean f_flag) {
 		if(f_flag)
-			write(Template.FDIV, a1, a2, res);
+			write(Template.FDIV, a1.toString(), a2.toString(), res.toString());
 		else
 			call(".div");	
 	}
 	
-	public void modOp(String a1, String a2, String res, Boolean f_flag) {
+	public void modOp(Address a1, Address a2, Address res) {
 			call(".rem");
 	}
 
@@ -436,25 +443,25 @@ public class Writer {
 		write(Template.FSTOI, f0, f1);
 	}
 	
-	public void negOp(String a1, String res, boolean f_flag) {
-		if(f_flag){
-			write(Template.FNEG, a1, res);
-			return;
-		}
-		write(Template.NEG, a1, res);		
+	public void negOp(Address a1, Address res, boolean f_flag) {
+		if(f_flag)
+			write(Template.FNEG, a1.toString(), res.toString());
+		else
+			write(Template.NEG, a1.toString(), res.toString());		
 	}
 
-	public void orOp(String a1, String a2, String res) {
-		write(Template.OR, a1, a2, res);	
+	public void orOp(Address a1, Address a2, Address res) {
+		write(Template.OR, a1.toString(), a2.toString(), res.toString());	
+	}
+	
+	public void andOp(Address a1, Address a2, Address res) {
+		write(Template.AND, a1.toString(), a2.toString(), res.toString());	
 	}
 
-	public void andOp(String a1, String a2, String res) {
-		write(Template.AND, a1, a2, res);	
+	public void xorOp(Address a1, Address a2, Address res) {
+		write(Template.XOR, a1.toString(), a2.toString(), res.toString());	
 	}
-
-	public void xorOp(String a1, String a2, String res) {
-		write(Template.XOR, a1, a2, res);		
-	}
+	
 
 	public void returnstmt() {
 		write(Template.RET);
@@ -482,7 +489,7 @@ public class Writer {
 		
 	}
 
-	public void inc(String a1, boolean floawt) {
+	public void inc(Address a1, boolean floawt) {
 		STO s = new VoidSTO();
 		addSTO(s);
 		if(!floawt){
@@ -497,7 +504,7 @@ public class Writer {
 		
 	}
 	
-	public void dec(String a1, boolean floawt) {
+	public void dec(Address a1, boolean floawt) {
 		STO s = new VoidSTO();
 		addSTO(s);
 		if(!floawt){

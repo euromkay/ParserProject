@@ -1,5 +1,5 @@
 
-public class ComparisonOp extends BinaryOp {
+public class ComparisonOp extends BooleanOp {
 
 	public ComparisonOp(String op_symbol) {
 		super(op_symbol);

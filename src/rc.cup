@@ -1030,11 +1030,11 @@ Relation ::=     T_LT
 
 AddOp ::=       	T_PLUS
                     {:
-                        RESULT = Operator.newOp("+");
+                        RESULT = new PlusOp();
                     :}
     |               T_MINUS
                     {:
-                        RESULT = Operator.newOp("-");
+                        RESULT = new MinusOp();
                     :}
     ;
 
@@ -1165,18 +1165,18 @@ Designator3 ::=     T_LPAREN Expr:_2 T_RPAREN
     |               T_STR_LITERAL:_1
                     {:
                         ConstSTO c = new ConstSTO (_1, new StringType(), 4.0);
-                        String s = ((MyParser) parser).WriteStringLiteral(_1);
+                        ((MyParser) parser).WriteStringLiteral(_1);
                         RESULT = c;
                     :}
     |               T_TRUE
                     {:
                         RESULT = new ConstSTO ("true", new BoolType(), BoolType.TRUE);
-                        ((MyParser) parser).WriteBoolLiteral(RESULT, true);
+                        ((MyParser) parser).WriteBoolLiteral(RESULT, MyParser.TRUE_S);
                     :}
     |               T_FALSE
                     {:
                         RESULT = new ConstSTO ("false", new BoolType(), BoolType.FALSE);
-                        ((MyParser) parser).WriteBoolLiteral(RESULT, false);
+                        ((MyParser) parser).WriteBoolLiteral(RESULT, MyParser.FALSE_S);
                     :}
     |               T_NULLPTR
                     {:
@@ -1191,7 +1191,6 @@ Designator3 ::=     T_LPAREN Expr:_2 T_RPAREN
     |               T_COLONCOLON T_ID:_1
                     {:
                         RESULT = ((MyParser) parser).DoDesignator4_ID (_1);
-                       ((MyParser) parser).WriteID_GLOBAL(_1);
                     :}
     |               T_ID:_1
                     {:

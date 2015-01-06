@@ -1,4 +1,4 @@
-public class BitWiseOp extends ArithmeticOp {
+public abstract class BitWiseOp extends ArithmeticOp {
 
 	public BitWiseOp(String op_symbol) {
 		super(op_symbol);

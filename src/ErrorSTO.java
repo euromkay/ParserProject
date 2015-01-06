@@ -21,9 +21,7 @@ class ErrorSTO extends STO
 	}
 	
 	public STO newSTO(){
-		STO s = new ErrorSTO(new String(strName));
-		s.setAddress(new String(getAddress()));
-		return s;
+		return this;
 	}
 	
 	

@@ -2,8 +2,8 @@
 public abstract class Operator {
 
 	public static final String PLUS = "+";
-	public static final String SLASH = "/";
-	public static final String STAR = "*";
+	public static final String SLASH = "/";//divide
+	public static final String STAR = "*";//multiply
 	public static final String MINUS = "-";
 	public static final String OR = "||";
 	public static final String AND = "&&";
@@ -17,8 +17,8 @@ public abstract class Operator {
 	public static final String CARET = "^";
 	public static final String AMPERSAND = "&";
 	public static final String BAR = "|";
-	public static final String U_MINUS = ".-";
-	public static final String U_PLUS = ".+";
+	public static final String U_MINUS = ".-";//negate
+	public static final String U_PLUS = ".+";//doesnt do anything
 	public static final String PLUS_POST = "P+";
 	public static final String PLUS_PRE = "+P";
 	public static final String MINUS_PRE = "-P";
@@ -37,32 +37,7 @@ public abstract class Operator {
 	
 	public abstract STO checkOperands(STO a, STO b);
 
-	public static Operator newOp(String string) {
-		if(isEqual(string, PLUS, MINUS, SLASH, STAR))
-			return new ArithmeticOp(string);
-		
-		else if(isEqual(string, MOD, CARET, AMPERSAND, BAR))
-			return new BitWiseOp(string);
-
-		else if(isEqual(string, LT, GT, LTE, GTE))
-			return new ComparisonOp(string);
-		
-		else if(isEqual(string, EQ, NEQ))
-			return new RelationOp(string);
-		
-		else if(isEqual(string, OR, AND))
-			return new BooleanOp(string);
-		
-		else if(isEqual(string, U_PLUS, U_MINUS))
-			return new UnaryOp(string);
-		
-		else if(isEqual(string, PLUS_PRE, PLUS_POST, MINUS_PRE, MINUS_POST)) 
-			return new UnaryOp(string);
-		
-		throw new ParserException(string);
-		
-		
-	}
+	
 
 	public static boolean isEqual(String input, String ... list){
 		for(String possible: list){
@@ -92,5 +67,7 @@ public abstract class Operator {
 		else
 			return s.substring(0, 1) + "f" + s.substring(1);
 	}
+
+	public abstract void writeSparc(STO a, STO b, STO result, Address a1, Address a2, Address res, Boolean f_flag, MyParser p);
 	
 }

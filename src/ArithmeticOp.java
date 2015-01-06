@@ -1,7 +1,5 @@
 
-public class ArithmeticOp extends BinaryOp {
-	
-	private static final double ERR = -0.;
+public abstract class ArithmeticOp extends BinaryOp {
 
 	public ArithmeticOp(String op_symbol) {
 		super(op_symbol);
@@ -75,4 +73,6 @@ public class ArithmeticOp extends BinaryOp {
 		}
 		return result;
 	}
+	
+	
 }

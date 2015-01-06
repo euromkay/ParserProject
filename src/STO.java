@@ -188,7 +188,6 @@ abstract class STO
 			writer.minusOp(Template.FP, offset.toString(), a1, false);
 		}
 		
-		tempAdd.release();
 		
 		return a1;
 	}
@@ -242,9 +241,18 @@ abstract class STO
 	}
 
 	public void store(STO from, Writer writer) {
-		from.writeVal(Template.L7, writer);
-		writer.store(Template.L1, Template.L0);
+		Address from_a = writer.getAddressManager().getAddress();
+		Address to_a   = writer.getAddressManager().getAddress();
+		from.writeVal(from_a, writer);
+		
+		writer.store(from_a, to_a);
 	}
 
+	public void store(Address value_a, Writer writer) {
+		Address sto_a = writer.getAddressManager().getAddress();
+		
+		writeAddress(sto_a, writer);
+		writer.store(value_a, sto_a);
+	}
 	
 }

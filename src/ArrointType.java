@@ -9,7 +9,7 @@ public abstract class ArrointType extends CompositeType{
 		this.subType = subType;
 	}
 	
-	public Type getType(){
+	public Type getSubtype(){
 		return subType;
 	}
 

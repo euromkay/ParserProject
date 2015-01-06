@@ -3,17 +3,15 @@ public class ArrayType extends ArrointType {
 
 	public static final int NO_ARRAY = -1;
 	
-	private int length;
-	Type t;
+	private Integer length;
 	
 	public ArrayType(Type type, int size) {
 		super(type.getName() + "[" + size + "]", type, size*type.getSize());
 		length = size;
-		this.t = type;
 	}
 	
-	public Integer getLength(){
-		return length;		
+	public String getLength(){
+		return length.toString();		
 	}
 
 	public boolean isArrayType(){
@@ -27,11 +25,11 @@ public class ArrayType extends ArrointType {
 		ArrayType aT = (ArrayType) type;
 		if(aT.length != length)
 			return false;
-		return (this.t.isEquivalent(aT.t));
+		return (getSubtype().isEquivalent(aT.getSubtype()));
 	}
 
 	public Type newType() {
-		return new ArrayType(t.newType(), length); 
+		return new ArrayType(getSubtype(), length); 
 	}
 
 	public boolean isAssignable(Type type) {

@@ -1,43 +1,29 @@
 
-public class BooleanOp extends BinaryOp {
+public abstract class BooleanOp extends BinaryOp {
 
 	public BooleanOp(String op_symbol) {
 		super(op_symbol);
 	}
 
-	@Override
-	public STO checkOperands(STO a, STO b) {
-		Type aType = a.getType();
-		Type bType = b.getType();
+
+	public void writeSparc(STO a, STO b, STO result, Address a1, Address a2, Address res, Boolean f_flag, MyParser p) {
+		Writer writer = p.getWriter();
+		Address res_a = writer.getAddressManager().getAddress();
+		writer.cmp(a1, a2, f_flag);
 		
-		if(!(aType instanceof BoolType)){
-			return new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, aType.getName(), getName()));
-		}
-		if(!(bType instanceof BoolType)){
-			return new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, bType.getName(), getName()));
-		}
-		//trying to return a float type
-		else{
-			if(a instanceof ConstSTO && b instanceof ConstSTO){
-				boolean result = getResult((ConstSTO) a, (ConstSTO) b);
-				return new ConstSTO(a.getName() + b.getName(), new BoolType(), BoolType.dub(result));
-			}
-			return 
-				new ExprSTO(a.getName() + b.getName(), new BoolType());
-		}
-			
+		writer.write(getTemplate(f_flag), MyParser.BRANCH + p.literalCount);
+		writer.write(Template.NOP);
+		writer.newLine();
+		
+		writer.set("0", res_a);
+		writer.ba(MyParser.BRANCH + p.literalCount + ".DONE");
+		writer.newLine();
+		writer.label(MyParser.BRANCH + p.literalCount);
+		writer.set("1", res_a);
+		writer.label(MyParser.BRANCH + p.literalCount + ".DONE");
+		p.literalCount++;	
+
 		
 	}
 
-	private boolean  getResult(ConstSTO aa, ConstSTO bb){
-		String op = getName();
-		boolean result = false;
-		if(op.equals(OR)){
-			result = aa.getBoolValue() || bb.getBoolValue();
-		}
-		else if(op.equals(AND)){
-			result = aa.getBoolValue() && bb.getBoolValue();
-		}
-		return result;
-	}
 }

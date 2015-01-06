@@ -1,5 +1,5 @@
 
-public class UnaryOp extends Operator {
+public abstract class UnaryOp extends Operator {
 
 	public UnaryOp(String op_symbol) {
 		super(op_symbol);
