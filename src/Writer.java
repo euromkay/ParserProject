@@ -323,13 +323,16 @@ public class Writer {
 		
 	}
 
-	public void set(String a1, Address add2) {
-		String a2 = add2.toString();
-		if(a1.startsWith("%") && a2.startsWith("%")){ // means both registers. can't set from reg to reg
-			write(Template.MOV, a1, a2);
+	public void set(String a1, Address a2) {
+		if(a1.startsWith("%") && a2.isRegister()){ // means both registers. can't set from reg to reg
+			write(Template.MOV, a1, a2.toString());
 		}
 		else
-			write(Template.SET, a1, a2);
+			write(Template.SET, a1, a2.toString());
+	}
+	
+	public void set(Address a1, Address a2){
+		write(Template.MOV, a1.toString(), a2.toString());
 	}
 	
 	public void store(Address a1, Address a2){
@@ -400,12 +403,19 @@ public class Writer {
 			addOp(a1, a2, res);
 	}
 	
+	public void fminusOp(Address a1, Address a2, Address res){
+		write(Template.FSUB, a1.toString(), a2.toString(), res.toString());
+	}
 	
 	public void minusOp(Address a1, Address a2, Address res, Boolean f_flag) {
 		if(f_flag)
-			write(Template.FSUB, a1.toString(), a2.toString(), res.toString());
+			fminusOp(a1, a2, res);
 		else
-			write(Template.SUB, a1.toString(), a2.toString(), res.toString());		
+			minusOp(a1, a2, res);	
+	}
+	
+	public void minusOp(Address a1, Address a2, Address res) {
+		write(Template.SUB, a1.toString(), a2.toString(), res.toString());		
 	}
 	
 	public void multiOp(Address a1, Address a2, Address res, Boolean f_flag) {

@@ -650,12 +650,9 @@ class MyParser extends parser {
 		
 		int prev = m_nNumErrors;
 		
-		if (!(sto.getType() instanceof FunctionPointerType)) {
-		 	m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.not_function,
-					sto.getName()));
-			return new ErrorSTO(sto.getName());
-		}
+		if (!(sto.getType() instanceof FunctionPointerType)) 
+			return generateError(ErrorMsg.not_function, sto.getName());
+		
 
 		FunctionPointerType fsto = (FunctionPointerType) sto.getType();
 		
@@ -1538,11 +1535,11 @@ class MyParser extends parser {
 			
 			
 			writer.set(t.getSubtype().getSize().toString(), size_a);
-			s.writeVal(Template.L3, writer);
+			s.writeVal(sto_a, writer);
 			if(inc)
-				writer.addOp(Template.L2, Template.L3, a, false);
+				writer.addOp(sto_a, size_a, a);
 			else
-				writer.minusOp(Template.L3, Template.L2, a, false);
+				writer.minusOp(sto_a, size_a, a);
 			
 		}
 		
@@ -1551,8 +1548,9 @@ class MyParser extends parser {
 	public static final boolean OR_FLAG = true, AND_FLAG = false;
 	
 	public void WriteEqStmt_1(STO s, boolean flag){
-		s.writeAddress(Template.L0, writer);
-		writer.cmp(Template.L0, Template.G0);
+		Address a = am.getAddress();
+		writeAddress(s, a);
+		writer.cmp(a, Address.G0);
 		String str = ".eq" + literalCount++;
 		labelList.add(str);
 		if(flag == OR_FLAG)
@@ -1562,9 +1560,10 @@ class MyParser extends parser {
 	}
 	public static final String DONE = ".DONE";
 	public void WriteEqStmt_2(STO s, STO result, boolean flag){
+		Address a = am.getAddress();
 		writer.addSTO(result);
-		writer.ld(s.getAddress(), Template.L0);
-		writer.cmp(Template.L0, Template.G0);
+		writer.ld(s.getAddress(), a);
+		writer.cmp(a, Address.G0);
 		String str = labelList.pop(), result1, result2;
 		if(flag == OR_FLAG){
 			writer.bne(str);
@@ -1575,21 +1574,20 @@ class MyParser extends parser {
 			result1 = "1";
 			result2 = "0";
 		}
-		writer.set(result1, Template.L1);
+		writer.set(result1, a);
 		writer.ba(str+DONE);
 		writer.label(str);
-		writer.set(result2, Template.L1);
+		writer.set(result2, a);
 		writer.label(str+DONE);
-		writer.store(Template.L1, result.getAddress());
+		result.store(a, writer);
 	}
 	
 	
 	public void WriteSizeOf(STO s){
-		if(writer.isGlobal())
-			return;
-		writer.set(((ConstSTO) s).getIntValue().toString(), Template.L7);
+		Address a = am.getAddress();
+		writer.set(((ConstSTO) s).getIntValue().toString(), a);
 		writer.addSTO(s);
-		writer.store(Template.L7, s.getAddress());		
+		s.store(a, writer);
 	}
 	
 	public void WriteReturn(STO s){
@@ -1598,18 +1596,18 @@ class MyParser extends parser {
 		
 		if(s != null){
 			if(fT.isRef()){
-				s.writeAddress(Template.I0, writer);
+				writeAddress(s, Address.I0);
 			}
 			else{
 				if(isIntToFloat(currentFunc, s)){
-					s.writeVal(Template.F0, writer);
-					writer.fitos(Template.F0, Template.F0);
+					writeVal(s, Address.F0);
+					writer.fitos(Address.F0, Address.F0);
 				}else
-					s.writeVal(Template.I0, writer);
+					writeVal(s, Address.I0);
 			}
 		}
 		else
-			writer.set(Template.G0, Template.I0);
+			writer.set(Address.G0, Address.I0);
 		
 		writer.returnstmt();		
 	}
@@ -1628,31 +1626,36 @@ class MyParser extends parser {
 		
 		
 		for(int i = 0; i < args.size(); i++){
+			Address a = new Address(o+(i + structOffset));
 			STO e = args.get(i);
 			if(funcParams.get(i).isRef() || e.getType() instanceof ArrayType || e.getType() instanceof StructType){
-				e.writeAddress(o+(i + structOffset), writer);
+				writeAddress(e, a);
 			}
 			else{
-				if(args.get(i).getType() instanceof IntType && funcParams.get(i).getType() instanceof FloatType){
-					VarSTO temp = new VarSTO("", new IntType());
+				if(isIntToFloat(e, funcParams.get(i))){
+					VarSTO temp = new VarSTO("", new FloatType());
 					writer.addSTO(temp);
-					temp.writeAddress(Template.L0, writer);
-					e.writeVal(Template.F0, writer);
-					writer.fitos(Template.F0, Template.F0);
-					writer.store(Template.F0, Template.L0);
-					writer.ld(Template.L0, o+(i+structOffset));
 					
-				}else
-					e.writeVal(o+(i + structOffset), writer);
+					Address temp_a = am.getAddress();
+					
+					writeAddress(temp, temp_a);
+					writeVal(e, Address.F0);
+					writer.fitos(Address.F0, Address.F0);
+					writer.store(Address.F0, temp_a);
+					writer.ld(temp_a, a);
+					
+				}else{
+					writeVal(e, a);
+				}
 			}
 			i++;
 		}
 		
 		writer.call(func.getName());
 		if(!(func.getReturnType() instanceof VoidType))
-			writer.store(Template.O0, fsto.getAddress());
+			fsto.store(Address.O0, writer);
 	}
-	
+	/*
 	public void WriteFuncCall(VarSTO v, Vector<STO> params, STO fsto){
 		FuncSTO func = (FuncSTO) v.getInit();
 		STO structSTO = v.getInit2();
@@ -1663,7 +1666,7 @@ class MyParser extends parser {
 		int structOffset;
 		if(func.isMemberFunction()){
 			structOffset = 1;
-			structSTO.writeAddress(Template.O0, writer);
+			writeAddress(structSTO, Address.O0);
 		}else{
 			structOffset = 0;
 		}
@@ -1682,7 +1685,7 @@ class MyParser extends parser {
 		writer.call(func.getName());
 		if(!(func.getReturnType() instanceof VoidType))
 			writer.store(Template.O0, fsto.getAddress());
-	}
+	}*/
 	
 	public void WriteDoNotOp(STO a, STO s){
 		writer.addSTO(s);

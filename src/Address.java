@@ -8,6 +8,8 @@ public class Address implements Comparable<Address> {
 	
 	public static final Address F0 = new Address("%f0");
 	public static final Address F1 = new Address("%f1");
+
+	public static final Address I0 = new Address("%i0");
 	private String s;
 	private AddressManager am;
 	
@@ -40,6 +42,10 @@ public class Address implements Comparable<Address> {
 	}
 
 	public boolean isLocal() {
+		return s.startsWith("%l");
+	}
+
+	public boolean isRegister() {
 		return s.startsWith("%");
 	}
 }
