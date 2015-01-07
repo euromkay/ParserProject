@@ -9,10 +9,8 @@ class ErrorSTO extends STO
 	//----------------------------------------------------------------
 	public ErrorSTO(String strName)
 	{
-		super(strName);
-		this.strName = strName;
+		super(strName, new ErrorType());
 	}
-	String strName;
 
 	public Type getType(){
 		//throw new NullPointerException();

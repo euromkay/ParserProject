@@ -41,7 +41,7 @@ class ErrorMsg
     public static final String error0g_Scope  =
       "Identifier %S is undeclared in the global scope.";
 
-    // Check 1 //n
+    // Check 1 //
     public static final String error1n_Expr  =
       "Incompatible type %T to binary operator %O, numeric expected.";
 
@@ -125,8 +125,11 @@ class ErrorMsg
       "Arithmetic exception occurred during constant folding.";
 
     // Check 9 //
-    // No new messages for this check -- reuse appropriate messages from
-    // earlier checks.
+    public static final String error9_Decl  =
+      "Duplicate declaration of overloaded function %S.";
+
+    public static final String error9_Illegal  =
+      "Illegal call to overloaded function %S.";
 
     // Check 10 //
     public static final String error10i_Array =
@@ -175,8 +178,11 @@ class ErrorMsg
     public static final String error13a_Struct =
       "Field %S declared second time in struct.";
 
-    public static final String error13b_Struct =
-      "Size of field %S cannot be determined at compile time.";
+    public static final String error13b_Ctor =
+      "Name of constructor %S does not match name of struct %S.";
+
+    public static final String error13b_Dtor =
+      "Name of destructor %S does not match name of struct %S.";
 
     // Check 14 //
     public static final String error14t_StructExp =
@@ -187,7 +193,7 @@ class ErrorMsg
     public static final String error14f_StructExp =
       "Referenced field %S not found in type %T.";
 
-    public static final String error14b_StructExpThis =
+    public static final String error14c_StructExpThis =
       "Referenced field %S not found in current struct.";
 
     /////////////////////////////////////////////////////////////////
@@ -195,6 +201,10 @@ class ErrorMsg
     /////////////////////////////////////////////////////////////////
 
     // Check 15 //
+    // NOTE!  You don't need to use the formatter with this message
+    public static final String error15_Nullptr =
+      "Attempt to dereference nullptr keyword using *, ->, or [] operator.";
+
     public static final String error15_Receiver =
       "Incompatible type %T to unary dereference operator *, pointer expected.";
 
@@ -216,6 +226,9 @@ class ErrorMsg
     public static final String error16_Delete =
       "Type of delete's operand must be of pointer type, %T found.";
 
+    public static final String error16b_NonStructCtorCall =
+      "Operand to \"new\" with constructor call is not of pointer to struct type, %T found.";
+
     // Check 17 //
     public static final String error17_Expr =
       "Incompatible types to operator %O:\n"
@@ -224,8 +237,8 @@ class ErrorMsg
         + "  both must be of equivalent pointer type.";
 
     // Check 18 //
-    // No new messages for this check -- reuse appropriate messages from
-    // earlier checks.
+    public static final String error18_AddressOf =
+      "Non-addressable argument of type %T to address-of operator.";
 
     // Check 19 //
     // NOTE!  You don't need to use the formatter with this message
@@ -235,15 +248,4 @@ class ErrorMsg
     // Check 20 //
     public static final String error20_Cast = 
       "Invalid type cast. Type %T to type %T is not supported.";
-
-    // Check 21 //
-    public static final String error21_AddressOf =
-      "Non-addressable argument of type %T to address-of operator.";
-
-    // Check 22 - Extra Credit //
-    public static final String error22_Decl  =
-      "Duplicate declaration of overloaded function %S.";
-
-    public static final String error22_Illegal  =
-      "Illegal call to overloaded function %S.";
 }

@@ -1,3 +1,5 @@
+import java.math.BigDecimal;
+
 //---------------------------------------------------------------------
 //
 //---------------------------------------------------------------------
@@ -12,7 +14,7 @@ class ConstSTO extends STO
     //	type. Booleans/Ptrs can easily be handled by ints.
     //	Feel free to change this if you don't like it!
     //----------------------------------------------------------------
-    private Double		m_value;
+    private BigDecimal	m_value;
 	STO init, init2;
 	
 	public void setSTOInit(STO s){
@@ -49,15 +51,48 @@ class ConstSTO extends STO
 	}
 */
 
-	public ConstSTO(String strName, Type typ, Double dub)
+	public ConstSTO(String strName, Type typ, BigDecimal dub)
 	{
 		super(new String(strName), typ.newType());
-		m_value = dub.doubleValue();/*
+		m_value = dub;/*
 		if(init != null)
 			c.init = init.newSTO();
 		if(init2 != null)
 			c.init2 = ini2.newSTO();*/
 	}
+	
+	public ConstSTO(String strName)
+	{
+		super(strName);
+		m_value = null; // fix this
+		// You may want to change the isModifiable and isAddressable
+		// fields as necessary
+	}
+
+	public ConstSTO(String strName, Type typ)
+	{
+		super(strName, typ);
+		m_value = null; // fix this
+		// You may want to change the isModifiable and isAddressable
+		// fields as necessary
+	}
+
+	public ConstSTO(String strName, Type typ, int val)
+	{
+		super(strName, typ);
+		m_value = new BigDecimal(val);
+		// You may want to change the isModifiable and isAddressable
+		// fields as necessary
+	}
+
+	public ConstSTO(String strName, Type typ, double val)
+	{
+		super(strName, typ);
+		m_value = new BigDecimal(val);
+		// You may want to change the isModifiable and isAddressable
+		// fields as necessary
+	}
+	
 	/*
 	public ConstSTO(String strName, BoolType typ, boolean result) {
 		super(strName, typ);
@@ -80,7 +115,7 @@ class ConstSTO extends STO
 	//----------------------------------------------------------------
 	//
 	//----------------------------------------------------------------
-	public Double getValue() 
+	public BigDecimal getValue() 
 	{
 		return m_value;
 	}
@@ -104,7 +139,7 @@ class ConstSTO extends STO
 
 	public Boolean getBoolValue() 
 	{
-		return m_value.intValue() != 0;
+		return !BigDecimal.ZERO.equals(m_value);;
 	}
 
 

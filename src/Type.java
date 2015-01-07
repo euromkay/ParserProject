@@ -9,7 +9,6 @@ abstract class Type
 	// Name of the Type (e.g., int, bool, or some typedef
 	private String m_typeName;
 	private int m_size;
-	private Type parentType;//typedef
 	//----------------------------------------------------------------
 	//
 	//----------------------------------------------------------------
@@ -75,16 +74,11 @@ abstract class Type
 	}
 
 	public boolean isIntAssignable() {
-		Type t = this;
-		while(t.getParentType() != null)
-			t = t.getParentType();
-		
-		return t instanceof IntType;
+		//TODO
+		return this instanceof IntType;
 	}
 	
-	private Type getParentType() {
-		return parentType;
-	}
+	
 
 	public boolean isArrayType(){
 		return false;

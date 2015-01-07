@@ -731,7 +731,7 @@ class MyParser extends parser {
 			if(sto.getName().equals("this")){
 				STO thisSTO = symTab.isInStructScope(memberID);
 				if(thisSTO == null){
-					error = (Formatter.toString(ErrorMsg.error14b_StructExpThis, memberID));
+					error = (Formatter.toString(ErrorMsg.error14c_StructExpThis, memberID));
 					m_nNumErrors++;
 					m_errors.print(error);
 					return new ErrorSTO(error);
@@ -908,7 +908,7 @@ class MyParser extends parser {
 		String error = null;
 		if(!s.getIsAddressable()){
 			m_nNumErrors++;
-			error = Formatter.toString(ErrorMsg.error21_AddressOf, s.getType().getName());
+			error = Formatter.toString(ErrorMsg.error18_AddressOf, s.getType().getName());
 			m_errors.print(error);
 			return new ErrorSTO(error);
 		}
@@ -993,7 +993,7 @@ class MyParser extends parser {
 			if(!(s.getType() instanceof PointerType)){
 				if(s.getType().getName().equals(name)){
 					m_nNumErrors++;
-					m_errors.print(Formatter.toString(ErrorMsg.error13b_Struct, id));
+					m_errors.print(Formatter.toString(ErrorMsg.error13b_Ctor, id));
 				}
 			}
 			if(list.contains(id)){

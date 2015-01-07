@@ -18,4 +18,8 @@ public class IntType extends NumericType{
 	public Type newType() {
 		return new IntType();
 	}
+	
+	public boolean isInt(){
+		return true;
+	}
 }
