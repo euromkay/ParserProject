@@ -15,7 +15,7 @@ public class RValSTO extends STO {
 	Type t;
 	public STO newSTO() {
 		STO s = new RValSTO(new String(strName), t.newType());
-		s.setAddress(new String(getAddress()));
+		s.setAddress(getAddress());
 		return s;
 	}
 

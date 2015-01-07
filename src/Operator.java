@@ -69,5 +69,16 @@ public abstract class Operator {
 	}
 
 	public abstract void writeSparc(STO a, STO b, STO result, Address a1, Address a2, Address res, Boolean f_flag, MyParser p);
+
+	public static Operator newOp(String string) {
+		if(string.equals(Operator.PLUS_POST))
+			return new PlusPostOp();
+		if(string.equals(Operator.PLUS_PRE))
+			return new PlusPreOp();
+		if(string.equals(Operator.MINUS_POST))
+			return new MinusPreOp();
+		else
+			return new MinusPostOp();
+	}
 	
 }

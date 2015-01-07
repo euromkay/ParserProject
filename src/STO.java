@@ -148,6 +148,9 @@ abstract class STO
 	public void setAddress(Address a){
 		address = a;
 	}
+	public void setAddress(String s){
+		setAddress(new Address(s));
+	}
 	
 	public Address getAddress() {
 		if(address == null)
@@ -176,7 +179,7 @@ abstract class STO
 			VarSTO number = (VarSTO) ((VarSTO) this).getInit2();
 			array.writeAddress(a1, writer);
 			number.writeVal(tempAdd, writer);
-			for(int i = 0; i < ((ArrayType) array.getType()).t.getSize(); i++)
+			for(int i = 0; i < ((ArrayType) array.getType()).getSubtype().getSize(); i++)
 				writer.addOp(a1, tempAdd, a1, false);
 		/*}else if(getAddress().equals(DEFAULT)){
 			writeStructField(writer, a1);*/
@@ -185,15 +188,16 @@ abstract class STO
 		}else if(isParameter(writer.symTab.getFunc()) && this instanceof VarSTO && (((VarSTO) this).isRef())){
 			writer.set(address, a1);
 		}else{
-			writer.minusOp(Template.FP, offset.toString(), a1, false);
+			writer.set(offset.toString(), tempAdd);
+			writer.minusOp(Address.FP, tempAdd, a1);
 		}
 		
-		
+		tempAdd.release();
 		return a1;
 	}
 	
 	public String stringField = "";
-	private void writeStructField(Writer w, String result){
+	private void writeStructField(Writer w, Address result){
 		Vector<STO> v = w.symTab.m_stkScopes.get(1).getVector();
 		STO s = null;
 		
@@ -201,9 +205,13 @@ abstract class STO
 		for(int i = 1; i < v.size(); i++ ){
 			s = v.get(i);
 			if(s.getName().equals(getName())){
-				w.set(Template.I0, Template.L7);
-				w.set(size.toString(), Template.L6);
-				w.addOp(Template.L6, Template.L7, result, false);
+				Address a = w.getAddressManager().getAddress();
+				
+				w.set(size.toString(), a);
+				w.addOp(Address.I0, a, result, false);
+				
+				a.release();
+				
 				return;
 			}
 			else
@@ -225,13 +233,11 @@ abstract class STO
 	
 
 	public void writeVal(Address res, Writer writer) {
-		Address a = address;
-		if(!getAddress().startsWith("%")){
-			a = Template.L6;
-			writeAddress(a, writer);
-		}
+		Address a = writer.getAddressManager().getAddress();
+		writeAddress(a, writer);
 		writer.ld(a, res);
 		
+		a.release();
 	}
 
 
@@ -246,6 +252,9 @@ abstract class STO
 		from.writeVal(from_a, writer);
 		
 		writer.store(from_a, to_a);
+		
+		to_a.release();
+		from_a.release();
 	}
 
 	public void store(Address value_a, Writer writer) {
@@ -253,6 +262,8 @@ abstract class STO
 		
 		writeAddress(sto_a, writer);
 		writer.store(value_a, sto_a);
+		
+		sto_a.release();
 	}
 	
 }

@@ -5,11 +5,17 @@ public class Address implements Comparable<Address> {
 	
 	public static final Address O0 = new Address("%o0");
 	public static final Address O1 = new Address("%o1");
+	public static final Address O2 = new Address("%o2");
 	
 	public static final Address F0 = new Address("%f0");
 	public static final Address F1 = new Address("%f1");
+	public static final Address F2 = new Address("%f2");
 
 	public static final Address I0 = new Address("%i0");
+
+	public static final Address FP = new Address("%fp");
+
+
 	private String s;
 	private AddressManager am;
 	
@@ -22,14 +28,11 @@ public class Address implements Comparable<Address> {
 		this.s = s;
 		am = null;
 	}
+
 	
-	protected void finalize() throws Throwable{
-		release();
-		super.finalize();
-	}
-	
-	private void release(){
-		am.add(this);
+	public void release(){
+		if(am != null)
+			am.add(this);
 	}
 
 

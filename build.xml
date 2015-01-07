@@ -4,7 +4,7 @@
     <property name="src" location="${basedir}\src" />
     <property name="bin" location="${basedir}\bin" />
 	 <property name="lib" location="${basedir}\lib" />
-    <property name="javacup" location="${basedir}/java-cup-v11a.jar" />
+    <property name="javacup" location="${basedir}/lib/java-cup-v11a.jar" />
     <description>  Ant build file for CSE 131 Project  </description>
 
     <!-- Check that the rc.cup file has been updated before generating a new parser --> 

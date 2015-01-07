@@ -20,7 +20,7 @@ public class PointerType extends PointerGroupType {
 			if(t instanceof NullPointerType)
 				return true;
 			ArrointType pt = (ArrointType) t;
-			return getType().isEquivalent(pt.getType());
+			return getSubtype().isEquivalent(pt.getSubtype());
 		}
 		return false;
 	}
@@ -30,7 +30,7 @@ public class PointerType extends PointerGroupType {
 			if(type instanceof NullPointerType)
 				return true;
 			PointerType pt = (PointerType) type;
-			return getType().isEquivalent(pt.getType());
+			return getSubtype().isEquivalent(pt.getSubtype());
 		}
 		return false;
 	}
@@ -38,7 +38,7 @@ public class PointerType extends PointerGroupType {
 
 	
 	public Type newType() {
-		return new PointerType(getType().newType());
+		return new PointerType(getSubtype().newType());
 		
 	}
 

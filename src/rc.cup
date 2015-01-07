@@ -227,7 +227,10 @@ GlobalDecls ::= GlobalDecl:_1
 				{:
 					System.out.println(_1);
 				:}
-    |               GlobalDecls GlobalDecl
+    |           GlobalDecls GlobalDecl:_1
+    			{:
+    				System.out.println(_1);
+    			:}
     ;
 
 
@@ -868,11 +871,11 @@ ExprList ::=     Expr:_1
  
 UnarySign ::=   T_PLUS
 				{:
-					RESULT = Operator.newOp(Operator.U_PLUS);
+					RESULT = new PlusOp();
 				:}
 		|		T_MINUS
 				{:
-					RESULT = Operator.newOp(Operator.U_MINUS);
+					RESULT = new NegOp();
 				:}
 		;
 
@@ -895,7 +898,7 @@ Expr0 ::=       Expr0:_1
 				:}
 				T_OR Expr1:_3
                 {:
-                	RESULT = ((MyParser) parser).DoBinaryExpr (_1, Operator.newOp("||"), _3); // may cause errors in future?
+                	RESULT = ((MyParser) parser).DoBinaryExpr (_1, new RelationOp("||"), _3); 
                 	((MyParser) parser).WriteEqStmt_2(_3, RESULT, MyParser.OR_FLAG);
                 :}
     |           Expr1:_1
@@ -911,7 +914,7 @@ Expr1 ::=       Expr1:_1
 				:}
 				T_AND Expr2:_3
                 {:
-                	RESULT = ((MyParser) parser).DoBinaryExpr (_1, Operator.newOp("&&"), _3); // may cause errors in future?
+                	RESULT = ((MyParser) parser).DoBinaryExpr (_1, new RelationOp("&&"), _3); // may cause errors in future?
                 	((MyParser) parser).WriteEqStmt_2(_3, RESULT, MyParser.AND_FLAG);
                 :}
     |           Expr2:_1
@@ -923,7 +926,7 @@ Expr1 ::=       Expr1:_1
 
 Expr2 ::=        Expr2:_1 T_BAR Expr3:_3
                     {:
-                        RESULT = ((MyParser) parser).DoBinaryExpr (_1, Operator.newOp("|"), _3);
+                        RESULT = ((MyParser) parser).DoBinaryExpr (_1, new BarOp(), _3);
                     :}
     |               Expr3:_1
                     {:
@@ -934,7 +937,7 @@ Expr2 ::=        Expr2:_1 T_BAR Expr3:_3
 
 Expr3 ::=        Expr3:_1 T_CARET Expr4:_3
                     {:
-                        RESULT = ((MyParser) parser).DoBinaryExpr (_1, Operator.newOp("^"), _3);
+                        RESULT = ((MyParser) parser).DoBinaryExpr (_1, new CaretOp(), _3);
                     :}
     |               Expr4:_1
                     {:
@@ -945,7 +948,7 @@ Expr3 ::=        Expr3:_1 T_CARET Expr4:_3
 
 Expr4 ::=        Expr4:_1 T_AMPERSAND Expr5:_3
                     {:
-                        RESULT = ((MyParser) parser).DoBinaryExpr (_1, Operator.newOp("&"), _3);
+                        RESULT = ((MyParser) parser).DoBinaryExpr (_1, new AmpersandOp(), _3);
                     :}
     |               Expr5:_1
                     {:
@@ -1000,30 +1003,30 @@ Expr8 ::=        Expr8:_1 MulOp:_2 Designator:_3
 
 Equality ::=     T_EQU
    				 {:
-                 	RESULT = Operator.newOp("==");
+                 	RESULT = new EqualityOp(Operator.EQ);
                  :}
     |               T_NEQ
    				 {:
-                 	RESULT = Operator.newOp("!=");
+                 	RESULT = new EqualityOp(Operator.NEQ);
                  :}
     ;
 
 
 Relation ::=     T_LT
                  {:
-                 	RESULT = Operator.newOp("<");
+                 	RESULT = new EqualityOp(Operator.LT);
                  :}
     |            T_GT
                  {:
-                 	RESULT = Operator.newOp(">");
+                 	RESULT = new EqualityOp(Operator.GT);
                  :}
     |            T_LTE
                  {:
-                 	RESULT = Operator.newOp("<=");
+                 	RESULT = new EqualityOp(Operator.LTE);
                  :}
     |            T_GTE
                  {:
-                 	RESULT = Operator.newOp(">=");
+                 	RESULT = new EqualityOp(Operator.GTE);
                  :}
     ;
 
@@ -1041,15 +1044,15 @@ AddOp ::=       	T_PLUS
 
 MulOp ::=       	T_STAR
                     {:
-                        RESULT = Operator.newOp("*");
+                        RESULT = new MultiplyOp();
                     :}
     |               T_SLASH
                     {:
-                        RESULT = Operator.newOp("/");
+                        RESULT = new DivideOp();
                     :}
     |               T_MOD
                     {:
-                        RESULT = Operator.newOp("%");
+                        RESULT = new ModulusOp();
                     :}
     ;
 
@@ -1136,8 +1139,8 @@ Designator2 ::=     Designator2:_1 T_DOT T_ID:_3
                       RESULT = ((MyParser) parser).DoFuncCall (_1, _2);  
                       if(_1 instanceof FuncSTO)
                       ((MyParser) parser).WriteFuncCall((FuncSTO) _1, _2, RESULT);
-                      else
-                      ((MyParser) parser).WriteFuncCall((VarSTO) _1, _2, RESULT);
+                      //else
+                      //((MyParser) parser).WriteFuncCall((VarSTO) _1, _2, RESULT);
                     :}
     |               Designator3:_1
                     {:
@@ -1148,7 +1151,7 @@ Designator2 ::=     Designator2:_1 T_DOT T_ID:_3
 
 Designator3 ::=     T_LPAREN Expr:_2 T_RPAREN
                     {:
-                        RESULT = _2;
+                        RESULT = ((MyParser) parser).DoParens(_2);
                     :}
     |               T_INT_LITERAL:_1
                     {:

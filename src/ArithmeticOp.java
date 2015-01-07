@@ -10,40 +10,42 @@ public abstract class ArithmeticOp extends BinaryOp {
 		Type bType = b.getType();
 		
 		//Check STOs are NumericTypes, report appropriate errors
-		if(!(aType instanceof NumericType)){
+		if(!(aType instanceof NumericType))
 			return new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, aType.getName(), getName()));
-		}
-		else if(!(bType instanceof NumericType)){
+		
+		
+		else if(!(bType instanceof NumericType))
 			return new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, bType.getName(), getName()));
-		}
+		
+		
 		else {
 			//Returning IntType Result
 			if(aType instanceof IntType && bType instanceof IntType){
 				if(a instanceof ConstSTO && b instanceof ConstSTO){
 					try{
 						double result = getResult((ConstSTO) a, (ConstSTO) b);
-						return new ConstSTO(a.getName() + b.getName(), new IntType(), result);
+						return new ConstSTO(a.getName() + " " + getName() + " " + b.getName(), new IntType(), result);
 					}
 					catch (ArithmeticException e){
 						return new ErrorSTO(ErrorMsg.error8_Arithmetic);
 					}
 				}
 				else	//Resolve to ExprSTO
-					return new ExprSTO(a.getName() + b.getName(), new IntType());
+					return new ExprSTO(a.getName() + " " + getName() + " " + b.getName(), new IntType());
 			}
 			//Returning FloatType Result
 			else{
 				if(a instanceof ConstSTO && b instanceof ConstSTO){
 					try{
 						double result = getResult((ConstSTO) a, (ConstSTO) b);
-						return new ConstSTO(a.getName() + b.getName(), new FloatType(), result);
+						return new ConstSTO(a.getName() + " " + getName() + " " + b.getName(), new FloatType(), result);
 					}
 					catch (ArithmeticException e){
 						return new ErrorSTO(ErrorMsg.error8_Arithmetic);
 					}
 				}
 				else{	//Resolve to ExprSTO
-					return new ExprSTO(a.getName() + b.getName(), new FloatType());
+					return new ExprSTO(a.getName() + " " + getName() + " " + b.getName(), new FloatType());
 				}
 			}
 		}

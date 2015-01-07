@@ -1,5 +1,5 @@
 
-public abstract class RelationOp extends BinaryOp {
+public class RelationOp extends BooleanOp {
 
 	public RelationOp(String op_symbol) {
 		super(op_symbol);

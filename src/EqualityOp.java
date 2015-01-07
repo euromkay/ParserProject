@@ -1,5 +1,5 @@
 
-public abstract class EqualityOp extends BinaryOp{
+public class EqualityOp extends BooleanOp{
 
 	public EqualityOp(String op_symbol) {
 		super(op_symbol);

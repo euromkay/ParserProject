@@ -124,7 +124,7 @@ public class Writer {
     private static final String SEPARATOR = "\t";
     
     
-    private SymbolTable symTab;
+    SymbolTable symTab;
     private AddressManager am;
     
     public AddressManager getAddressManager(){
@@ -134,12 +134,14 @@ public class Writer {
     public Writer(SymbolTable m_symtab, AddressManager am){
     	this("rc.s");
     	symTab = m_symtab;
+		this.am = am;
     	writeUsefulAsciz();
     	
     	write(Template.DATA);
 		write(Template.ALIGN, "4");
 		write(Template.INT_VAR_DECL, GLOBAL_INIT, "0");
 		newLine();
+		
     }
     public static final String GLOBAL_INIT = ".globalInit";
     
@@ -187,6 +189,8 @@ public class Writer {
     }
     
     public void dispose() {
+    	if(am.size() != 8)
+    		System.err.println("not all returned");
         try {
             fileWriter.close();
         } catch (IOException e) {
@@ -264,7 +268,7 @@ public class Writer {
 				s.setAddress(s.getName());
 			}else{
 				globalVarSpace += s.getType().getSize();
-				s.setAddress("%fp-" + globalVarSpace);
+				s.setAddress("%fp-");
 				s.setOffset(globalVarSpace.toString());
 			}
 		}
@@ -492,10 +496,8 @@ public class Writer {
 		
 	}
 
-	public void neg(String a, String res) {
+	public void neg(Address a, Address res) {
 		negOp(a, res, false);
-		//set("0", Template.L4);
-		//andOp(Template.L4, res, res);
 		
 	}
 
@@ -503,14 +505,17 @@ public class Writer {
 		STO s = new VoidSTO();
 		addSTO(s);
 		if(!floawt){
-			write(Template.INC, a1);
+			write(Template.INC, a1.toString());
 			return;
 		}
-		set("1", Template.L3);
-		store(Template.L3, s.getAddress());
-		ld(s.getAddress(), Template.F22);
-		fitos(Template.F22, Template.F22);
-		addOp(a1, Template.F22, a1, floawt);
+		Address _1_a = am.getAddress();
+		set("1", _1_a);
+		store(_1_a, s.getAddress());
+		s.writeVal(Address.F2, this);
+		fitos(Address.F2, Address.F2);
+		addOp(a1, Address.F2, a1, floawt);
+		
+		_1_a.release();
 		
 	}
 	
@@ -518,16 +523,17 @@ public class Writer {
 		STO s = new VoidSTO();
 		addSTO(s);
 		if(!floawt){
-			write(Template.DEC, a1);
+			write(Template.DEC, a1.toString());
 			return;
 		}
-		Address _1 = am.getAddress();
-		set("1", _1);
-		store(_1, s.getAddress());
-		ld(s.getAddress(), Template.F22);
-		fitos(Template.F22, Template.F22);
-		minusOp(a1, Template.F22, a1, floawt);
+		Address _1_a = am.getAddress();
+		set("1", _1_a);
+		store(_1_a, s.getAddress());
+		s.writeVal(Address.F2, this);
+		fitos(Address.F2, Address.F2);
+		minusOp(a1, Address.F2, a1, floawt);
 		
+		_1_a.release();
 	}
 
 	public void fmov(String f31, String string) {
