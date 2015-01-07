@@ -1,9 +1,11 @@
+import java.math.BigDecimal;
+
 
 public class BoolType extends BasicType {
 
 	public static final String NAME = "bool";
-	public static final Double TRUE = 1.;
-	public static final Double FALSE = 0.;
+	public static final BigDecimal TRUE = BigDecimal.ONE;
+	public static final BigDecimal FALSE = BigDecimal.ZERO;;
 
 	public BoolType() {
 		super("bool", 4);
@@ -27,12 +29,12 @@ public class BoolType extends BasicType {
 		
 	}
 	
-	private static double reverse(STO s){
+	private static BigDecimal reverse(STO s){
 		ConstSTO sto = (ConstSTO) s;
-		if(sto.getValue() == TRUE)
-			return FALSE;
-		else
+		if(sto.getValue().equals(FALSE))
 			return TRUE;
+		else
+			return FALSE;
 	}
 
 
@@ -41,7 +43,7 @@ public class BoolType extends BasicType {
 	}
 
 
-	public static Double dub(boolean result) {
+	public static BigDecimal dub(boolean result) {
 		if(result)
 			return TRUE;
 		else

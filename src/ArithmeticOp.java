@@ -1,3 +1,5 @@
+import java.math.BigDecimal;
+
 
 public abstract class ArithmeticOp extends BinaryOp {
 
@@ -23,7 +25,7 @@ public abstract class ArithmeticOp extends BinaryOp {
 			if(aType instanceof IntType && bType instanceof IntType){
 				if(a instanceof ConstSTO && b instanceof ConstSTO){
 					try{
-						double result = getResult((ConstSTO) a, (ConstSTO) b);
+						BigDecimal result = getResult((ConstSTO) a, (ConstSTO) b);
 						return new ConstSTO(a.getName() + " " + getName() + " " + b.getName(), new IntType(), result);
 					}
 					catch (ArithmeticException e){
@@ -37,7 +39,7 @@ public abstract class ArithmeticOp extends BinaryOp {
 			else{
 				if(a instanceof ConstSTO && b instanceof ConstSTO){
 					try{
-						double result = getResult((ConstSTO) a, (ConstSTO) b);
+						BigDecimal result = getResult((ConstSTO) a, (ConstSTO) b);
 						return new ConstSTO(a.getName() + " " + getName() + " " + b.getName(), new FloatType(), result);
 					}
 					catch (ArithmeticException e){
@@ -51,27 +53,23 @@ public abstract class ArithmeticOp extends BinaryOp {
 		}
 	}
 		
-	private double getResult(ConstSTO aa, ConstSTO bb){
+	private BigDecimal getResult(ConstSTO aa, ConstSTO bb){
 		String op = getName();
-		double result;
+		BigDecimal result;
 		
 		if(op.equals(PLUS)){
-			result = aa.getValue() + bb.getValue();
-			//System.out.println("Plus" + " result: " + result + "\n");
+			result = aa.getValue().add(bb.getValue());
 		}
 		else if(op.equals(MINUS)){
-			result = aa.getValue() - bb.getValue();
-			//System.out.println("Minus" + " result: " + result + "\n");
+			result = aa.getValue().subtract(bb.getValue());
 		}
 		else if(op.equals(STAR)){
-			result = aa.getIntValue() * bb.getIntValue();
-			//System.out.println("Multiply" + " result: " + result + "\n");
+			result = aa.getValue().multiply(bb.getValue());
 		}
 		else {
-			if (bb.getValue() == 0 || bb.getValue() == 0.0)
+			if (bb.getValue().equals(BigDecimal.ZERO))
 				throw new ArithmeticException();
-			result = aa.getValue() / bb.getValue();
-			//System.out.println("Divide" + " result: " + result + "\n");
+			result = aa.getValue().divide(bb.getValue());
 		}
 		return result;
 	}

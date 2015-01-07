@@ -9,7 +9,7 @@ class SymbolTable
 	public int m_nLevel;
 	private Scope m_scopeGlobal;
 	private FuncSTO m_func = null;
-	private TypedefSTO currentStruct = null;
+	private StructdefSTO currentStruct = null;
     
 	//----------------------------------------------------------------
 	//
@@ -112,8 +112,8 @@ class SymbolTable
 	public FuncSTO getFunc() { return m_func; }
 	public void setFunc(FuncSTO sto) { m_func = sto; }
 	
-	public TypedefSTO getStruct() { return currentStruct; }
-	public void setStructSTO(TypedefSTO sto) { currentStruct = sto; }
+	public StructdefSTO getStruct() { return currentStruct; }
+	public void setStructSTO(StructdefSTO sto) { currentStruct = sto; }
 	
 	public STO isInStructScope(String id){
 		Scope structScope = m_stkScopes.get(1);

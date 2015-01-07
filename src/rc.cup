@@ -212,23 +212,47 @@ OptGlobalDecls ::=  GlobalDecls
     ;
 
 
-GlobalDecls ::=     GlobalDecl
-    |               GlobalDecls GlobalDecl
+GlobalDecls ::= GlobalDecl:_1
+				{:
+					System.out.println(_1);
+				:}
+    |           GlobalDecls GlobalDecl:_1
+    			{:
+    				System.out.println(_1);
+    			:}
     ;
 
 
-GlobalDecl ::=      ExternDecl
-    |               VarDecl
-    |               ConstDecl
-    |               StructdefDecl
-    |               FuncDecl
-    |               FuncDef
+GlobalDecl ::=  ExternDecl:_1
+				{:
+					RESULT = _1;
+				:}
+    |           VarDecl:_1
+				{:
+					RESULT = _1;
+				:}
+    |           ConstDecl:_1
+				{:
+					RESULT = _1;
+				:}
+    |           StructdefDecl:_1
+				{:
+					RESULT = _1;
+				:}
+    |           FuncDecl:_1
+				{:
+					RESULT = _1;
+				:}
+    |           FuncDef:_1
+				{:
+					RESULT = _1.getName();
+				:}
     ;
 
 
 ExternDecl ::=      T_EXTERN DecoratedBasicType:_2 T_ID:_3 OptArrayList:_4
                     {:
-                        ((MyParser) parser).DoExternDecl (_3);
+                        ((MyParser) parser).DoExternDecl (_2, _3, _4);
                     :}
                     T_SEMI
     ;

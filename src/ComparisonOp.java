@@ -31,16 +31,16 @@ public class ComparisonOp extends BooleanOp {
 		boolean result;
 		
 		if(op.equals(LT)){
-			result = aa.getValue() < bb.getValue();
+			result = aa.getValue().compareTo(bb.getValue()) < 0;
 		}
 		else if(op.equals(LTE)){
-			result = aa.getValue() <= bb.getValue();
+			result = aa.getValue().compareTo(bb.getValue()) <= 0;
 		}
 		else if(op.equals(GT)){
-			result = aa.getValue() > bb.getValue();
+			result = aa.getValue().compareTo(bb.getValue()) >= 0;
 		}
 		else {
-			result = aa.getValue() >= bb.getValue();
+			result = aa.getValue().compareTo(bb.getValue()) >= 0;
 		}
 		return result;
 	}

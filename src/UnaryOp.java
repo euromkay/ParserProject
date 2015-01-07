@@ -31,7 +31,7 @@ public abstract class UnaryOp extends Operator {
 				if(a instanceof ConstSTO){
 					ConstSTO cSTO = (ConstSTO) a;
 					if(getName().equals(U_MINUS)){
-						return new ConstSTO(a.getName(), a.getType(), cSTO.getValue() * -1);
+						return new ConstSTO(a.getName(), a.getType(), cSTO.getValue().negate());
 					}
 				}
 				return new ExprSTO(getName() + a.getName(), a.getType());

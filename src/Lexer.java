@@ -291,7 +291,7 @@ class Lexer
             {
               ungetChar (c);
               token = new Token (sym.T_INT_LITERAL,
-            		  baseConversion(buffer, 16));
+                  new String (buffer));
             }
             break;
 
@@ -306,7 +306,7 @@ class Lexer
             {
               ungetChar (c);
               token = new Token (sym.T_INT_LITERAL,
-            		  baseConversion(buffer, 8));
+                  new String (buffer));
             }
             break;
 
@@ -439,17 +439,6 @@ class Lexer
     return (token);
 	}
 
-	private String baseConversion(StringBuffer b, int radix) {
-		String buffer;
-		if(radix == 16)
-			buffer = b.substring(2);
-		else
-			buffer = b.toString();
-		Integer j = Integer.parseInt(buffer.toString(), radix);	
-		/*Debug statement for HEX or OCTAL conversion
-		System.out.println("PHASE 0.3 - LEXER.JAVA - baseConversion(), Your octal/hex value is: - " + j.intValue());*/
-		return j.toString();
-	}
 
 	//----------------------------------------------------------------
 	//

@@ -135,7 +135,7 @@ abstract class STO
 	public boolean isConst()   { return false; }
 	public boolean isExpr()    { return false; }
 	public boolean isFunc()    { return false; }
-	public boolean isTypedef() { return false; }
+	public boolean isStructdef() { return false; }
 	public boolean isError()   { return false; }
 	
 	

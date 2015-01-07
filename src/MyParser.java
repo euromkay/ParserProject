@@ -1,3 +1,4 @@
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.Vector;
@@ -365,7 +366,7 @@ class MyParser extends parser {
 				m_errors.print(Formatter.toString(ErrorMsg.redeclared_id, id));
 			}
 
-			TypedefSTO sto = new TypedefSTO(id, type.newType());
+			StructdefSTO sto = new StructdefSTO(id, type.newType());
 			symTab.insert(sto);
 		}
 	}
@@ -379,7 +380,7 @@ class MyParser extends parser {
 			m_errors.print(Formatter.toString(ErrorMsg.redeclared_id, id));
 		}
 	
-		TypedefSTO sto = new TypedefSTO(id, new StructType(id)); 
+		StructdefSTO sto = new StructdefSTO(id, new StructType(id)); 
 		symTab.setStructSTO(sto);
 		symTab.insert(sto);
 	}
@@ -397,7 +398,7 @@ class MyParser extends parser {
 			offset += field.getType().getSize();
 		}
 		
-		TypedefSTO sto = (TypedefSTO) symTab.access(id);
+		StructdefSTO sto = (StructdefSTO) symTab.access(id);
 		((StructType) sto.getType()).setFields(fields, offset);
 		symTab.setFunc(null);
 	}
@@ -416,7 +417,7 @@ class MyParser extends parser {
 			m_errors.print(Formatter.toString(ErrorMsg.error10i_Array, s.getType().getName()));
 			return new ErrorSTO(ErrorMsg.error10i_Array);
 		}	
-		if(((ConstSTO)s).getValue() < 1){
+		if(((ConstSTO)s).getValue().compareTo(BigDecimal.ONE) < 0){
 			m_nNumErrors++;
 			m_errors.print(Formatter.toString(ErrorMsg.error10z_Array, ((ConstSTO)s).getIntValue()));
 			return new ErrorSTO(ErrorMsg.error10z_Array);
@@ -828,7 +829,7 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	STO DoQualIdent(String strID) {
+	STO DoStructType_ID(String strID) {
 		STO sto;
 
 		if ((sto = symTab.access(strID)) == null) {
@@ -837,7 +838,7 @@ class MyParser extends parser {
 			return new ErrorSTO(strID);
 		}
 
-		if (!sto.isTypedef()) {
+		if (!sto.isStructdef()) {
 			m_nNumErrors++;
 			m_errors.print(Formatter.toString(ErrorMsg.not_type, sto.getName()));
 			return new ErrorSTO(sto.getName());
@@ -845,6 +846,8 @@ class MyParser extends parser {
 		
 		return sto;
 	}
+	
+	
 
 	public void DoExprBoolCheck(STO a) {
 		if(a instanceof ErrorSTO)

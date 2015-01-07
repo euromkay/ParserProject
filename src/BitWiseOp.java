@@ -1,3 +1,5 @@
+import java.math.BigDecimal;
+
 public abstract class BitWiseOp extends ArithmeticOp {
 
 	public BitWiseOp(String op_symbol) {
@@ -19,7 +21,7 @@ public abstract class BitWiseOp extends ArithmeticOp {
 			//Returning IntType Result
 			if(aType instanceof IntType && bType instanceof IntType){
 				if(a instanceof ConstSTO && b instanceof ConstSTO){
-					double result = getResult((ConstSTO) a,  (ConstSTO) b);
+					BigDecimal result = getResult((ConstSTO) a,  (ConstSTO) b);
 					return new ConstSTO(a.getName() + b.getName(), new IntType(), result);	//Result should be intType
 				}
 			}
@@ -30,21 +32,21 @@ public abstract class BitWiseOp extends ArithmeticOp {
 
 	
 	
-	private int getResult(ConstSTO aa, ConstSTO bb){
+	private BigDecimal getResult(ConstSTO aa, ConstSTO bb){
 		String op = getName();
-		int result;
+		BigDecimal result;
 		
 		if(op.equals(MOD)){
-			result = (int) ((aa.getValue()) % (bb.getValue()));
+			result = aa.getValue().remainder(bb.getValue());
 		}
-		else if(op.equals(CARET)){		
-			result = ((aa.getIntValue()) ^ (bb.getIntValue()));
+		else if(op.equals(CARET)){	
+			result = new BigDecimal(aa.getValue().intValue() ^ bb.getIntValue());
 		}
 		else if(op.equals(AMPERSAND)){
-			result = ((aa.getIntValue()) & (bb.getIntValue()));
+			result = new BigDecimal(aa.getValue().intValue() & bb.getIntValue());
 		}
 		else {
-			result = ((aa.getIntValue()) | (bb.getIntValue()));
+			result = new BigDecimal(aa.getValue().intValue() | bb.getIntValue());
 		}
 		return result;
 	}

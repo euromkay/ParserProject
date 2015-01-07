@@ -139,7 +139,7 @@ class ConstSTO extends STO
 
 	public Boolean getBoolValue() 
 	{
-		return !BigDecimal.ZERO.equals(m_value);;
+		return !BigDecimal.ZERO.equals(m_value);
 	}
 
 
