@@ -148,14 +148,11 @@ non terminal
     WritePairList,
     WritePair,
     
-    ConstExpr,
     ExprList,
     UnarySign,
     Equality,
     Relation,
     
-    OptCtorCall,
-    CtorCall,
     Pointer
     ;
 
@@ -194,6 +191,8 @@ non terminal STO
     Designator2,
     Designator3,
         
+    ConstExpr,
+    
     OptInit
     ;
 
@@ -209,6 +208,9 @@ non terminal Type
 non terminal Vector
     OptArrayList,
     ArrayList,
+    
+    OptCtorCall,
+    CtorCall,
     
     OptParamList,
     ParamList
@@ -287,15 +289,17 @@ VarDecl ::=         OptStatic:_1 DecoratedType:_2 T_ID:_3 OptArrayList:_4 OptIni
                     T_SEMI
     |               OptStatic:_1 StructType:_2 T_ID:_3 OptArrayList:_4 OptCtorCall:_5
                     {:
-                        ((MyParser) parser).DoVarDecl (_3);
+                        RESULT = ((MyParser) parser).DoVarDecl (_1, _2, _3, _4, _5);
+                        ((MyParser) parser).WriteVarDecl(RESULT);
                     :}
                     T_SEMI
     ;
 
 
-ConstDecl ::=       OptStatic:_1 T_CONST BasicType:_2 T_ID:_3 T_ASSIGN ConstExpr:_5
+ConstDecl ::=       OptStatic:_1 T_CONST BasicType:_2 T_ID:_3 T_ASSIGN ConstExpr:_4
                     {:
-                        ((MyParser) parser).DoConstDecl (_3);
+                        RESULT = ((MyParser) parser).DoConstDecl (_1, _2, _3, _4);
+                        ((MyParser) parser).WriteVarDecl(RESULT);
                     :}
                     T_SEMI
     ;
@@ -608,12 +612,18 @@ OptInit ::=         T_ASSIGN Expr:_1
     ;
 
 
-OptCtorCall ::=     CtorCall
+OptCtorCall ::=     CtorCall:_1
+					{:
+						RESULT = _1;
+					:}
     |               /* empty */
     ;
 
 
-CtorCall ::=        T_COLON T_LPAREN OptExprList T_RPAREN
+CtorCall ::=        T_COLON T_LPAREN OptExprList:_1 T_RPAREN
+					{:
+						RESULT = _1;
+					:}
     ;
 
 

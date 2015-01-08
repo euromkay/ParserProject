@@ -50,17 +50,18 @@ class ConstSTO extends STO
                 // fields as necessary
 	}
 */
+	
 
 	public ConstSTO(String strName, Type typ, BigDecimal dub)
 	{
-		super(new String(strName), typ.newType());
+		this(strName, typ);
 		m_value = dub;/*
 		if(init != null)
 			c.init = init.newSTO();
 		if(init2 != null)
 			c.init2 = ini2.newSTO();*/
 	}
-	
+	/*
 	public ConstSTO(String strName)
 	{
 		super(strName);
@@ -68,19 +69,18 @@ class ConstSTO extends STO
 		// You may want to change the isModifiable and isAddressable
 		// fields as necessary
 	}
-
-	public ConstSTO(String strName, Type typ)
+	*/
+	private ConstSTO(String strName, Type typ)
 	{
 		super(strName, typ);
-		m_value = null; // fix this
-		// You may want to change the isModifiable and isAddressable
-		// fields as necessary
+		setIsAddressable(true);
+		setIsModifiable(false);
 	}
 
 
 	public ConstSTO(String strName, Type typ, String val)
 	{
-		super(strName, typ);
+		this(strName, typ);
 		m_value = new BigDecimal(val);
 		// You may want to change the isModifiable and isAddressable
 		// fields as necessary

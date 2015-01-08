@@ -177,6 +177,26 @@ class MyParser extends parser {
 		return v;
 	}
 	
+	STO DoVarDecl(boolean statik, Type t, String name, Vector<STO> arraySTOs, Vector<STO> ctrs) {
+		STO error = hasError(arraySTOs);
+		if(error != null)
+			return error;
+		
+		t = Type.mergeType(t, arraySTOs);
+		if (symTab.accessLocal(name) != null) 
+			return generateError(ErrorMsg.redeclared_id, name);
+		
+		VarSTO v = new VarSTO(name, t);
+		v.setCtrs(ctrs);
+		if(statik)
+			v.setStatic();
+		if(t.isArrayType())
+			v.setIsModifiable(false);
+		symTab.insert(v);
+			
+		return v;
+	}
+	
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
@@ -315,43 +335,28 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	ArrayList<STO> DoConstDecl(Type t, InfoBlock lstIDs, boolean statik) {
-		ArrayList<STO> params = new ArrayList<STO>();
-		for (int i = 0; i < lstIDs.getList().size(); i++) {
-			STO s = lstIDs.getList().get(i).init;
-			if(s instanceof ErrorSTO)
-				continue;
-			String id = lstIDs.getList().get(i).name;
-			
-			
-			if (symTab.accessLocal(id) != null) {
-				m_nNumErrors++;
-				m_errors.print(Formatter.toString(ErrorMsg.redeclared_id, id));
-			}
+	STO DoConstDecl(boolean statik, Type t, String name, STO init) {
+		if(init.isError())
+			return init;
 
-			if(!t.isAssignable(s.getType())){
-				m_nNumErrors++;
-				m_errors.print(Formatter.toString(ErrorMsg.error8_Assign, s.getType().getName(), t.getName() ));
-			}
-			
-			
-			//Checking for ConstExpr
-			if(s instanceof ConstSTO){
-				VarSTO v = new VarSTO(id, t);
-				v.setIsAddressable(true);
-				v.setInit(s);
-				symTab.insert(v);
-				if(statik)
-					v.setStatic();
-				params.add(v);
-			}
-			else{
-				m_nNumErrors++;
-				m_errors.print(Formatter.toString(ErrorMsg.error8_CompileTime, id));
-			}
-		}
+		if (symTab.accessLocal(name) != null) 
+			return generateError(ErrorMsg.redeclared_id, name);
+
+		if(!t.isAssignable(init.getType()))
+			generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
 		
-		return params;
+		if(!init.isConst())
+			generateError(ErrorMsg.error8_CompileTime, name);
+		
+		ConstSTO c = new ConstSTO(name, t, ((ConstSTO) init).getValue());
+		c.setIsAddressable(true);
+		c.setSTOInit(init);
+		if(statik)
+			c.setStatic();
+		
+		symTab.insert(c);
+		
+		return c;
 	}
 
 	// ----------------------------------------------------------------
@@ -1078,8 +1083,11 @@ class MyParser extends parser {
 	
 	/************************ START ASSEMBLY WRITING *************************/
 
-	public String WriteVarDecl(ArrayList<STO> stos){
+	public void WriteVarDecl(STO s){
 		String params = "";
+		
+		if(s.isError())
+			return;
 		
 		for(STO e : stos){
 			if(e instanceof ErrorSTO)
