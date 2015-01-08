@@ -77,15 +77,8 @@ class ConstSTO extends STO
 		// fields as necessary
 	}
 
-	public ConstSTO(String strName, Type typ, int val)
-	{
-		super(strName, typ);
-		m_value = new BigDecimal(val);
-		// You may want to change the isModifiable and isAddressable
-		// fields as necessary
-	}
 
-	public ConstSTO(String strName, Type typ, double val)
+	public ConstSTO(String strName, Type typ, String val)
 	{
 		super(strName, typ);
 		m_value = new BigDecimal(val);
@@ -93,11 +86,7 @@ class ConstSTO extends STO
 		// fields as necessary
 	}
 	
-	/*
-	public ConstSTO(String strName, BoolType typ, boolean result) {
-		super(strName, typ);
-		m_value = 0.;
-	}	*/
+
 
 	//----------------------------------------------------------------
 	//

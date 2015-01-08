@@ -54,4 +54,11 @@ public class BoolType extends BasicType {
 		return new BoolType();
 	}
 	
+	public static String toNum(String s){
+		if(s.equals("false"))
+			return "0";
+		else
+			return "1";
+	}
+	
 }

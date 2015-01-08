@@ -150,41 +150,31 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	ArrayList<STO> DoVarDecl(InfoBlock lstIDs, Type t, boolean statik) {
-		ArrayList<STO> stos = new ArrayList<STO>();
-		Type tOriginal = t;
-		ArrayList<InfoBlock.Triplet> list = lstIDs.getList();
-		for (int i = 0; i < list.size(); i++) {
-			InfoBlock.Triplet trip = list.get(i);
-			t = TransformType(trip.arraySize, trip.pointer, t);
-			
-			STO right = trip.init; //this is the initializing type of the sto
-			String id = trip.name;
-			
-			if (symTab.accessLocal(id) != null) {
-				m_nNumErrors++;
-				m_errors.print(Formatter.toString(ErrorMsg.redeclared_id, id));
+	STO DoVarDecl(boolean statik, Type t, String name, Vector<STO> arraySTOs, STO init) {
+		STO error = hasError(arraySTOs);
+		if(error != null)
+			return error;
+		
+		t = Type.mergeType(t, arraySTOs);
+		
+		if (symTab.accessLocal(name) != null) 
+			return generateError(ErrorMsg.redeclared_id, name);
+		if(init != null){
+			if(!t.isAssignable(init.getType())){
+				generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
 			}
-			
-			if(right != null)
-				if(!t.isAssignable(right.getType())){
-					generateError(ErrorMsg.error8_Assign, right.getType().getName(), t.getName());
-				}
-			
-			VarSTO left = new VarSTO(id, t); // Set the type of the STO
-			if(statik)
-				left.setStatic();
-			if(right != null)
-				left.setInit(right);
-			if(t instanceof ArrayType)
-				left.setIsModifiable(false);
-			symTab.insert(left);
-			
-			stos.add(left);
-			t = tOriginal;
 		}
 		
-		return stos;
+		
+		VarSTO v = new VarSTO(name, t);
+		v.setInit(init);
+		if(statik)
+			v.setStatic();
+		if(t.isArrayType())
+			v.setIsModifiable(false);
+		symTab.insert(v);
+		
+		return v;
 	}
 	
 	// ----------------------------------------------------------------
@@ -231,21 +221,31 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	void DoExternDecl(Type t, InfoBlock lstIDs) {
-		for (int i = 0; i < lstIDs.getList().size(); i++) {
-			String id = lstIDs.getList().get(i).name;
-
-			if (symTab.accessLocal(id) != null) {
-				m_nNumErrors++;
-				m_errors.print(Formatter.toString(ErrorMsg.redeclared_id, id));
-			}
-			//Maybe t should be VoidType
-			VarSTO sto = new VarSTO(id, t);
-			symTab.insert(sto);
-			sto.setAddress(new Address(id));
+	void DoExternDecl(Type input_t, String name, Vector<STO> arraySTOs) {
+		if(hasError(arraySTOs) != null)
+			return;
+		
+		Type t = Type.mergeType(input_t, arraySTOs);
+		VarSTO sto = new VarSTO(name, t);
+		symTab.insert(sto);
+		sto.setAddress(new Address(name));
+		
+		
+		String arrayExpr = "";
+		for(STO s: arraySTOs){
+			arrayExpr += s.getName();
 		}
+		writer.comment("extern " + input_t.toString() + name + arrayExpr);
 	}
 
+	private STO hasError(Vector<STO> list){
+		for(STO s: list){
+			if(s.isError())
+				return s;
+		}
+		return null;
+	}
+	
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
@@ -561,11 +561,11 @@ class MyParser extends parser {
 			return new ErrorSTO(ErrorMsg.error19_Sizeof);
 		}
 		
-		return new ConstSTO("size of " + sto.getName(), new IntType(), Double.valueOf(sto.getType().getSize()));
+		return new ConstSTO("size of " + sto.getName(), new IntType(), sto.getType().getSize().toString());
 	}
 	
 	STO DoSizeOf(Type t){
-		return new ConstSTO("size of " + t.getName(), new IntType(), Double.valueOf(t.getSize()));
+		return new ConstSTO("size of " + t.getName(), new IntType(), t.getSize().toString());
 	}
 	
 	// ----------------------------------------------------------------
@@ -591,8 +591,7 @@ class MyParser extends parser {
 			else if(!(t instanceof FloatType)){
 				String val = csto.getValue().toString();
 				int i = val.indexOf(".");
-				Double d = Double.parseDouble(val.substring(0, i));
-				return new ConstSTO(s.getName(), t, d);
+				return new ConstSTO(s.getName(), t, val.substring(0, i));
 			}
 			return new ConstSTO(s.getName(), t, ((ConstSTO) s).getValue());
 		}
@@ -1789,7 +1788,7 @@ class MyParser extends parser {
 		String label = "." + s + literalCount++;
 		whileForList.add(label);
 		
-		ConstSTO c = new ConstSTO(whileForList.peek()+".counter", new IntType(), 0.0);
+		ExprSTO c = new ExprSTO(whileForList.peek()+".counter", new IntType());
 		symTab.insert(c);
 		writer.addSTO(c);
 		writer.set("0", a);

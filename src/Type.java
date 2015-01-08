@@ -1,3 +1,5 @@
+import java.util.Vector;
+
 //---------------------------------------------------------------------
 // This is the top of the Type hierarchy. You most likely will need to
 // create sub-classes (since this one is abstract) that handle specific
@@ -89,4 +91,25 @@ abstract class Type
 	}
 
 	public abstract Type newType();
+
+	public static Type mergeType(Type t, int pointerSize, Vector<STO> arraySTOs) {
+		t = mergeType(t, pointerSize);
+		t = mergeType(t, arraySTOs);
+		return t;
+	}
+	
+	public static Type mergeType(Type t, Vector<STO> arraySTOs) {
+
+   	 	for(STO c: arraySTOs){
+   	 		t = new ArrayType(t, ((ConstSTO) c).getIntValue());
+   	 	}
+   	 	return t;
+	}
+	
+	public static Type mergeType(Type t, int pointerSize) {
+		for(int i = 0; i < pointerSize; i++){
+   	 		t = new PointerType(t);
+   	 	}
+   	 	return t;
+	}
 }
