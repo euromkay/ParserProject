@@ -1,0 +1,7 @@
+int * x, y;
+
+function : void main(){
+	y = 4;
+	x = &y;
+	cout << 4;
+}
