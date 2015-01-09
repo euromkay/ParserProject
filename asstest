@@ -1,4 +1,9 @@
-int * x, y;
+structdef MYS{
+	int y;
+	MYS(int x){
+		
+	}
+};
 
 function : void main(){
 	y = 4;

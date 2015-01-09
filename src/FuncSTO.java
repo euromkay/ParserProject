@@ -88,6 +88,15 @@ class FuncSTO extends STO
 		isFuncMember = true;
 	}
 
+	public static String getName(String name, Vector<STO> params) {
+		String s = name;
+		for(STO p: params){
+			name += "_" + p.getType().getName();
+		}
+		
+		return s;
+	}
+
 	
 	
 }

@@ -161,7 +161,7 @@ class MyParser extends parser {
 			return generateError(ErrorMsg.redeclared_id, name);
 		if(init != null){
 			if(!t.isAssignable(init.getType())){
-				generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
+				return generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
 			}
 		}
 		
@@ -507,11 +507,13 @@ class MyParser extends parser {
 		return s;
 	}
 
-
+	FuncSTO DoFuncDecl_1(String id) {
+		return DoFuncDecl_1(symTab.getStruct().getType(), false, id);
+	}
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	FuncSTO DoFuncDecl_1(String id, Type t) {
+	FuncSTO DoFuncDecl_1(Type t, boolean ref, String id) {
 		if (symTab.accessLocal(id) != null) {
 			m_nNumErrors++;
 			m_errors.print(Formatter.toString(ErrorMsg.redeclared_id, id));
@@ -526,13 +528,27 @@ class MyParser extends parser {
 		
 		return sto;
 	}
-
+	
+	void DoFormalParams(Vector<VarSTO> params) {
+		FuncSTO func = symTab.getFunc();
+		if (func == null) {
+			m_nNumErrors++;
+			m_errors.print("internal: DoFormalParams says no proc!");
+		}
+		for(VarSTO v: params){
+			symTab.insert(v);
+		}
+		func.setParameters(params);
+	}
 	// ----------------------------------------------------------------
 	// PHASE1.6B //Makesure statements in skeleton code have nonvoid or non null EXprSTO 
 	// v is the statement list
 	// ----------------------------------------------------------------
-	STO DoFuncDecl_2(Type funType, Vector<String> statements) {
-		STO s = null;
+	STO DoFuncDecl_2(Vector<String> statements){
+		return DoFuncDecl_2(false, new VoidType(), statements);
+	}
+	STO DoFuncDecl_2(boolean extern, Type funType, Vector<String> statements) {
+		
 		
 		int rets = 0;//return statements
 		//retExpr is each statement that might be a return (type);
@@ -540,13 +556,12 @@ class MyParser extends parser {
 			if(retExpr.startsWith("return")){
 				rets ++;
 			}
-			
 		}
 		if(rets == 0 && !(funType instanceof VoidType)){
-			m_nNumErrors++;
-			m_errors.print(ErrorMsg.error6a_Return_expr);
-			s = new ErrorSTO(ErrorMsg.error6a_Return_expr);
+			if(!extern)
+				return generateError(ErrorMsg.error6a_Return_expr);
 		}
+		STO s = null;
 		if(!(s instanceof ErrorSTO))
 			s = symTab.getFunc();
 		symTab.closeScope();
@@ -603,17 +618,7 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	void DoFormalParams(Vector<VarSTO> params) {
-		FuncSTO func = symTab.getFunc();
-		if (func == null) {
-			m_nNumErrors++;
-			m_errors.print("internal: DoFormalParams says no proc!");
-		}
-		for(VarSTO v: params){
-			symTab.insert(v);
-		}
-		func.setParameters(params);
-	}
+	
 
 	// ----------------------------------------------------------------
 	//
@@ -909,22 +914,17 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	STO DoStructType_ID(String strID) {
+	Type DoStructType_ID(String strID) {
 		STO sto;
 
-		if ((sto = symTab.access(strID)) == null) {
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.undeclared_id, strID));
-			return new ErrorSTO(strID);
-		}
-
-		if (!sto.isStructdef()) {
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.not_type, sto.getName()));
-			return new ErrorSTO(sto.getName());
-		}
+		if ((sto = symTab.access(strID)) == null)
+			return generateError(ErrorMsg.undeclared_id, strID).getType();
 		
-		return sto;
+
+		if (!sto.isStructdef()) 
+			return generateError(ErrorMsg.not_type, sto.getName()).getType();
+	
+		return sto.getType();
 	}
 	
 	
@@ -1132,7 +1132,8 @@ class MyParser extends parser {
 	
 	/************************ START ASSEMBLY WRITING *************************/
 
-	public void WriteVarDeclComment(STO left, STO right){
+	public String WriteVarDeclComment(STO left, STO right){
+		String label;
 		String left_t = left.getType() + " " + left.getName();
 		if(left.isConst())
 			left_t = "const " + left_t;
@@ -1141,14 +1142,19 @@ class MyParser extends parser {
 		if(right != null)
 			right_t = " = " + right.getName();
 		
-		writer.comment(left_t + right_t);
+		label = left_t + right_t;
+		writer.comment(label);
+		
+		return label;
 	}
-	public void WriteVarDeclComment(STO left, Vector<STO> cParams){
+	public String WriteVarDeclComment(STO left, Vector<STO> cParams){
+		String label;
 		if(cParams == null){
-			writer.comment(left.getType() + " " + left.getName());
+			label = left.getType() + " " + left.getName();
+			writer.comment(label);
 		}
 		else{ 
-			String label = left.getType() + " " + left.getName() + " : (";
+			label = left.getType() + " " + left.getName() + " : (";
 			for(STO s: cParams){
 				label += s.getName();
 				if(cParams.indexOf(s) + 1 != cParams.size())
@@ -1158,6 +1164,7 @@ class MyParser extends parser {
 			}
 			writer.comment(label);
 		}
+		return label;
 	}
 	
 	public void WriteVarDecl(STO left){
@@ -2052,12 +2059,20 @@ class MyParser extends parser {
 		}
 	}
 
-	public void WriteNewStmt(STO s) {
+	public void WriteNewStmt(STO s, Vector<STO> params) {
 		Address a = am.getAddress();
 		writer.set("1", Address.O0);
 		writer.set(s.getType().getSize().toString(), Address.O1);
 		writer.call("calloc");
 		store(s, Address.O0);
+		
+		
+		
+		String funcToCall = FuncSTO.getName(s.getType().getName(), params);
+		for(int i = 0; i < params.size(); i++){
+			STO p = params.get(i);
+			//p.write
+		}
 		
 		a.release();
 	}

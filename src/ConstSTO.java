@@ -70,7 +70,7 @@ class ConstSTO extends STO
 		// fields as necessary
 	}
 	*/
-	private ConstSTO(String strName, Type typ)
+	public ConstSTO(String strName, Type typ)
 	{
 		super(strName, typ);
 		setIsAddressable(true);
