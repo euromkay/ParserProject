@@ -1,10 +1,13 @@
-structdef MYS{
-	int y;
-	MYS(int x){
-		
-	}
-};
-
-function : void main(){
-	int x = 6/(0xA - 10);
+float f = 5.5;
+function : void foo(){
+	int f;
+	//f = ::f; // error, not assignable:
+ 	// float cannot be assigned to int
+ 	
+ 	float i;
+ 	
+ 	i = 4.4;
+ 	i = 4;
+ 	
+ 	
 }

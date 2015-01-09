@@ -5,8 +5,8 @@ public class NullType extends Type {
 		super("null", 4);
 	}
 
-	public boolean isAssignable(Type type) {
-		return false;
+	public boolean isEquivalent(Type type) {
+		return true;
 	}
 
 	public Type newType() {

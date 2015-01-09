@@ -61,34 +61,34 @@ abstract class Type
 	//----------------------------------------------------------------
 	public boolean	isInt ()	{ return false; }
 
-	public boolean isBool() {
+	public boolean isBool() { return false; }
+	
+	public boolean isFloat() { return false; }
+
+	public boolean isArray(){
 		return false;
 	}
-
-	public abstract boolean isAssignable(Type type);
+	
+	public boolean isPointer(){
+		return false;
+	}
+	
+	public boolean isAssignable(Type type){
+		return isEquivalent(type);
+	}
 
 	public boolean isEquivalent(Type type) {
-		return getClass() == type.getClass();
+		return getName().equals(type.getName());
 	}
 
 	public boolean isBasicType() {
 		return false;
 	}
 
-	public boolean isIntAssignable() {
-		//TODO
-		return this instanceof IntType;
-	}
 	
 	
 
-	public boolean isArrayType(){
-		return false;
-	}
 	
-	public boolean isPointerType(){
-		return false;
-	}
 
 	public abstract Type newType();
 

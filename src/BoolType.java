@@ -25,7 +25,7 @@ public class BoolType extends BasicType {
 	}
 
 	public boolean isAssignable(Type type) {
-		return (type == null) || type instanceof BoolType;
+		return type.isBool();
 		
 	}
 	
@@ -35,11 +35,6 @@ public class BoolType extends BasicType {
 			return TRUE;
 		else
 			return FALSE;
-	}
-
-
-	public boolean isEquivalent(Type type) {
-		return type instanceof BoolType;
 	}
 
 

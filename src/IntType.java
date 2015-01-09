@@ -8,11 +8,8 @@ public class IntType extends NumericType{
 	}
 
 	public boolean isAssignable(Type type) {
-		return (type == null) || type instanceof IntType;
+		return type.isFloat() || super.isAssignable(type);
 		
-	}
-	public boolean isEquivalent(Type type) {
-		return type instanceof IntType;
 	}
 
 	public Type newType() {

@@ -1,4 +1,5 @@
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 
 public abstract class ArithmeticOp extends BinaryOp {
@@ -69,7 +70,7 @@ public abstract class ArithmeticOp extends BinaryOp {
 		else {
 			if (bb.getValue().equals(BigDecimal.ZERO))
 				throw new ArithmeticException();
-			result = aa.getValue().divide(bb.getValue());
+			result = aa.getValue().divide(bb.getValue(), RoundingMode.HALF_UP);
 		}
 		return result;
 	}

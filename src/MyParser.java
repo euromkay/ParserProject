@@ -151,6 +151,7 @@ class MyParser extends parser {
 	//
 	// ----------------------------------------------------------------
 	STO DoVarDecl(boolean statik, Type t, String name, Vector<STO> arraySTOs, STO init) {
+		
 		STO error = hasError(arraySTOs);
 		if(error != null)
 			return error;
@@ -160,7 +161,9 @@ class MyParser extends parser {
 		if (symTab.accessLocal(name) != null) 
 			return generateError(ErrorMsg.redeclared_id, name);
 		if(init != null){
-			if(!t.isAssignable(init.getType())){
+			if(init.isError())
+				return init;
+			if(!init.getType().isAssignable(t)){
 				return generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
 			}
 		}
@@ -187,7 +190,7 @@ class MyParser extends parser {
 		VarSTO v = new VarSTO(name, t);
 		if(statik)
 			v.setStatic();
-		if(t.isArrayType())
+		if(t.isArray())
 			v.setIsModifiable(false);
 		symTab.insert(v);
 			
@@ -273,6 +276,10 @@ class MyParser extends parser {
 			return b;
 		STO result = o.checkOperands(a, b);
 		printErrorSTO(result);
+
+		if(result.isError())
+			return result;
+		
 		if(!(o.getName().equals(Operator.AND) || o.getName().equals(Operator.OR)))
 			WriteBinaryExpr(a, o, b, result);
 		
@@ -490,7 +497,7 @@ class MyParser extends parser {
 			m_errors.print(ErrorMsg.error10c_Array);
 			return new ErrorSTO(ErrorMsg.error10c_Array);
 		}
-		if(!(s.getType().isIntAssignable())){
+		if(!(s.getType().isInt())){
 			m_nNumErrors++;
 			m_errors.print(Formatter.toString(ErrorMsg.error10i_Array, s.getType().getName()));
 			return new ErrorSTO(ErrorMsg.error10i_Array);
@@ -570,11 +577,11 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	// PHASE1.6A
 	// ----------------------------------------------------------------
-	STO DoReturn(STO sto){
+	String DoReturn(STO sto){
 		String error;
 		STO s = sto;
 		if(sto.isError())
-			return sto;
+			return "";
 		
 		FunctionPointerType fs = (FunctionPointerType) symTab.getFunc().getType();
 		Type neededType = fs.getReturnType();
@@ -602,7 +609,7 @@ class MyParser extends parser {
 			}
 		}
 		
-		return new ExprSTO("return " + sto.getName());
+		return "return " + sto.getName();
 	}
 	
 	// ----------------------------------------------------------------
@@ -686,40 +693,19 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	STO DoAssignExpr(STO stoLeft, STO stoRight) {
 		
-		//why are we losing stoRight to a null
 		if(stoLeft instanceof ErrorSTO || stoRight instanceof ErrorSTO)
 			return new ErrorSTO(stoLeft.getName());
 
 		
 		//Phase 1 Check #3a where stoDes is NOT a modifiable L-Val IS THIS IT?>
 		if (!stoLeft.isModLValue() || stoLeft.getType() instanceof ArrayType) {
-			m_nNumErrors++;
-			m_errors.print(ErrorMsg.error3a_Assign);
-			return new ErrorSTO(stoLeft.getName()); //Is the arg in the parameter correct?
+			return generateError(ErrorMsg.error3a_Assign);
 		}
-		Type a = stoLeft.getType();
-		Type b = stoRight.getType();
-		if(!(a.isAssignable(b))){
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.error3b_Assign, b.getName(), a.getName()));
-			return new ErrorSTO(stoLeft.getName());
-		}
-		/*if(a instanceof BoolType && !(b instanceof BoolType)){
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.error3b_Assign, a.getName(), b.getName()));
-			return new ErrorSTO(stoLeft.getName());
-		}
-		else if(a instanceof IntType && !(b instanceof IntType)){
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.error3b_Assign, b.getName(), a.getName()));
-			return new ErrorSTO(stoLeft.getName());
-		}
-		else if(a instanceof FloatType && !(b instanceof NumericType)){
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.error3b_Assign, b.getName(), a.getName()));
-			return new ErrorSTO(stoLeft.getName());
-		}
-		else if(ainstanceof )*/
+		Type lType = stoLeft.getType();
+		Type rType = stoRight.getType();
+		if(!(rType.isAssignable(lType)))
+			return generateError(ErrorMsg.error3b_Assign, rType.getName(), lType.getName());
+			
 		
 		return stoLeft;
 	}
@@ -849,13 +835,13 @@ class MyParser extends parser {
 		if(e instanceof ErrorSTO || a instanceof ErrorSTO)
 			return e;
 		
-		if(!(e.getType().isIntAssignable())){
+		if(!(e.getType().isInt())){
 			String error = (Formatter.toString(ErrorMsg.error11i_ArrExp, e.getType().getName()));
 			m_nNumErrors++;
 			m_errors.print(error);
 			return new ErrorSTO(error);
 		}
-		if(!a.getType().isArrayType() && !a.getType().isPointerType()){
+		if(!a.getType().isArray() && !a.getType().isPointer()){
 			String error = (Formatter.toString(ErrorMsg.error11t_ArrExp, a.getType().getName()));
 			m_nNumErrors++;
 			m_errors.print(error);
@@ -944,7 +930,7 @@ class MyParser extends parser {
 		if(a instanceof ErrorSTO)
 			return a.getName();
 		Type aType = a.getType();
-		if (!aType.isIntAssignable()){
+		if (!aType.isInt()){
 			return generateError(ErrorMsg.error7_Exit, aType.getName()).getName();
 		}
 		else		
@@ -1179,7 +1165,7 @@ class MyParser extends parser {
 			String skip;
 			if(isFloat(left_s))
 				skip = Template.FLOAT_VAR_DECL;
-			else if (left_s.getType().isArrayType())
+			else if (left_s.getType().isArray())
 				skip = Template.SKIP;
 			else
 				skip = Template.INT_VAR_DECL;
@@ -1189,7 +1175,7 @@ class MyParser extends parser {
 			//if theres some sort of initializatoin
 			
 			Type lType = left.getType();
-			if(lType.isArrayType()){
+			if(lType.isArray()){
 				val = lType.getSize().toString();
 					
 				Address lAdd = am.getAddress();
@@ -1257,6 +1243,9 @@ class MyParser extends parser {
 				_1.release();
 				bool_a.release();
 					
+			}
+			else{
+				writer.addSTO(left);
 			}
 		}
 
@@ -1713,6 +1702,10 @@ class MyParser extends parser {
 	}
 	
 	public void WriteFuncCall(FuncSTO func, Vector<STO> args, STO fsto){
+		if(fsto.isError())
+			return;
+		
+		
 		writer.addSTO(fsto);
 		Vector<VarSTO> funcParams = ((FunctionPointerType) func.getType()).getParams();
 		String o = "%o";

@@ -372,7 +372,9 @@ OptCtorDtorList ::= CtorDtorList:_1
 					{:
 						RESULT = _1;
 					:}
-    |               /* empty */
+    |               {:
+    					RESULT = new Vector<STO>();
+    				:}
     ;
 
 
@@ -725,9 +727,9 @@ ParamList ::=       ParamDecl:_1
     ;
 
 
-ParamDecl ::=       Type:_1 OptRef:_2 T_ID:_3
+ParamDecl ::=       Type:_1 OptRef:_2 T_ID:_3 OptArrayList:_4
 					{:
-						RESULT = ((MyParser) parser).DoRefCheck(_1, _2, _3);
+						RESULT = ((MyParser) parser).DoRefCheck(Type.mergeType(_1, _4), _2, _3);
 					:}
     ;
 
@@ -862,12 +864,12 @@ NewStmt	 ::=		T_NEW Designator:_1 OptCtorCall:_2 T_SEMI
 
 ReturnStmt ::=   T_RETURN T_SEMI
 				{:
-					((MyParser) parser).DoReturn(null);
+					RESULT = ((MyParser) parser).DoReturn(null);
 					((MyParser) parser).WriteReturn(null);
 				:}
     |               T_RETURN Expr:_1 T_SEMI
     			{:
-    				((MyParser) parser).DoReturn(_1);
+    				RESULT = ((MyParser) parser).DoReturn(_1);
     				((MyParser) parser).WriteReturn(_1);
     			:}
     ;

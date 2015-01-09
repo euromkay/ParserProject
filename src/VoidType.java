@@ -5,9 +5,7 @@ public class VoidType extends Type {
 		super("void", 4);
 	}
 	
-	public boolean isAssignable(Type type) {
-		if(type instanceof VoidType)
-			return true;
+	public boolean isEquivalent(Type type) {
 		return false;
 	}
 
