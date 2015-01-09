@@ -6,7 +6,5 @@ structdef MYS{
 };
 
 function : void main(){
-	y = 4;
-	x = &y;
-	cout << 4;
+	int x = 6/(0xA - 10);
 }

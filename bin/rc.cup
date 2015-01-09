@@ -116,8 +116,6 @@ non terminal
     WritePairList,
     WritePair,
     
-    UnarySign,
-    
     Pointer
     ;
 
@@ -135,6 +133,7 @@ non terminal Integer
 non terminal Operator
     Equality,
     Relation,
+    UnarySign,
     
     AddOp,
     MulOp
@@ -1073,15 +1072,33 @@ Expr8 ::=        Expr8:_1 MulOp:_2 Designator:_3
     ;
 
 
-Equality ::=        T_EQU
+Equality ::=     T_EQU
+   				 {:
+                 	RESULT = new EqualityOp(Operator.EQ);
+                 :}
     |               T_NEQ
+   				 {:
+                 	RESULT = new EqualityOp(Operator.NEQ);
+                 :}
     ;
 
 
-Relation ::=        T_LT
-    |               T_GT
-    |               T_LTE
-    |               T_GTE
+Relation ::=     T_LT
+                 {:
+                 	RESULT = new EqualityOp(Operator.LT);
+                 :}
+    |            T_GT
+                 {:
+                 	RESULT = new EqualityOp(Operator.GT);
+                 :}
+    |            T_LTE
+                 {:
+                 	RESULT = new EqualityOp(Operator.LTE);
+                 :}
+    |            T_GTE
+                 {:
+                 	RESULT = new EqualityOp(Operator.GTE);
+                 :}
     ;
 
 
@@ -1124,19 +1141,22 @@ IncDecOp ::=        T_PLUSPLUS
 
 Designator ::=      T_STAR Designator:_1
                     {:
-                        RESULT = _1;
+						RESULT = ((MyParser) parser).DoDeref(_1);
+						((MyParser) parser).WriteDeRef(_1, RESULT);
                     :}
     |               T_AMPERSAND Designator:_1
                     {:
-                        RESULT = _1;
+                    	RESULT = ((MyParser)parser).DoAddressOf(_1);
+						((MyParser) parser).WriteAmpersand(_1, RESULT);
                     :}
-    |               UnarySign Designator:_2
+    |               UnarySign:_1 Designator:_2
                     {:
-                        RESULT = _2;
+						RESULT = ((MyParser) parser).DoBinaryExpr(_2, _1, _2);
                     :}
     |               T_NOT Designator:_1
                     {:
-                        RESULT = _1;
+						RESULT = ((MyParser) parser).DoNotOp (_1);
+						((MyParser) parser).WriteNotOp(_1, RESULT);
                     :}
     |               T_SIZEOF T_LPAREN Designator:_2 T_RPAREN
                     {:
@@ -1148,13 +1168,14 @@ Designator ::=      T_STAR Designator:_1
                         RESULT = ((MyParser) parser).DoSizeOf(_2);
 						((MyParser) parser).WriteSizeOf(RESULT);
                     :}
-    |               T_LPAREN DecoratedType T_RPAREN Designator:_2
+    |               T_LPAREN DecoratedType:_1 T_RPAREN Designator:_2
                     {:
-                        RESULT = _2;
+                        RESULT = ((MyParser) parser).DoCast(_1, _2);
+						((MyParser) parser).WriteCast(_2, RESULT);
                     :}
-    |               IncDecOp Designator:_2
+    |               IncDecOp:_1 Designator:_2
                     {:
-                        RESULT = _2;
+                        RESULT = ((MyParser) parser).DoBinaryExpr (_2, Operator.newOp(_1+"P"), _2);
                     :}
     |               Designator2:_1 
                     {:
@@ -1166,23 +1187,28 @@ Designator ::=      T_STAR Designator:_1
 Designator2 ::=     Designator2:_1 T_DOT T_ID:_3
                     {:
                         RESULT = ((MyParser) parser).DoDesignator2_Dot (_1, _3);
+                        ((MyParser) parser).WriteDot(_1, _3, RESULT);
                     :}
     |               Designator2:_1 T_LBRACKET Expr:_2 T_RBRACKET
                     {:
-                        RESULT = ((MyParser) parser).DoDesignator2_Array (_1, _2);
+                      RESULT = ((MyParser) parser).DoDesignator2_Array (_1, _2);
+                      ((MyParser) parser).WriteArrayIndex(_1, _2, RESULT);
                     :}
-    |               Designator2:_1 T_ARROW T_ID
+    |               Designator2:_1 T_ARROW T_ID:_3
                     {:
-                        RESULT = _1;
+                        RESULT = ((MyParser) parser).DoArrowDeref(_1, _3);
                     :}
-    |               Designator2:_1 IncDecOp
+    |               Designator2:_1 IncDecOp:_2
                     {:
-                        RESULT = _1;
+                        RESULT = ((MyParser) parser).DoBinaryExpr (_1, Operator.newOp("P"+_2), _1);
                     :}
     |               Designator2:_1 T_LPAREN OptExprList:_2 T_RPAREN
                     {:
-                        ((MyParser) parser).DoFuncCall (_1, _2);
-                        RESULT = _1;
+                      RESULT = ((MyParser) parser).DoFuncCall (_1, _2);  
+                      if(_1 instanceof FuncSTO)
+                      ((MyParser) parser).WriteFuncCall((FuncSTO) _1, _2, RESULT);
+                      //else
+                      //((MyParser) parser).WriteFuncCall((VarSTO) _1, _2, RESULT);
                     :}
     |               Designator3:_1
                     {:
@@ -1193,31 +1219,37 @@ Designator2 ::=     Designator2:_1 T_DOT T_ID:_3
 
 Designator3 ::=     T_LPAREN Expr:_2 T_RPAREN
                     {:
-                        RESULT = _2;
+                        RESULT = ((MyParser) parser).DoParens(_2);
                     :}
     |               T_INT_LITERAL:_1
                     {:
                         RESULT = new ConstSTO (_1, new IntType(), _1);
+                        ((MyParser) parser).WriteIntLiteral(RESULT);
                     :}
     |               T_FLOAT_LITERAL:_1
                     {:
                         RESULT = new ConstSTO (_1, new FloatType(), _1); 
+                        ((MyParser) parser).WriteFloatLiteral(RESULT);
                     :}
     |               T_STR_LITERAL:_1
                     {:
                         RESULT = new ConstSTO (_1, new StringType());
+                        ((MyParser) parser).WriteStringLiteral(_1);
                     :}
     |               T_TRUE
                     {:
                         RESULT = new ConstSTO ("true", new BoolType(), "1");
+                        ((MyParser) parser).WriteBoolLiteral(RESULT, MyParser.TRUE_S);
                     :}
     |               T_FALSE
                     {:
                         RESULT = new ConstSTO ("false", new BoolType(), "0");
+                        ((MyParser) parser).WriteBoolLiteral(RESULT, MyParser.FALSE_S);
                     :}
     |               T_NULLPTR
                     {:
                         RESULT = new ExprSTO ("nullptr", new NullType());
+                        ((MyParser) parser).WriteNull(RESULT);
                     :}
     |               T_THIS
                     {:
@@ -1225,10 +1257,11 @@ Designator3 ::=     T_LPAREN Expr:_2 T_RPAREN
                     :}
     |               T_COLONCOLON T_ID:_1
                     {:
-                        RESULT = ((MyParser) parser).DoDesignator3_ID (_1);
+                        RESULT = ((MyParser) parser).DoDesignator4_ID (_1);
                     :}
     |               T_ID:_1
                     {:
                         RESULT = ((MyParser) parser).DoDesignator3_ID (_1);
+                        ((MyParser) parser).WriteID(RESULT, _1);
                     :}
     ;

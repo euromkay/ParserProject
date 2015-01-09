@@ -302,13 +302,10 @@ class MyParser extends parser {
 		
 		if(aType instanceof BoolType){
 			STO s = BoolType.getSTO(a);
-			WriteDoNotOp(a, s);
 			return s;
 		}
 
-		m_nNumErrors++;
-		m_errors.print(Formatter.toString(ErrorMsg.error1u_Expr, aType.getName(), "!", BoolType.NAME));
-		return new ErrorSTO(ErrorMsg.error1u_Expr);
+		return generateError(ErrorMsg.error1u_Expr, aType.getName(), "!", BoolType.NAME);
 	}
 	
 	
@@ -902,11 +899,9 @@ class MyParser extends parser {
 	STO DoDesignator4_ID(String strID) {
 		STO sto;
 		
-		if ((sto = symTab.accessGlobal(strID)) == null) {
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.error0g_Scope, strID));
-			sto = new ErrorSTO(strID);
-		}
+		if ((sto = symTab.accessGlobal(strID)) == null)
+			return generateError(ErrorMsg.error0g_Scope, strID);
+		
 
 		return sto;
 	}
@@ -1534,6 +1529,8 @@ class MyParser extends parser {
 	
 	public static final String BRANCH = ".branch";
 	public void COut(STO s){
+		if(s.isError())
+			return;
 		
 		Type t = s.getType();
 		if(t instanceof FloatType){
@@ -1791,7 +1788,7 @@ class MyParser extends parser {
 			writer.store(Template.O0, fsto.getAddress());
 	}*/
 	
-	public void WriteDoNotOp(STO s, STO result){
+	public void WriteNotOp(STO s, STO result){
 		writer.addSTO(result);
 		
 		Address a = am.getAddress(), _1_a = am.getAddress();
@@ -1945,6 +1942,9 @@ class MyParser extends parser {
 	}
 	
 	public void WriteAmpersand(STO given, STO result){
+		if(result.isError())
+			return;
+		
 		Address a = am.getAddress();
 		writer.addSTO(result);
 		
