@@ -3,7 +3,8 @@ import java.util.Vector;
 
 public class StructType extends CompositeType {
 
-	private Vector<STO> fields = new Vector<STO>(); 
+	private Vector<STO> vars = new Vector<STO>(); 
+	private Vector<STO> fields = new Vector<STO>();
 	
 	
 
@@ -23,24 +24,29 @@ public class StructType extends CompositeType {
 
 	public Type newType() {
 		Vector<STO> list = new Vector<STO>();
-		for(STO s: fields)
+		for(STO s: vars)
 			list.add(s.newSTO());
 		StructType s = new StructType(new String(getName()));
-		s.setFields(list, getSize());
+		s.setStructVars(list, getSize());
 		
 		return s;
 	}
 
-	public void setFields(Vector<STO> fields, int size) {
-		this.fields = fields;
+	public void setStructVars(Vector<STO> vars, int size) {
+		this.vars = vars;
 		setSize(size);
 		
 	}
 
-	public Vector<STO> getFields() {
+	public Vector<STO> getVars() {
+		return vars;
+	}
+	
+	public Vector<STO> getFields(){
 		return fields;
 	}
 	
-	
-	
+	public void addFunc(STO f){
+		fields.add(f);
+	}
 }

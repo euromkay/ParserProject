@@ -166,15 +166,7 @@ class MyParser extends parser {
 		}
 		
 		
-		VarSTO v = new VarSTO(name, t);
-		v.setInit(init);
-		if(statik)
-			v.setStatic();
-		if(t.isArrayType())
-			v.setIsModifiable(false);
-		symTab.insert(v);
-		
-		return v;
+		return varHelper(statik, t, name);
 	}
 	
 	STO DoVarDecl(boolean statik, Type t, String name, Vector<STO> arraySTOs, Vector<STO> ctrs) {
@@ -186,8 +178,13 @@ class MyParser extends parser {
 		if (symTab.accessLocal(name) != null) 
 			return generateError(ErrorMsg.redeclared_id, name);
 		
+		//TODO constructor call checks
+			
+		return varHelper(statik, t, name);
+	}
+	
+	private STO varHelper(boolean statik, Type t, String name){
 		VarSTO v = new VarSTO(name, t);
-		v.setCtrs(ctrs);
 		if(statik)
 			v.setStatic();
 		if(t.isArrayType())
@@ -390,22 +387,101 @@ class MyParser extends parser {
 		symTab.insert(sto);
 	}
 	
-	void DoStructdefDecl2(String id, Vector<STO> fields, int size) {
-		if (symTab.accessLocal(id) != null) {
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.redeclared_id, id));
-		}
-		Integer offset = 0;
-		for(STO field: fields){
-			field.setOffset(offset.toString());
-			//field.setAddress("STRUCT");
-			//s.stringField = s.getName();
-			offset += field.getType().getSize();
+	public void DoStructVarCheck(Vector<STO> vars){
+		StructdefSTO struct = symTab.getStruct();
+		String name = struct.getName();
+		
+		ArrayList<String> list = new ArrayList<String>();
+		Integer structSize = 0;
+		for(STO s: vars){
+			String id = s.getName();
+			
+			String t = s.getName();
+			s.setName("." + name + "_" + t);
+			
+			if(list.contains(id))
+				generateError(ErrorMsg.error13a_Struct, id);
+			else{
+				list.add(id);
+				s.setOffset(structSize.toString());
+				structSize =+ s.getType().getSize();
+			}
 		}
 		
-		StructdefSTO sto = (StructdefSTO) symTab.access(id);
-		((StructType) sto.getType()).setFields(fields, offset);
-		symTab.setFunc(null);
+		StructType sType = struct.getStructType();
+		sType.setStructVars(vars, structSize);	
+	}
+	
+	void DoConstructorCheck(Vector<STO> ctorList){
+		StructdefSTO struct = symTab.getStruct();
+		StructType structType = symTab.getStruct().getStructType();
+		
+		String structName = struct.getName();
+		
+		ArrayList<String> funcs = new ArrayList<String>();
+		
+		boolean hasDestruct = false;
+		
+		for(STO f: ctorList){
+			if(f.isError())
+				return;
+			
+			String name = f.getName();//full mangled function name
+			if(name.startsWith("~")){  //destructor
+				String destructorName = name.substring(1);
+				if(!structName.equals(destructorName)){
+					generateError(ErrorMsg.error13b_Dtor, destructorName, structName);
+					continue;
+				}
+				if(hasDestruct){
+					generateError(ErrorMsg.error9_Decl);
+					continue;
+				}
+				hasDestruct = true;
+			}
+			else{
+				String baseName = ((FuncSTO) f).getBaseName();
+				if(!structName.equals(baseName)){
+					generateError(ErrorMsg.error13b_Ctor, baseName, structName);
+					continue;
+				}
+				if(funcs.contains(name)){
+					generateError(ErrorMsg.error9_Decl);
+					continue;
+				}
+				funcs.add(name);
+			}
+			
+			structType.addFunc(f);
+		}
+	}
+	
+	
+	void DoStructFuncCheck(Vector<STO> funcs) {
+		StructdefSTO struct = symTab.getStruct();
+		
+		ArrayList<String> varList = new ArrayList<String>();
+		for(STO s: struct.getStructType().getVars()){
+			varList.add(s.getName());
+		}
+		
+		ArrayList<String> funcList = new ArrayList<String>();
+		
+		for(STO func_s: funcs){
+			if(func_s.isError())
+				return;
+			FuncSTO func = (FuncSTO) func_s;
+			if(varList.contains(func.getBaseName())){
+				generateError(ErrorMsg.error13a_Struct, func.getBaseName());
+			}
+			else if(funcList.contains(func.getName())){
+				generateError(ErrorMsg.error9_Decl);
+			}else{
+				varList.add(func.getName());
+			}
+		}
+		
+		symTab.setStructSTO(null);
 	}
 	
 	// ----------------------------------------------------------------
@@ -985,34 +1061,7 @@ class MyParser extends parser {
 	
 	
 	
-	public int DoStructFieldCheck(Vector<STO> v, String name){
-		
-		ArrayList<String> list = new ArrayList<String>();
-		int structSize = 0;
-		for(STO s: v){
-			String id = s.getName();
-			if(!(s instanceof FuncSTO))
-				structSize += s.getType().getSize();
-			else{
-				String t = s.getName();
-				s.setName("." + name + "_" + t);
-			}
-			if(!(s.getType() instanceof PointerType)){
-				if(s.getType().getName().equals(name)){
-					m_nNumErrors++;
-					m_errors.print(Formatter.toString(ErrorMsg.error13b_Ctor, id));
-				}
-			}
-			if(list.contains(id)){
-				m_nNumErrors++;
-				m_errors.print(Formatter.toString(ErrorMsg.error13a_Struct, id));
-			}
-			else{
-				list.add(id);
-			}
-		}
-		return structSize;		
-	}
+	
 
 	public Vector<STO> ChangeTypes(Type _1, InfoBlock _2) {
 		Vector<STO> list = new Vector<STO>();
@@ -1083,150 +1132,155 @@ class MyParser extends parser {
 	
 	/************************ START ASSEMBLY WRITING *************************/
 
-	public void WriteVarDecl(STO s){
-		String params = "";
+	public void WriteVarDeclComment(STO left, STO right){
+		String left_t = left.getType() + " " + left.getName();
+		if(left.isConst())
+			left_t = "const " + left_t;
 		
-		if(s.isError())
-			return;
+		String right_t = "";
+		if(right != null)
+			right_t = " = " + right.getName();
 		
-		for(STO e : stos){
-			if(e instanceof ErrorSTO)
-				return e.getName();
-			params += e.getType().getName() + " " + e.getName() +", ";
+		writer.comment(left_t + right_t);
+	}
+	public void WriteVarDeclComment(STO left, Vector<STO> cParams){
+		if(cParams == null){
+			writer.comment(left.getType() + " " + left.getName());
 		}
-		params = params.substring(0, params.length()-2);
-
+		else{ 
+			String label = left.getType() + " " + left.getName() + " : (";
+			for(STO s: cParams){
+				label += s.getName();
+				if(cParams.indexOf(s) + 1 != cParams.size())
+					label += ", ";
+				else
+					label += ")";
+			}
+			writer.comment(label);
+		}
+	}
+	
+	public void WriteVarDecl(STO left){
+		if(left.isError())
+			return;
 		
 		if(writer.isGlobal()){
 			
 			writer.write(Template.DATA);
+			writer.write(Template.ALIGN, "4");
 		
 			//Initialize Default Null Value
-			for(STO ef : stos){
-				VarSTO lSTO = (VarSTO) ef;
+			VarSTO left_s = (VarSTO) left;
+			left_s.setAddress(new Address(left_s.getName()));
 				
-				ef.setAddress(new Address(ef.getName()));
 				
-				writer.write(Template.ALIGN, "4");
-				
-				String skip;
-				if(isFloat(lSTO))
-					skip = Template.FLOAT_VAR_DECL;
-				else if (lSTO.getType() instanceof CompositeType)
-					skip = Template.SKIP;
-				else
-					skip = Template.INT_VAR_DECL;
+			String skip;
+			if(isFloat(left_s))
+				skip = Template.FLOAT_VAR_DECL;
+			else if (left_s.getType().isArrayType())
+				skip = Template.SKIP;
+			else
+				skip = Template.INT_VAR_DECL;
 
-				writer.writeLater = true;
-				String val = "0";
-				//if theres some sort of initializatoin
-				if(lSTO.getInit() != null){
-					STO rSTO = lSTO.getInit();
-					if(isIntToFloat(lSTO, lSTO.getInit())){
-						fitos(lSTO, rSTO);
-					}else{
-						store(lSTO, rSTO);
-					}
-				//clear out anything with size greater than 4, so structs and arrays
-				}else{
-					Type lType = lSTO.getType();
-					if(lType instanceof CompositeType){
-						val = lSTO.getType().getSize().toString();
-						Address lAdd = am.getAddress();
-						Address _4 = am.getAddress(), _0 = am.getAddress(); 
-						
-						writer.set("4", _4);
-						writer.set("0", _0);
-						for(int i = 0; i < lSTO.getType().getSize(); i+=4){
-							writer.store(lAdd, _0);
-							writer.addOp(lAdd, _4, lAdd);
-						}
-						
-						lAdd.release();
-						_4.release();
-						_0.release();
-						
-					}
-					
-					//if(e.getType() instanceof )
-				}
-
-				writer.writeLater = false;
-				writer.write(skip, lSTO.getName(), val);
-			}
-		
-			writer.newLine();
-		}else{
-
-			for(STO s : stos){
-				VarSTO lVar = (VarSTO) s;
-				if(lVar.isStatic()){
-					String name = "." + symTab.getFunc().getName() + "_" + lVar.getName();
-					String nameBool = name + "_bool";
-					final String alreadyInitialized = name + "_finish";
-
-					lVar.setAddress(new Address(name));
-					
-					writer.newLine();
-					Address varInitialized = am.getAddress();
-					writer.set(nameBool, varInitialized);
-					writer.load(varInitialized, varInitialized);
-					writer.cmp(varInitialized, Address.G0);
-					varInitialized.release();
-					
-					writer.bne(alreadyInitialized);
-					writer.newLine();
-					
-					writer.changeSection(Writer.DATA);
-					writer.write(Template.ALIGN, "4");
-					String type;
-					if(lVar.getType() instanceof FloatType)
-						type = Template.FLOAT_VAR_DECL;
-					else
-						type = Template.INT_VAR_DECL;
-					
-					
-					writer.write(type, name, "0");
-					writer.write(type, nameBool, "0");
-					
-					writer.changeSection(Writer.TEXT);
-					if(lVar.getInit() != null){
-						STO rVar = lVar.getInit();
-						if(isIntToFloat(lVar, rVar))
-							fitos(rVar, lVar);
-						else
-							store(lVar, rVar);
-						
-					}
-					
-					Address bAdd = am.getAddress(), _1 = am.getAddress();
-					
-					writer.set(nameBool, bAdd);
-					writer.set("1", _1);
-					writer.store(_1, bAdd);
-					writer.label(alreadyInitialized);
-					writer.newLine();
-
-					bAdd.release();
-					_1.release();
-					
-				}else{
-					if(lVar.getInit() != null){ //initalized
-						STO rVar = lVar.getInit();
-						if(isIntToFloat(lVar, rVar))
-							fitos(rVar, lVar);
-						else
-							store(lVar, rVar);
-						
-						writer.newLine();
-					}	
-				}
-			}
+			writer.writeLater = true;
+			String val = "0";
+			//if theres some sort of initializatoin
 			
-			//set it into local vars, then put it on the frame pointer
+			Type lType = left.getType();
+			if(lType.isArrayType()){
+				val = lType.getSize().toString();
+					
+				Address lAdd = am.getAddress();
+				Address _4 = am.getAddress(), _0 = am.getAddress(); 
+						
+				writer.set("4", _4);
+				writer.set("0", _0);
+				//clears our global arrays, setting contents to 0
+				for(int i = 0; i < lType.getSize(); i+=4){
+					writer.store(lAdd, _0);
+					writer.addOp(lAdd, _4, lAdd);
+				}
+						
+				lAdd.release();
+				_4.release();
+				_0.release();
+						
+			}
+
+			writer.writeLater = false;
+			writer.write(skip, left.getName(), val);
+
+		//local
+		}else{
+			if(left.isStatic()){
+				String name = "." + symTab.getFunc().getName() + "_" + left.getName();
+				String nameBool = name + "_bool";
+				final String alreadyInitialized = name + "_finish";
+
+				left.setAddress(new Address(name));
+					
+				writer.newLine();
+				Address bool_a = am.getAddress();
+				
+				writer.set(nameBool, bool_a);
+				writer.load(bool_a, bool_a);
+				writer.cmp(bool_a, Address.G0);
+				
+					
+				writer.bne(alreadyInitialized);
+				writer.newLine();
+					
+				writer.changeSection(Writer.DATA);
+				writer.write(Template.ALIGN, "4");
+				String type;
+				if(left.getType() instanceof FloatType)
+					type = Template.FLOAT_VAR_DECL;
+				else
+					type = Template.INT_VAR_DECL;
+					
+					
+				writer.write(type, name, "0");
+				writer.write(type, nameBool, "0");
+					
+				writer.changeSection(Writer.TEXT);
+					
+				Address _1 = am.getAddress();
+					
+				writer.set(nameBool, bool_a);
+				writer.set("1", _1);
+				writer.store(_1, bool_a);
+				writer.label(alreadyInitialized);
+				writer.newLine();
+
+				_1.release();
+				bool_a.release();
+					
+			}
 		}
+
+		writer.newLine();
 		
-		return params;
+		
+	}
+	
+	public void WriteVarInit(STO left, STO right){
+		if(right == null || right.isError())
+			return;
+		
+		if(isIntToFloat(left, right))
+			fitos(right, left);
+		else
+			store(left, right);
+		
+		String right_t = "";
+		if(right != null)
+			right_t = " = " + right.getName();
+		
+		writer.comment(left.getName() + right_t);
+	}
+	
+	public void WriteVarInit(STO left, Vector<STO> cParams){
+		//TODO
 	}
 	
 	private void store(STO to, STO from){

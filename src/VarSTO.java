@@ -9,7 +9,6 @@ class VarSTO extends STO
 	private boolean ref = false;
 	private STO init, init2;
 	
-	private Vector<STO> ctrs = new Vector<STO>();
 	
 	//----------------------------------------------------------------
 	//
@@ -86,10 +85,6 @@ class VarSTO extends STO
 		init = s;
 	}
 
-	
-	public void setCtrs(Vector<STO> ctrs){
-		this.ctrs = ctrs;
-	}
 	
 
 

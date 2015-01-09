@@ -62,6 +62,12 @@ class FuncSTO extends STO
 	{
 		super (new String(strName), new FunctionPointerType(returnType.newType()));
 		this.returnType = returnType.newType();
+		baseName = strName;
+	}
+	
+	private String baseName;
+	public String getBaseName() {
+		return baseName;
 	}
 
 	boolean isFuncMember = false;
@@ -81,6 +87,8 @@ class FuncSTO extends STO
 	public void setIsMemberFunction(){
 		isFuncMember = true;
 	}
+
+	
 	
 }
 	

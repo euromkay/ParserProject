@@ -109,22 +109,15 @@ non terminal
     FuncDef,
     FuncDecl,
     ExternDecl,
-    VarDecl,
-    ConstDecl,
     StructdefDecl,
     
     CtorDef,
     DtorDef,
     OptRef,
     
-    FieldVarsList,
     FieldVarDecl,
     
-    OptCtorDtorList,
-    CtorDtorList,
     CtorDtorDecl,
-    OptFieldFuncsList,
-    FieldFuncsList,
     FieldFuncDecl,
     
     OptStmtList,
@@ -170,10 +163,14 @@ non terminal String
     AddOp,
     MulOp,
     IncDecOp,
+    
     ParamDecl
     ;
 
 non terminal STO
+    VarDecl,
+    ConstDecl,
+    
     Array,
     
     Expr,
@@ -193,6 +190,7 @@ non terminal STO
         
     ConstExpr,
     
+    
     OptInit
     ;
 
@@ -211,6 +209,12 @@ non terminal Vector
     
     OptCtorCall,
     CtorCall,
+    
+    OptFieldFuncsList,
+    FieldFuncsList,
+    FieldVarsList,
+    OptCtorDtorList,
+    CtorDtorList,
     
     OptParamList,
     ParamList
@@ -237,11 +241,9 @@ OptGlobalDecls ::=  GlobalDecls
 
 GlobalDecls ::= GlobalDecl:_1
 				{:
-					System.out.println(_1);
 				:}
     |           GlobalDecls GlobalDecl:_1
     			{:
-    				System.out.println(_1);
     			:}
     ;
 
@@ -268,7 +270,7 @@ GlobalDecl ::=  ExternDecl:_1
 				:}
     |           FuncDef:_1
 				{:
-					RESULT = _1.getName();
+					RESULT = _1;
 				:}
     ;
 
@@ -283,14 +285,20 @@ ExternDecl ::=      T_EXTERN DecoratedBasicType:_2 T_ID:_3 OptArrayList:_4
 
 VarDecl ::=         OptStatic:_1 DecoratedType:_2 T_ID:_3 OptArrayList:_4 OptInit:_5
                     {:
-                        RESULT = ((MyParser) parser).DoVarDecl (_1, _2, _3, _4, _5);
-                        ((MyParser) parser).WriteVarDecl(RESULT);
+                        STO s = ((MyParser) parser).DoVarDecl (_1, _2,  _3, _4, _5);
+                        ((MyParser) parser).WriteVarDeclComment(s, _5);
+                        ((MyParser) parser).WriteVarDecl(s);
+                        ((MyParser) parser).WriteVarInit(s, _5);
+                        RESULT = s;
                     :}
                     T_SEMI
     |               OptStatic:_1 StructType:_2 T_ID:_3 OptArrayList:_4 OptCtorCall:_5
                     {:
-                        RESULT = ((MyParser) parser).DoVarDecl (_1, _2, _3, _4, _5);
-                        ((MyParser) parser).WriteVarDecl(RESULT);
+                        STO s = ((MyParser) parser).DoVarDecl (_1, _2, _3, _4, _5);
+                        ((MyParser) parser).WriteVarDeclComment(s, _5);
+                        ((MyParser) parser).WriteVarDecl(s);
+                        ((MyParser) parser).WriteVarInit(s, _5);
+                        RESULT = s;
                     :}
                     T_SEMI
     ;
@@ -298,8 +306,11 @@ VarDecl ::=         OptStatic:_1 DecoratedType:_2 T_ID:_3 OptArrayList:_4 OptIni
 
 ConstDecl ::=       OptStatic:_1 T_CONST BasicType:_2 T_ID:_3 T_ASSIGN ConstExpr:_4
                     {:
-                        RESULT = ((MyParser) parser).DoConstDecl (_1, _2, _3, _4);
-                        ((MyParser) parser).WriteVarDecl(RESULT);
+                        STO s = ((MyParser) parser).DoConstDecl (_1, _2, _3, _4);
+                        ((MyParser) parser).WriteVarDeclComment(s, _4);
+                        ((MyParser) parser).WriteVarDecl(s);
+                        ((MyParser) parser).WriteVarInit(s, _4);
+                        RESULT = s;
                     :}
                     T_SEMI
     ;
@@ -317,28 +328,40 @@ OptStatic ::=       T_STATIC
 
 StructdefDecl ::=   T_STRUCTDEF T_ID_U:_1 T_LBRACE
                     {:
+                        ((MyParser) parser).DoStructdefDecl1(_1);  
                         ((MyParser) parser).DoBlockOpen();
                     :}
-                    FieldVarsList
-                    OptCtorDtorList
+                    FieldVarsList:_4
+                    OptCtorDtorList:_3
                     {:
-                        // Put logic here to create default ctor if needed
+                    	((MyParser) parser).DoStructVarCheck(_4);
+                    	((MyParser) parser).DoConstructorCheck(_3);
                     :}
-                    OptFieldFuncsList
+                    OptFieldFuncsList:_5
                     {:
                         ((MyParser) parser).DoBlockClose();
-                        ((MyParser) parser).DoStructdefDecl (_1);
+                    	((MyParser) parser).DoStructFuncCheck(_5);
                     :}
                     T_RBRACE T_SEMI
     ;
 
-
-FieldVarsList ::=   FieldVarDecl
-    |               FieldVarsList FieldVarDecl
+FieldVarsList ::=   FieldVarDecl:_1
+					{:
+						RESULT = new Vector<STO>();
+						RESULT.add(1);
+					:}
+    |               FieldVarsList:_2 FieldVarDecl:_1
+    				{:
+    					RESULT = _2;
+						RESULT.add(1);
+    				:}
     ;
 
 
-FieldVarDecl ::=    DecoratedType T_ID OptArrayList T_SEMI
+FieldVarDecl ::=    DecoratedType:_1 T_ID:_2 OptArrayList:_3 T_SEMI
+					{:
+						RESULT = new VarSTO(_2, Type.mergeType(_1, _3);
+					:}
     ;
 
 
@@ -458,17 +481,17 @@ DecoratedBasicType ::= BasicType:_1 OptPointerList:_2
     ;
 
 
-BasicType ::=       T_INT:_1
+BasicType ::=       T_INT
                     {:
-                        RESULT = new ConstSTO(_1, new IntType(), _1);
+                        RESULT = new IntType();
                     :}
     |               T_FLOAT
                     {:
-                        RESULT = new ConstSTO(_1, new FloatType(), _1);
+                        RESULT = new FloatType();
                     :}
     |               T_BOOL
                     {:
-                        RESULT = new ConstSTO(_1, new BoolType(), BoolType.toNum(_1));
+                        RESULT = new BoolType();
                     :}
     ;
 
@@ -520,19 +543,19 @@ OptArrayList ::=    ArrayList:_1
 						RESULT = _1;
 					:}
     |               {:
-    					RESULT = new Vector<STO>():
+    					RESULT = new Vector<STO>();
     				:}
     ;
 
 ArrayList ::=       Array:_1
 					{:
 						RESULT = new Vector<STO>();
-						RESULT.add(_1):
+						RESULT.add(_1);
 					:}
     |               ArrayList:_1 Array:_2
     				{:
     					RESULT = _1;
-    					RESULT.add(_2):
+    					RESULT.add(_2);
     				:}
     ;
 

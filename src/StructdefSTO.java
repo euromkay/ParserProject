@@ -38,5 +38,9 @@ class StructdefSTO extends STO
 		STO s = new StructdefSTO(getName(), getType());
 		return super.newSTO(s);
 	}
+	
+	public StructType getStructType(){
+		return (StructType) getType();
+	}
 }
 
