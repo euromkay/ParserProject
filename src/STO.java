@@ -169,7 +169,7 @@ abstract class STO
 
 	public Address writeAddress(Address a1, Writer writer) {
 		Address tempAdd = writer.getAddressManager().getAddress();
-		if(getAddress().equals("STRUCT")){
+		/*if(getAddress().equals("STRUCT")){
 			VarSTO struct = (VarSTO) ((VarSTO) this).getInit();
 			struct.writeAddress(a1, writer);
 			writer.set(offset.toString(), tempAdd);
@@ -180,10 +180,10 @@ abstract class STO
 			array.writeAddress(a1, writer);
 			number.writeVal(tempAdd, writer);
 			for(int i = 0; i < ((ArrayType) array.getType()).getSubtype().getSize(); i++)
-				writer.addOp(a1, tempAdd, a1, false);
+				writer.addOp(a1, tempAdd, a1, false);*/
 		/*}else if(getAddress().equals(DEFAULT)){
 			writeStructField(writer, a1);*/
-		}else if(!getAddress().isLocal()){
+		if(!getAddress().isLocal()){
 			writer.set(getAddress(), a1);
 		}else if(isParameter(writer.symTab.getFunc()) && this instanceof VarSTO && (((VarSTO) this).isRef())){
 			writer.set(address, a1);

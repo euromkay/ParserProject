@@ -200,42 +200,29 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	STO DoIterationVarDecl(VarSTO iter, STO arr) {
-		String error;
-		if (symTab.accessLocal(iter.getName()) != null) {
-			m_nNumErrors++;
-			error = Formatter.toString(ErrorMsg.redeclared_id, iter.getName());
-			m_errors.print(error);
-			return new ErrorSTO(error);
-		}
-		if(!(arr.getType() instanceof ArrayType)){
-			m_nNumErrors++;
-			error = ErrorMsg.error12a_Foreach;
-			m_errors.print(error);
-			return new ErrorSTO(error);
-		}			
-		ArrayType exprType = (ArrayType) arr.getType();
+	String DoIterationVarDecl(VarSTO iter, STO arr) {
+		if (symTab.accessLocal(iter.getName()) != null)
+			return generateError(ErrorMsg.redeclared_id, iter.getName()).toString();
+		
+		if(!(arr.getType() instanceof ArrayType))
+			return generateError(ErrorMsg.error12a_Foreach).toString();
+		
+		Type aType = ((ArrayType) arr.getType()).getSubtype();
 		Type iterType = iter.getType();
 		if(iter.isRef()){
-			if(!iterType.isEquivalent(exprType.getSubtype())){
-				m_nNumErrors++;
-				error = Formatter.toString(ErrorMsg.error12r_Foreach, exprType.getSubtype().getName(), iter.getName(), iterType.getName());
-				m_errors.print(error);
-				return new ErrorSTO(error);
-			}
+			if(!iterType.isEquivalent(aType))
+				return generateError(ErrorMsg.error12r_Foreach, aType.getName(), iter.getName(), iterType.getName()).toString();
 		}
 		else{
-			if(!iterType.isAssignable(exprType.getSubtype())){
-				m_nNumErrors++;
-				error = Formatter.toString(ErrorMsg.error12v_Foreach, exprType.getSubtype().getName(), iter.getName(), iterType.getName());
-				m_errors.print(error);
-				return new ErrorSTO(error);
+			if(!iterType.isAssignable(aType)){
+				return generateError(ErrorMsg.error12v_Foreach, aType.getName(), iter.getName(), iterType.getName()).toString();
+				
 			}
 		}
 		
 		symTab.insert(iter);
 		
-		return new ExprSTO("foreach(" + iter.getType().getName() + " " + iter.getName() + " : " + arr.getName() + ")");
+		return "foreach(" + iter.getType().getName() + " " + iter.getName() + " : " + arr.getName() + ")";
 	}
 
 	// ----------------------------------------------------------------
@@ -524,6 +511,7 @@ class MyParser extends parser {
 		}
 		
 		FuncSTO sto = new FuncSTO(id, t);
+		sto.setRef(ref);
 		
 		symTab.insert(sto);
 
@@ -556,15 +544,14 @@ class MyParser extends parser {
 		
 		int rets = 0;//return statements
 		//retExpr is each statement that might be a return (type);
-		for(String retExpr: statements){
-			if(retExpr.startsWith("return")){
+		for(String retExpr: statements)
+			if(retExpr.startsWith("return"))
 				rets ++;
-			}
-		}
-		if(rets == 0 && !(funType instanceof VoidType)){
+		
+		if(rets == 0 && !(funType instanceof VoidType))
 			if(!extern)
 				return generateError(ErrorMsg.error6a_Return_expr);
-		}
+		
 		STO s = null;
 		if(!(s instanceof ErrorSTO))
 			s = symTab.getFunc();
@@ -578,38 +565,42 @@ class MyParser extends parser {
 	// PHASE1.6A
 	// ----------------------------------------------------------------
 	String DoReturn(STO sto){
-		String error;
-		STO s = sto;
-		if(sto.isError())
+		final String RETURN = "return ";
+		if(sto != null && sto.isError())
 			return "";
 		
-		FunctionPointerType fs = (FunctionPointerType) symTab.getFunc().getType();
-		Type neededType = fs.getReturnType();
-		Type givenType = s.getType();
-		if(fs.isRef()){
-			if(!fs.getReturnType().isEquivalent(s.getType())){
-				m_nNumErrors++;
-				error = Formatter.toString(ErrorMsg.error6b_Return_equiv, givenType.getName(), neededType.getName());
-				m_errors.print(error);
-				s = new ErrorSTO(error);
+		
+		FunctionPointerType fType = (FunctionPointerType) symTab.getFunc().getType();
+		Type rType = fType.getReturnType();
+		
+		if(sto == null){
+			if(!(rType instanceof VoidType)){
+				generateError(ErrorMsg.error6a_Return_expr);
+				return RETURN;
+			}
+			else
+				return RETURN;
+		}
+		
+		Type givenType = sto.getType();
+		if(fType.isRef()){
+			if(!givenType.isEquivalent(rType)){
+				generateError(ErrorMsg.error6b_Return_equiv, givenType.getName(), rType.getName());
+				return RETURN;
 			}
 			else if(!sto.isModLValue() && !(sto instanceof VoidSTO)){
-				m_nNumErrors++;
-				error = ErrorMsg.error6b_Return_modlval;
-				m_errors.print(error);
-				s = new ErrorSTO(error);
+				generateError(ErrorMsg.error6b_Return_modlval);
+				return RETURN;
 			}
 		}
 		else{
-			if(!fs.getReturnType().isAssignable(s.getType())){
-				m_nNumErrors++;
-				error = Formatter.toString(ErrorMsg.error6a_Return_type, givenType.getName(), neededType.getName());
-				m_errors.print(error);
-				s = new ErrorSTO(error);
+			if(!givenType.isAssignable(rType)){
+				generateError(ErrorMsg.error6a_Return_type, givenType.getName(), rType.getName());
+				return RETURN;
 			}
 		}
 		
-		return "return " + sto.getName();
+		return RETURN + sto.getName();
 	}
 	
 	// ----------------------------------------------------------------
@@ -717,51 +708,44 @@ class MyParser extends parser {
 		if(sto.isError())
 			return sto;
 		
-		int prev = m_nNumErrors;
+		STO error = null;
 		
 		if (!(sto.getType() instanceof FunctionPointerType)) 
 			return generateError(ErrorMsg.not_function, sto.getName());
 		
 
-		FunctionPointerType fsto = (FunctionPointerType) sto.getType();
+		FunctionPointerType fstoT = (FunctionPointerType) sto.getType();
 		
-		if(paramList.size() != fsto.getNumParams()){	//Check 5, number params expected and passed in don't match
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.error5n_Call, paramList.size(), fsto.getNumParams()));
+		if(paramList.size() != fstoT.getNumParams()){	//Check 5, number params expected and passed in don't match
+			error = generateError(ErrorMsg.error5n_Call, paramList.size() +"", fstoT.getNumParams() + "");
 		}
 		
-		for(int i = 0; i < paramList.size() && i < fsto.getNumParams(); i++){
-			VarSTO parameter = fsto.get(i);
+		for(int i = 0; i < paramList.size() && i < fstoT.getNumParams(); i++){
+			VarSTO parameter = fstoT.get(i);
 			boolean isRef = parameter.isRef();
 			STO argument = paramList.get(i);
 			
 			if(isRef){ //Checking parameter declared as pass-by-reference(&) and corresponding arg types
-				if(!parameter.getType().isEquivalent(argument.getType())){
-					m_nNumErrors++;
-					m_errors.print(Formatter.toString(ErrorMsg.error5r_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName()));
-				}
-				else if(!(argument.isModLValue()) ){//&& !(argument.getType() instanceof ArrayType)){ 456
-					m_nNumErrors++;
-					m_errors.print(Formatter.toString(ErrorMsg.error5c_Call, argument.getName(), argument.getType().getName()));
-				}
+				if(!parameter.getType().isEquivalent(argument.getType()))
+					error = generateError(ErrorMsg.error5r_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
+				else if(!(argument.isModLValue()) )//&& !(argument.getType() instanceof ArrayType)){
+					error = generateError(ErrorMsg.error5c_Call, argument.getName(), argument.getType().getName());
 			}
 			else{	//Checking parameter types against those being passed in
-				if(!parameter.getType().isAssignable(argument.getType())){
-					m_nNumErrors++;
-					m_errors.print(Formatter.toString(ErrorMsg.error5a_Call, parameter.getType().getName(), argument.getName(), argument.getType().getName()));
-				}
+				if(!parameter.getType().isAssignable(argument.getType()))
+					error = generateError(ErrorMsg.error5a_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
 			}
-				
 		}
+
+		if(error != null)
+			return error;
 		
-		if(sto.getIsModifiable() || fsto.getReturnType() instanceof PointerType){
-			return new VarSTO(fsto.getName(), fsto.getReturnType());
-		}
 		
-		if(prev != m_nNumErrors)
-			return new ErrorSTO("");
+		if(fstoT.isRef())
+			return new VarSTO(sto.getName(), fstoT.getReturnType());
 		
-		return new ExprSTO(fsto.getName(), fsto.getReturnType());
+		
+		return new ExprSTO(sto.getName(), fstoT.getReturnType());
 	}
 	// ----------------------------------------------------------------
 	//
@@ -1842,49 +1826,58 @@ class MyParser extends parser {
 		
 	}
 	Stack<String> whileForList = new Stack<String>();
-	public STO WriteForWhileBegin(String s){
-		Address a = am.getAddress();
+	public void WriteForWhileBegin(String s){
+		Address _0_a = am.getAddress();
 		String label = "." + s + literalCount++;
 		whileForList.add(label);
 		
-		ExprSTO c = new ExprSTO(whileForList.peek()+".counter", new IntType());
-		symTab.insert(c);
-		writer.addSTO(c);
-		writer.set("0", a);
-		writer.store(a, c.getAddress());
+		ExprSTO counter = new ExprSTO(whileForList.peek()+".counter", new IntType());
+		symTab.insert(counter);
+		writer.addSTO(counter);
+		writer.set("0", _0_a);
+		
+		store(counter, _0_a);
 		
 		writer.label(label);
 
-		a.release();
-		return c;
+		_0_a.release();
 	}
 	
 	public void WriteForMiddle(STO s_index, STO s_array) {
+		if(s_index.isError())
+			return;
+		writer.addSTO(s_index);
+		
+		
 		VarSTO index = (VarSTO) s_index, array = (VarSTO) s_array;
 		STO counter = symTab.access(whileForList.peek()+".counter");
-		ArrayType aT = ((ArrayType) array.getType());
-		String length = aT.getLength().toString();
-		Address length_a = am.getAddress();
-		Address counter_a = am.getAddress();
+
+		ArrayType aT = (ArrayType) array.getType();
+		String maxlength = aT.getLength().toString();
 		
-		writer.set(length, length_a);
-		counter.writeVal(counter_a, writer);
+		Address length_a = am.getAddress();
+		Address counter_a = Address.O1;
+		
+		writer.set(maxlength, length_a);
+		writeVal(counter, counter_a);
 		writer.cmp(counter_a, length_a);
 		writer.be(whileForList.peek() + DONE);
 		
 		length_a.release();
-		counter_a.release();
 		
-		index.setInit(array);
-		array.setInit2(index);
-		//index.setAddress("ARRAY");
-		if(index.isRef()){
-			Address a = am.getAddress();
-			writeVal(index, a);
-			writer.addSTO(index);
-			index.store(a, writer);
-			a.release();
-		}
+		Address sTypeLen_a = Address.O0; 
+		String subTypeLength = aT.getSubtype().getSize().toString();
+		writer.set(subTypeLength, sTypeLen_a);
+		writer.call(".mul");
+		
+		Address array_a = am.getAddress();
+		writeVal(array, array_a);//this should be writing the address of the first element
+		
+		if(!index.isRef())
+			writer.ld(array_a, array_a);
+		
+		store(index, array_a);
+		array_a.release();
 	}
 	
 	public void WriteWhileMiddle(STO s){

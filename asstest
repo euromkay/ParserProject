@@ -1,13 +1,16 @@
-float f = 5.5;
-function : void foo(){
-	int f;
-	//f = ::f; // error, not assignable:
- 	// float cannot be assigned to int
- 	
- 	float i;
- 	
- 	i = 4.4;
- 	i = 4;
- 	
- 	
+bool x;
+
+function : {
+	bool x;
+	while(x){}
+	if(x){}
+	while(::x){}
+	if(x){}
+	
+	if(4 < 2){}
+	while(false){}
+	
+	int i = 4;
+	while(i){}
+	if(i){}
 }
