@@ -642,6 +642,7 @@ class Lexer {
 		m_htKeywords.put("continue", new Integer(sym.T_CONTINUE));
 		m_htKeywords.put("cout", new Integer(sym.T_COUT));
 		m_htKeywords.put("const", new Integer(sym.T_CONST));
+		m_htKeywords.put("delete", new Integer(sym.T_DELETE));
 		m_htKeywords.put("else", new Integer(sym.T_ELSE));
 		m_htKeywords.put("endl", new Integer(sym.T_ENDL));
 		m_htKeywords.put("exit", new Integer(sym.T_EXIT));
@@ -652,6 +653,7 @@ class Lexer {
 		m_htKeywords.put("function", new Integer(sym.T_FUNCTION));
 		m_htKeywords.put("if", new Integer(sym.T_IF));
 		m_htKeywords.put("int", new Integer(sym.T_INT));
+		m_htKeywords.put("new", new Integer(sym.T_NEW));
 		m_htKeywords.put("nullptr", new Integer(sym.T_NULLPTR));
 		m_htKeywords.put("return", new Integer(sym.T_RETURN));
 		m_htKeywords.put("sizeof", new Integer(sym.T_SIZEOF));

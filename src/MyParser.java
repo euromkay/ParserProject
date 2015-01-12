@@ -498,16 +498,16 @@ class MyParser extends parser {
 		return s;
 	}
 
-	FuncSTO DoFuncDecl_1(String id) {
+	STO DoFuncDecl_1(String id) {
 		return DoFuncDecl_1(symTab.getStruct().getType(), false, id);
 	}
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	FuncSTO DoFuncDecl_1(Type t, boolean ref, String id) {
+	STO DoFuncDecl_1(Type t, boolean ref, String id) {
 		if (symTab.accessLocal(id) != null) {
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.redeclared_id, id));
+			if(!symTab.accessLocal(id).isFunc())
+				return generateError(ErrorMsg.redeclared_id, id);
 		}
 		
 		FuncSTO sto = new FuncSTO(id, t);
@@ -1448,6 +1448,8 @@ class MyParser extends parser {
 		s.store(a, writer);
 		
 		a.release();
+		
+		writer.comment(s.getName());
 	}
 	
 	public int literalCount;
@@ -1468,6 +1470,7 @@ class MyParser extends parser {
 		s.store(a, writer);
 		
 		a.release();
+		writer.comment(s.getName());
 	}
 
 	public static final String TRUE_S = "1", FALSE_S = "0";
@@ -1482,6 +1485,7 @@ class MyParser extends parser {
 		s.store(a, writer);
 		
 		a.release();
+		writer.comment(s.getName());
 	}
 	
 	public void WriteStringLiteral(String s) {
@@ -1491,6 +1495,7 @@ class MyParser extends parser {
 		writer.newLine();
 		
 		writer.changeSection(Writer.TEXT);
+		writer.comment(s);
 		
 	}
 	
@@ -1733,7 +1738,7 @@ class MyParser extends parser {
 		if(!(func.getReturnType() instanceof VoidType))
 			fsto.store(Address.O0, writer);
 	}
-	/*
+	
 	public void WriteFuncCall(VarSTO v, Vector<STO> params, STO fsto){
 		FuncSTO func = (FuncSTO) v.getInit();
 		STO structSTO = v.getInit2();
@@ -1753,17 +1758,17 @@ class MyParser extends parser {
 		for(int i = 0; i < params.size(); i++){
 			STO e = params.get(i);
 			if(funcParams.get(i).isRef() || e.getType() instanceof ArrayType || e.getType() instanceof StructType){
-				e.writeAddress(o+(i + structOffset), writer);
+				e.writeAddress(new Address(o+(i + structOffset)), writer);
 			}
 			else
-				e.writeVal(o+(i + structOffset), writer);
+				e.writeVal(new Address(o+(i + structOffset)), writer);
 			i++;
 		}
 		
 		writer.call(func.getName());
 		if(!(func.getReturnType() instanceof VoidType))
-			writer.store(Template.O0, fsto.getAddress());
-	}*/
+			writer.store(Address.O0, fsto.getAddress());
+	}
 	
 	public void WriteNotOp(STO s, STO result){
 		writer.addSTO(result);
