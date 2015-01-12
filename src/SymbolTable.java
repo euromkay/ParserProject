@@ -10,6 +10,7 @@ class SymbolTable
 	private Scope m_scopeGlobal;
 	private FuncSTO m_func = null;
 	private StructdefSTO currentStruct = null;
+	
     
 	//----------------------------------------------------------------
 	//
@@ -118,6 +119,15 @@ class SymbolTable
 	public STO isInStructScope(String id){
 		Scope structScope = m_stkScopes.get(1);
 		return structScope.access(id);
+	}
+	private ArrayList<String> overLoadedNames = new ArrayList<String>();
+	public void add(String id) {
+		overLoadedNames.add(id);
+		
+	}
+
+	public boolean has(String id) {
+		return overLoadedNames.contains(id);
 	}
 	
 }

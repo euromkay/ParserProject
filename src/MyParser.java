@@ -505,19 +505,27 @@ class MyParser extends parser {
 	//
 	// ----------------------------------------------------------------
 	STO DoFuncDecl_1(Type t, boolean ref, String id) {
+		STO error = null;
 		if (symTab.accessLocal(id) != null) {
 			if(!symTab.accessLocal(id).isFunc())
-				return generateError(ErrorMsg.redeclared_id, id);
+				error = generateError(ErrorMsg.redeclared_id, id);
+			else{
+				((FuncSTO) symTab.accessLocal(id)).fix();
+				symTab.add(id);
+			}
 				
 		}
 		
-		FuncSTO sto= new FuncSTO(id, t);
+		FuncSTO sto = new FuncSTO(id, t);
+		symTab.setFunc(sto);
+		symTab.openScope();
+		
+		if(error != null)
+			return error;
+		
 		sto.setRef(ref);
 		
-		symTab.insert(sto);
 
-		symTab.openScope();
-		symTab.setFunc(sto);
 		
 		return sto;
 	}
@@ -528,10 +536,20 @@ class MyParser extends parser {
 			m_nNumErrors++;
 			m_errors.print("internal: DoFormalParams says no proc!");
 		}
+		if(symTab.access(FuncSTO.getName(func.getBaseName(), params)) != null  ){
+			generateError(ErrorMsg.error9_Decl, func.getBaseName());
+			return;
+		}
+		
 		for(VarSTO v: params){
 			symTab.insert(v);
 		}
 		func.setParameters(params);
+		if(overLoaded(func.getBaseName()))
+			func.fix();
+		
+				
+				
 	}
 	// ----------------------------------------------------------------
 	// PHASE1.6B //Makesure statements in skeleton code have nonvoid or non null EXprSTO 
@@ -541,7 +559,7 @@ class MyParser extends parser {
 		return DoFuncDecl_2(false, new VoidType(), statements);
 	}
 	STO DoFuncDecl_2(boolean extern, Type funType, Vector<String> statements) {
-		
+
 		
 		int rets = 0;//return statements
 		//retExpr is each statement that might be a return (type);
@@ -552,14 +570,22 @@ class MyParser extends parser {
 		if(rets == 0 && !(funType instanceof VoidType))
 			if(!extern)
 				return generateError(ErrorMsg.error6a_Return_expr);
+		FuncSTO current = symTab.getFunc();
 		
-		STO s = null;
-		if(!(s instanceof ErrorSTO))
-			s = symTab.getFunc();
+
 		symTab.closeScope();
+		
+		/*FuncSTO dummy = new FuncSTO(current.getBaseName(), current.getReturnType());
+		dummy.setRef(current.getFunctionType().isRef());
+		dummy.setParameters(current.getFunctionType().getParams());
+		dummy.setName(current.getBaseName());
+		
+		symTab.insert(dummy);*/
+		symTab.insert(current);
+		
 		symTab.setFunc(null);
 		
-		return s;
+		return current;
 	}
 
 	// ----------------------------------------------------------------
@@ -705,9 +731,16 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	STO DoFuncCall(STO sto, Vector<STO> paramList) {
+	STO DoFuncCall(STO sto, Vector<VarSTO> argList) {
 		if(sto.isError())
 			return sto;
+		String baseName = ((FuncSTO)sto).getBaseName();
+		
+		STO temp = symTab.access(FuncSTO.getName(sto.getName(), argList));
+		if(temp != null)
+			sto = temp;
+		else if(overLoaded(baseName))
+			return generateError(ErrorMsg.error9_Illegal, baseName);
 		
 		STO error = null;
 		
@@ -717,23 +750,23 @@ class MyParser extends parser {
 
 		FunctionPointerType fstoT = (FunctionPointerType) sto.getType();
 		
-		if(paramList.size() != fstoT.getNumParams()){	//Check 5, number params expected and passed in don't match
-			error = generateError(ErrorMsg.error5n_Call, paramList.size() +"", fstoT.getNumParams() + "");
+		if(argList.size() != fstoT.getNumParams()){	//Check 5, number params expected and passed in don't match
+			error = generateError(ErrorMsg.error5n_Call, argList.size() +"", fstoT.getNumParams() + "");
 		}
 		
-		for(int i = 0; i < paramList.size() && i < fstoT.getNumParams(); i++){
+		for(int i = 0; i < argList.size() && i < fstoT.getNumParams(); i++){
 			VarSTO parameter = fstoT.get(i);
 			boolean isRef = parameter.isRef();
-			STO argument = paramList.get(i);
+			STO argument = argList.get(i);
 			
 			if(isRef){ //Checking parameter declared as pass-by-reference(&) and corresponding arg types
-				if(!parameter.getType().isEquivalent(argument.getType()))
+				if(!argument.getType().isEquivalent(parameter.getType()))
 					error = generateError(ErrorMsg.error5r_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
 				else if(!(argument.isModLValue()) )//&& !(argument.getType() instanceof ArrayType)){
 					error = generateError(ErrorMsg.error5c_Call, argument.getName(), argument.getType().getName());
 			}
 			else{	//Checking parameter types against those being passed in
-				if(!parameter.getType().isAssignable(argument.getType()))
+				if(!argument.getType().isAssignable(parameter.getType()))
 					error = generateError(ErrorMsg.error5a_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
 			}
 		}
@@ -748,6 +781,10 @@ class MyParser extends parser {
 		
 		return new ExprSTO(sto.getName(), fstoT.getReturnType());
 	}
+	private boolean overLoaded(String id){
+		return symTab.has(id);
+	}
+	
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
@@ -1693,10 +1730,10 @@ class MyParser extends parser {
 		writer.returnstmt();		
 	}
 	
-	public void WriteFuncCall(FuncSTO func, Vector<STO> args, STO fsto){
+	public void WriteFuncCall(FuncSTO func, Vector<VarSTO> args, STO fsto){
 		if(fsto.isError())
 			return;
-		
+		func = (FuncSTO) symTab.access(FuncSTO.getName(func.getName(), args));
 		
 		writer.addSTO(fsto);
 		Vector<VarSTO> funcParams = ((FunctionPointerType) func.getType()).getParams();
@@ -2053,7 +2090,7 @@ class MyParser extends parser {
 		}
 	}
 
-	public void WriteNewStmt(STO s, Vector<STO> params) {
+	public void WriteNewStmt(STO s, Vector<VarSTO> params) {
 		Address a = am.getAddress();
 		writer.set("1", Address.O0);
 		writer.set(s.getType().getSize().toString(), Address.O1);

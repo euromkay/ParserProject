@@ -11,12 +11,12 @@ class FuncSTO extends STO
 	//
 	//----------------------------------------------------------------
 	
-	
+	public FunctionPointerType getFunctionType(){
+		return (FunctionPointerType) getType();
+	}
 	
 	void setRef(boolean ref){
 
-		setIsAddressable(ref);
-		setIsModifiable(ref);
 		FunctionPointerType ft = (FunctionPointerType) getType();
 		ft.setRef(ref);
 	}
@@ -88,13 +88,16 @@ class FuncSTO extends STO
 		isFuncMember = true;
 	}
 
-	public static String getName(String name, Vector<STO> params) {
-		String s = name;
+	public static String getName(String name, Vector<VarSTO> params) {
 		for(STO p: params){
 			name += "_" + p.getType().getName();
 		}
 		
-		return s;
+		return name;
+	}
+
+	public void fix() {
+		setName(getName(getName(), getFunctionType().getParams()));
 	}
 
 	
