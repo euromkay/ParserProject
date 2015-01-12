@@ -636,6 +636,7 @@ class Lexer {
 	private void loadKeywords() {
 		m_htKeywords = new Hashtable<String, Integer>();
 
+		
 		m_htKeywords.put("bool", new Integer(sym.T_BOOL));
 		m_htKeywords.put("break", new Integer(sym.T_BREAK));
 		m_htKeywords.put("cin", new Integer(sym.T_CIN));
