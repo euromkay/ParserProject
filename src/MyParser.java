@@ -508,9 +508,10 @@ class MyParser extends parser {
 		if (symTab.accessLocal(id) != null) {
 			if(!symTab.accessLocal(id).isFunc())
 				return generateError(ErrorMsg.redeclared_id, id);
+				
 		}
 		
-		FuncSTO sto = new FuncSTO(id, t);
+		FuncSTO sto= new FuncSTO(id, t);
 		sto.setRef(ref);
 		
 		symTab.insert(sto);
@@ -1410,7 +1411,7 @@ class MyParser extends parser {
 	}
 
 	public void WriteAssignExpr(STO left, STO right_s) {
-		if(left.isError())
+		if(left.isError() || right_s.isError())
 			return;
 		VarSTO left_s = (VarSTO) left;
 		Address left_a = am.getAddress();

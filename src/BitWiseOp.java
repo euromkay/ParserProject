@@ -12,10 +12,10 @@ public abstract class BitWiseOp extends ArithmeticOp {
 		
 		
 		if(!(aType instanceof IntType)){
-			return new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, aType.getName(), getName()));
+			return new ErrorSTO(Formatter.toString(ErrorMsg.error1w_Expr, aType.getName(), getName(), new IntType().getName()));
 		}
 		else if(!(bType instanceof IntType)){
-			return new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, bType.getName(), getName()));
+			return new ErrorSTO(Formatter.toString(ErrorMsg.error1w_Expr, bType.getName(), getName(), new IntType().getName()));
 		}
 		else {
 			//Returning IntType Result
