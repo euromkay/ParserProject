@@ -1,6 +1,8 @@
 
 function : int main(){
-	int x;
+	int *x;
+	
+	*x = 1;
 	
 	delete x;
 	

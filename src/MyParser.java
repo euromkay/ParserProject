@@ -1038,9 +1038,9 @@ class MyParser extends parser {
 		return list;
 	}
 	
-	public void DoAllocCheck(String s, STO x){
+	public String DoAllocCheck(String s, STO x){
 		if(x instanceof ErrorSTO)
-			return;
+			return "";
 		boolean isDelete = s.equals("delete");
 		if(!x.isModLValue()){
 			m_nNumErrors++;
@@ -1056,6 +1056,8 @@ class MyParser extends parser {
 			else
 				m_errors.print(Formatter.toString(ErrorMsg.error16_Delete, x.getType().getName()));
 		}
+		
+		return s + " " + x.getName();
 	}
 
 	public Vector<VarSTO> DoMultiParamCheck(Vector<VarSTO> _1) {
