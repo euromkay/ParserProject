@@ -51,4 +51,8 @@ public class Address implements Comparable<Address> {
 	public boolean isRegister() {
 		return s.startsWith("%");
 	}
+
+	public boolean isOnFP() {
+		return s.startsWith("%fp");
+	}
 }

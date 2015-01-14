@@ -1217,10 +1217,10 @@ Designator2 ::=     Designator2:_1 T_DOT T_ID:_3
     |               Designator2:_1 T_LPAREN OptExprList:_2 T_RPAREN
                     {:
                       RESULT = ((MyParser) parser).DoFuncCall (_1, _2);  
-                      //if(_1 instanceof FuncSTO)
-                        //((MyParser) parser).WriteFuncCall((FuncSTO) _1, _2, RESULT);
-                      //else
-                        //((MyParser) parser).WriteFuncCall((VarSTO) _1, _2, RESULT);
+                      if(_1 instanceof FuncSTO)
+                        ((MyParser) parser).WriteFuncCall((FuncSTO) _1, _2, RESULT);
+                      else
+                        ((MyParser) parser).WriteFuncCall((VarSTO) _1, _2, RESULT);
                     :}
     |               Designator3:_1
                     {:

@@ -183,7 +183,12 @@ abstract class STO
 				writer.addOp(a1, tempAdd, a1, false);*/
 		/*}else if(getAddress().equals(DEFAULT)){
 			writeStructField(writer, a1);*/
-		if(!getAddress().isLocal()){
+		if(getAddress().isOnFP()){
+			writer.set(address, tempAdd);
+			writer.set(offset, a1);
+			writer.minusOp(tempAdd, a1, a1);
+		}
+		else if(!getAddress().isLocal()){
 			writer.set(getAddress(), a1);
 		}else if(isParameter(writer.symTab.getFunc()) && this instanceof VarSTO && (((VarSTO) this).isRef())){
 			writer.set(address, a1);

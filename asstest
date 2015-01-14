@@ -1,41 +1,5 @@
-/*
 
-function : int fvr(float a) { return 0; }
-float r;
-function : int fv() { return 0; }
-int i;
-function : int fi() { return 0; }
-function : int fii(int a) { return 0; }
-function : int fiVr(float &a) { return 0; }
-
-function : void main() {
- fvr(r);
- fv();
- i = fi();
- i = fii(i);
- i = fii(fii(17 + i));
- i = fii(i * fi());
- i = fiVr(r);
- fvr(i);
-} */
-
-
-function : void foo(){}
-function : int foo(float x, int y, float z, int a){return 0;}
-function : void foo(float x, float y, float z){}
-
-function : void main(){
-	foo();
-	foo(0.0, 0, 0.0, 0);
-		foo(0.0, 0, 0, 0);
-	foo(0.0, 0, 0.0);
-	foo(0.0, 0.0, 0.0);
-}
-
-
-
-
-/*float f [5];
+float f [5];
 
 function : void main(){
 	int i = 0;
@@ -45,5 +9,5 @@ function : void main(){
 	foreach(float f: ::f){
 		cout << f << endl;
 	}
-	exit(false);
-}*/
+	exit(1);
+}

@@ -218,6 +218,7 @@ public class Writer {
         
         try {
             fileWriter.write(asStmt);
+            System.out.print(asStmt);
         } catch (IOException e) {
             System.err.println(ERROR_IO_WRITE);
             e.printStackTrace();
@@ -268,7 +269,7 @@ public class Writer {
 				s.setAddress(s.getName());
 			}else{
 				globalVarSpace += s.getType().getSize();
-				s.setAddress("%fp-");
+				s.setAddress("%fp");
 				s.setOffset(globalVarSpace.toString());
 			}
 		}
@@ -287,8 +288,8 @@ public class Writer {
 	public boolean writeLater = false;
 	
 	
-	public void write(String template, String ... params){
-		if(writeLater  || isGlobal() && getSection() == TEXT)
+	private void write(String template, String ... params){
+		if(writeLater)
 			pWrites.add(convert(template, params));
 		else
 			writeNow(template, params);
@@ -311,9 +312,29 @@ public class Writer {
 			write(Template.TEXT);
 	}
 
+	public void align(String s){
+		write(Template.ALIGN, s);
+	}
+	
+	public void skip(String r, String s, String t){
+		write(r, s, t);
+	}
+	
 	public void call(String function) {
 		write(Template.CALL, function);
 		write(Template.NOP);
+	}
+	
+	public void funcComment(String name){
+		write(Template.LABEL_COMMENT, name);
+	}
+	
+	public void global(String fname){
+		write(Template.GLOBAL, fname);
+	}
+	
+	public void save(){
+		write(Template.SAVE, Template.SP, Template.G1, Template.SP);
 	}
 
 	//bracketed a1, nonbrack a2

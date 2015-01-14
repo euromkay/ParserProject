@@ -1139,7 +1139,7 @@ class MyParser extends parser {
 
 	public String WriteVarDeclComment(STO left, STO right){
 		String label;
-		String left_t = left.getType() + " " + left.getName();
+		String left_t = left.getType().getName() + " " + left.getName();
 		if(left.isConst())
 			left_t = "const " + left_t;
 		
@@ -1155,7 +1155,7 @@ class MyParser extends parser {
 	public String WriteVarDeclComment(STO left, Vector<STO> cParams){
 		String label;
 		if(cParams == null){
-			label = left.getType() + " " + left.getName();
+			label = left.getType().getName() + " " + left.getName();
 			writer.comment(label);
 		}
 		else{ 
@@ -1178,8 +1178,8 @@ class MyParser extends parser {
 		
 		if(writer.isGlobal()){
 			
-			writer.write(Template.DATA);
-			writer.write(Template.ALIGN, "4");
+			writer.changeSection(Writer.DATA);
+			writer.align("4");
 		
 			//Initialize Default Null Value
 			VarSTO left_s = (VarSTO) left;
@@ -1220,7 +1220,7 @@ class MyParser extends parser {
 			}
 
 			writer.writeLater = false;
-			writer.write(skip, left.getName(), val);
+			writer.skip(skip,  left.getName(),  val);
 
 		//local
 		}else{
@@ -1243,16 +1243,16 @@ class MyParser extends parser {
 				writer.newLine();
 					
 				writer.changeSection(Writer.DATA);
-				writer.write(Template.ALIGN, "4");
+				writer.align("4");
+				
 				String type;
 				if(left.getType() instanceof FloatType)
 					type = Template.FLOAT_VAR_DECL;
 				else
 					type = Template.INT_VAR_DECL;
 					
-					
-				writer.write(type, name, "0");
-				writer.write(type, nameBool, "0");
+				writer.skip(type, name, "0");
+				writer.skip(type, nameBool, "0");
 					
 				writer.changeSection(Writer.TEXT);
 					
@@ -1273,7 +1273,6 @@ class MyParser extends parser {
 			}
 		}
 
-		writer.newLine();
 		
 		
 	}
@@ -1349,16 +1348,15 @@ class MyParser extends parser {
 			offset++;
 		}
 		//Write Function Comment
-		writer.write(Template.LABEL_COMMENT, fname);
+		writer.funcComment(fname);
 		
 		//Write Function Header
 		writer.changeSection(Writer.TEXT);
-		writer.write(Template.GLOBAL, fname);
+		writer.global(fname);
 		writer.newLine();
 		writer.label(fname);
 		
 		writer.set("SAVE." + fname, new Address("%g1")); 
-		writer.write(Template.SAVE, Template.SP, Template.G1, Template.SP);
 		writer.newLine();
 		
 		if(fname.equals("main"))
@@ -1435,8 +1433,7 @@ class MyParser extends parser {
 	
 	public void WriteFuncDeclFinish(String fname) {
 		//writer.functionFinish();
-		writer.write(Template.RET);
-		writer.write(Template.RESTORE);	
+		writer.returnstmt();
 		writer.newLine();
 		if(symTab.m_nLevel == 2){
 			String structName = symTab.m_stkScopes.get(1).getLastStructName();
@@ -1482,6 +1479,8 @@ class MyParser extends parser {
 
 	
 	public void WriteIntLiteral(STO s){
+		writer.comment(s.getName());
+		
 		Address a = am.getAddress();
 		writer.set(s.getName(), a);
 		writer.addSTO(s);
@@ -1489,18 +1488,19 @@ class MyParser extends parser {
 		
 		a.release();
 		
-		writer.comment(s.getName());
+		writer.newLine();
 	}
 	
 	public int literalCount;
 	
 	public void WriteFloatLiteral(STO s) {
+		writer.comment(s.getName());
 			
 		writer.addSTO(s);
 		int section = writer.getSection();
 		writer.changeSection(Writer.RODATA);
 		String label = "_float_" + s.getName() + literalCount++;
-		writer.write(Template.FLOAT_VAR_DECL, label, s.getName());
+		writer.skip(Template.FLOAT_VAR_DECL, label, s.getName());
 		writer.newLine();
 	
 		Address a = am.getAddress();
@@ -1510,7 +1510,8 @@ class MyParser extends parser {
 		s.store(a, writer);
 		
 		a.release();
-		writer.comment(s.getName());
+		
+		writer.newLine();
 	}
 
 	public static final String TRUE_S = "1", FALSE_S = "0";
@@ -1531,7 +1532,7 @@ class MyParser extends parser {
 	public void WriteStringLiteral(String s) {
 		writer.changeSection(Writer.RODATA);
 		String label = "_string" + literalCount++;
-		writer.write(Template.ASCIZ, label, "\""+s+"\"");
+		writer.skip(Template.ASCIZ, label, "\""+s+"\"");
 		writer.newLine();
 		
 		writer.changeSection(Writer.TEXT);
@@ -1733,7 +1734,8 @@ class MyParser extends parser {
 	public void WriteFuncCall(FuncSTO func, Vector<VarSTO> args, STO fsto){
 		if(fsto.isError())
 			return;
-		func = (FuncSTO) symTab.access(FuncSTO.getName(func.getName(), args));
+		if(overLoaded(func.getBaseName()))
+			func = (FuncSTO) symTab.access(FuncSTO.getName(func.getName(), args));
 		
 		writer.addSTO(fsto);
 		Vector<VarSTO> funcParams = ((FunctionPointerType) func.getType()).getParams();
