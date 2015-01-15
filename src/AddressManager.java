@@ -34,7 +34,7 @@ public class AddressManager {
 			return;
 		//System.out.println("Returning : " + address.toString());
 		locals.add(address);
-		//sort();
+		sort();
 	}
 
 	private void sort() {

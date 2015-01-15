@@ -5,7 +5,7 @@ import java.util.*;
 
 class SymbolTable
 {
-	Stack<Scope> m_stkScopes;
+	private Stack<Scope> m_stkScopes;
 	public int m_nLevel;
 	private Scope m_scopeGlobal;
 	private FuncSTO m_func = null;

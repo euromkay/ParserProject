@@ -14,7 +14,7 @@ public class ArrayType extends ArrointType {
 		return length.toString();		
 	}
 
-	public boolean isArrayType(){
+	public boolean isArray(){
 		return true;
 	}
 

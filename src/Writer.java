@@ -137,9 +137,9 @@ public class Writer {
 		this.am = am;
     	writeUsefulAsciz();
     	
-    	write(Template.DATA);
-		write(Template.ALIGN, "4");
-		write(Template.INT_VAR_DECL, GLOBAL_INIT, "0");
+    	changeSection(Writer.DATA);
+    	align("4");
+		skip(Template.INT_VAR_DECL, GLOBAL_INIT, "0");
 		newLine();
 		
     }
@@ -148,14 +148,14 @@ public class Writer {
     
     
     public void writeUsefulAsciz(){
-    	write(Template.RODATA);
-    	write(Template.ASCIZ, "_endl", Template.ENDL);
-    	write(Template.ASCIZ, Template.INTFORMAT, "\"%d\"");
-    	write(Template.ASCIZ, Template.STRFORMAT, "\"%s\"");
-    	write(Template.ASCIZ, Template.BOOLT, "\"true\"");
-    	write(Template.ASCIZ, Template.BOOLF, "\"false\"");
-    	write(Template.ASCIZ, Template.ARRAY_ERROR_FORMAT, "\"Index value of %d is outside legal range [0,%d).\\n\"");
-    	write(Template.ASCIZ, Template.ARRAY_DEL_FORMAT, "\"Attempt to dereference NULL pointer.\\n\"");
+    	writeNow(Template.RODATA);
+    	writeNow(Template.ASCIZ, "_endl", Template.ENDL);
+    	writeNow(Template.ASCIZ, Template.INTFORMAT, "\"%d\"");
+    	writeNow(Template.ASCIZ, Template.STRFORMAT, "\"%s\"");
+    	writeNow(Template.ASCIZ, Template.BOOLT, "\"true\"");
+    	writeNow(Template.ASCIZ, Template.BOOLF, "\"false\"");
+    	writeNow(Template.ASCIZ, Template.ARRAY_ERROR_FORMAT, "\"Index value of %d is outside legal range [0,%d).\\n\"");
+    	writeNow(Template.ASCIZ, Template.ARRAY_DEL_FORMAT, "\"Attempt to dereference NULL pointer.\\n\"");
     	newLine();
     }
     
@@ -164,7 +164,7 @@ public class Writer {
             fileWriter = new FileWriter(fileToWrite);
             
             // 7
-            write(FILE_HEADER, (new Date()).toString());
+            writeNow(FILE_HEADER, (new Date()).toString());
         } catch (IOException e) {
             System.err.printf(ERROR_IO_CONSTRUCT, fileToWrite);
             e.printStackTrace();
@@ -208,6 +208,7 @@ public class Writer {
     
     // 9
     private void writeNow(String template, String ... params) {
+        lastAction = NOW;
         
     	String asStmt;
         if(params.length == 0)
@@ -239,8 +240,13 @@ public class Writer {
         return asStmt.toString();
     }
     
+    private boolean lastAction;
+    private static final boolean NOW = true;
     public void newLine(){
-    	write("\n");
+    	if(lastAction == NOW)
+    		writeNow("\n");
+    	else
+    		write("\n");
     }
     
     
@@ -275,7 +281,7 @@ public class Writer {
 		}
 		else{
 			localVarSpace += s.getType().getSize();
-			s.setAddress("%fp-" + localVarSpace);
+			s.setAddress("%fp");
 			s.setOffset(localVarSpace.toString());
 		}
 	}
@@ -289,8 +295,11 @@ public class Writer {
 	
 	
 	private void write(String template, String ... params){
-		if(writeLater)
+		
+		if(symTab.getFunc() == null){
+			lastAction = !NOW;
 			pWrites.add(convert(template, params));
+		}
 		else
 			writeNow(template, params);
 	}
@@ -305,23 +314,29 @@ public class Writer {
 	public void changeSection(int sec) {
 		this.section = sec;
 		if(section == DATA){
-			write(Template.DATA);
+			writeNow(Template.DATA);
 		}else if(section == RODATA)
-			write(Template.RODATA);
+			writeNow(Template.RODATA);
 		else
-			write(Template.TEXT);
+			writeNow(Template.TEXT);
 	}
 
 	public void align(String s){
-		write(Template.ALIGN, s);
+		writeNow(Template.ALIGN, s);
 	}
 	
 	public void skip(String r, String s, String t){
-		write(r, s, t);
+		writeNow(r, s, t);
 	}
 	
 	public void call(String function) {
 		write(Template.CALL, function);
+		write(Template.NOP);
+	}
+	
+	
+	
+	public void nop(){
 		write(Template.NOP);
 	}
 	
@@ -349,15 +364,16 @@ public class Writer {
 	}
 
 	public void set(String a1, Address a2) {
-		if(a1.startsWith("%") && a2.isRegister()){ // means both registers. can't set from reg to reg
-			write(Template.MOV, a1, a2.toString());
-		}
-		else
-			write(Template.SET, a1, a2.toString());
+		set(new Address(a1), a2);
+		
 	}
 	
 	public void set(Address a1, Address a2){
-		write(Template.MOV, a1.toString(), a2.toString());
+		if(a1.isRegister() && a2.isRegister()){ // means both registers. can't set from reg to reg
+			write(Template.MOV, a1.toString(), a2.toString());
+		}
+		else
+			write(Template.SET, a1.toString(), a2.toString());
 	}
 	
 	public void store(Address a1, Address a2){
@@ -564,6 +580,10 @@ public class Writer {
 
 	public void comment(String s) {
 		write("!" + s + "\n");
+	}
+
+	public void write_special(String template, String string) {
+		write(template, string);
 	}
 	
 

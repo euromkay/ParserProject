@@ -11,8 +11,8 @@ public abstract class BooleanOp extends BinaryOp {
 		Address res_a = writer.getAddressManager().getAddress();
 		writer.cmp(a1, a2, f_flag);
 		
-		writer.write(getTemplate(f_flag), MyParser.BRANCH + p.literalCount);
-		writer.write(Template.NOP);
+		writer.write_special(getTemplate(f_flag), MyParser.BRANCH + p.literalCount);
+		writer.nop();
 		writer.newLine();
 		
 		writer.set("0", res_a);

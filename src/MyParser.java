@@ -262,10 +262,11 @@ class MyParser extends parser {
 		if(b instanceof ErrorSTO)
 			return b;
 		STO result = o.checkOperands(a, b);
-		printErrorSTO(result);
 
-		if(result.isError())
+		if(result.isError()){
+			printErrorSTO(result);
 			return result;
+		}
 		
 		if(!(o.getName().equals(Operator.AND) || o.getName().equals(Operator.OR)))
 			WriteBinaryExpr(a, o, b, result);
@@ -274,10 +275,9 @@ class MyParser extends parser {
 	}
 	
 	private void printErrorSTO(STO result){
-		if (result instanceof ErrorSTO) {
-			m_nNumErrors++;
-			m_errors.print(result.getName()); // maybe?
-		}
+		m_nNumErrors++;
+		m_errors.print(result.getName()); // maybe?
+		
 	}
 	
 	// ----------------------------------------------------------------
@@ -1204,12 +1204,13 @@ class MyParser extends parser {
 					
 				Address lAdd = am.getAddress();
 				Address _4 = am.getAddress(), _0 = am.getAddress(); 
-						
+				
+				writeAddress(left, lAdd);
 				writer.set("4", _4);
 				writer.set("0", _0);
 				//clears our global arrays, setting contents to 0
 				for(int i = 0; i < lType.getSize(); i+=4){
-					writer.store(lAdd, _0);
+					writer.store(_0, lAdd);
 					writer.addOp(lAdd, _4, lAdd);
 				}
 						
@@ -1274,23 +1275,20 @@ class MyParser extends parser {
 		}
 
 		
-		
 	}
 	
 	public void WriteVarInit(STO left, STO right){
-		if(right == null || right.isError())
+		if(right == null || right.isError()){
+			writer.newLine();
 			return;
+		}
 		
 		if(isIntToFloat(left, right))
 			fitos(right, left);
 		else
 			store(left, right);
-		
-		String right_t = "";
-		if(right != null)
-			right_t = " = " + right.getName();
-		
-		writer.comment(left.getName() + right_t);
+
+		writer.newLine();
 	}
 	
 	public void WriteVarInit(STO left, Vector<STO> cParams){
@@ -1342,9 +1340,9 @@ class MyParser extends parser {
 	
 	public void WriteFuncDecl(String fname, Vector<VarSTO> paramList){
 		int offset = 0;
-		if(symTab.m_nLevel == 3){
-			String structName = symTab.m_stkScopes.get(1).getLastStructName();
-			fname = "."+ structName + "_" + fname;
+		
+		if(symTab.getStruct() != null){
+			fname = "."+ symTab.getStruct().getName() + "_" + fname;
 			offset++;
 		}
 		//Write Function Comment
@@ -1353,7 +1351,6 @@ class MyParser extends parser {
 		//Write Function Header
 		writer.changeSection(Writer.TEXT);
 		writer.global(fname);
-		writer.newLine();
 		writer.label(fname);
 		
 		writer.set("SAVE." + fname, new Address("%g1")); 
@@ -1402,15 +1399,14 @@ class MyParser extends parser {
 		writer.cmp(globalInit_a, Address.G0);
 		final String alreadyInitialized = ".globalFinish";
 		writer.bne(alreadyInitialized);
-		writer.writeGlobalInits();
 		writer.newLine();
+		writer.writeGlobalInits();
 		
 		Address _1_a = am.getAddress();
 		writer.set(Writer.GLOBAL_INIT, globalInit_a);
 		writer.set("1", _1_a);
 		writer.store(_1_a, globalInit_a);
 		writer.label(alreadyInitialized);
-		writer.newLine();
 		
 		globalInit_a.release();
 		_1_a.release();
@@ -1436,8 +1432,7 @@ class MyParser extends parser {
 		writer.returnstmt();
 		writer.newLine();
 		if(symTab.m_nLevel == 2){
-			String structName = symTab.m_stkScopes.get(1).getLastStructName();
-			fname = "."+ structName + "_" + fname;
+			fname = "."+ symTab.getStruct().getName() + "_" + fname;
 		}
 
 		writer.save(fname, writer.getStackSize());
