@@ -1,7 +1,7 @@
 public class PlusOp extends ArithmeticOp{
 
 	public PlusOp() {
-		super(Operator.PLUS);
+		super(Operator.PLUS, "+");
 	}
 
 	public void writeSparc(STO a, STO b, STO result, Address a1, Address a2, Address res, Boolean f_flag, MyParser p) {

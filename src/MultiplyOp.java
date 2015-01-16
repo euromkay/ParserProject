@@ -1,7 +1,7 @@
 public class MultiplyOp extends ArithmeticOp{
 
 	public MultiplyOp() {
-		super(Operator.STAR);
+		super(Operator.STAR, "*");
 	}
 
 	public void writeSparc(STO a, STO b, STO result, Address a1, Address a2, Address res, Boolean f_flag, MyParser p) {

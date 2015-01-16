@@ -1,8 +1,8 @@
 
 public class ComparisonOp extends BooleanOp {
 
-	public ComparisonOp(String op_symbol) {
-		super(op_symbol);
+	public ComparisonOp(String op_symbol, String r_symbol) {
+		super(op_symbol, r_symbol);
 	}
 
 	public STO checkOperands(STO a, STO b) {
@@ -19,10 +19,10 @@ public class ComparisonOp extends BooleanOp {
 		else{
 			if(a instanceof ConstSTO && b instanceof ConstSTO){
 				boolean result = getResult((ConstSTO) a, (ConstSTO) b); 
-				return new ConstSTO(a.getName() + b.getName(), new BoolType(), BoolType.dub(result));
+				return new ConstSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new BoolType(), BoolType.dub(result));
 			}
 			else
-				return new ExprSTO(a.getName() + getName() + b.getName(), new BoolType());
+				return new ExprSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new BoolType());
 		}
 	}
 

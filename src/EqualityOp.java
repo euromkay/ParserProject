@@ -2,7 +2,7 @@
 public class EqualityOp extends BooleanOp{
 
 	public EqualityOp(String op_symbol) {
-		super(op_symbol);
+		super(op_symbol, op_symbol);
 	}
 
 	public STO checkOperands(STO a, STO b) {

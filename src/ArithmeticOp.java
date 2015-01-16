@@ -4,8 +4,8 @@ import java.math.RoundingMode;
 
 public abstract class ArithmeticOp extends BinaryOp {
 
-	public ArithmeticOp(String op_symbol) {
-		super(op_symbol);
+	public ArithmeticOp(String op_symbol, String r_symbol) {
+		super(op_symbol, r_symbol);
 	}
 	
 	public STO checkOperands(STO a, STO b) {
@@ -27,28 +27,28 @@ public abstract class ArithmeticOp extends BinaryOp {
 				if(a instanceof ConstSTO && b instanceof ConstSTO){
 					try{
 						BigDecimal result = getResult((ConstSTO) a, (ConstSTO) b);
-						return new ConstSTO(a.getName() + " " + getName() + " " + b.getName(), new IntType(), result);
+						return new ConstSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new IntType(), result);
 					}
 					catch (ArithmeticException e){
 						return new ErrorSTO(ErrorMsg.error8_Arithmetic);
 					}
 				}
 				else	//Resolve to ExprSTO
-					return new ExprSTO(a.getName() + " " + getName() + " " + b.getName(), new IntType());
+					return new ExprSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new IntType());
 			}
 			//Returning FloatType Result
 			else{
 				if(a instanceof ConstSTO && b instanceof ConstSTO){
 					try{
 						BigDecimal result = getResult((ConstSTO) a, (ConstSTO) b);
-						return new ConstSTO(a.getName() + " " + getName() + " " + b.getName(), new FloatType(), result);
+						return new ConstSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new FloatType(), result);
 					}
 					catch (ArithmeticException e){
 						return new ErrorSTO(ErrorMsg.error8_Arithmetic);
 					}
 				}
 				else{	//Resolve to ExprSTO
-					return new ExprSTO(a.getName() + " " + getName() + " " + b.getName(), new FloatType());
+					return new ExprSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new FloatType());
 				}
 			}
 		}

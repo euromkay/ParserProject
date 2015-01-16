@@ -2,8 +2,8 @@ import java.math.BigDecimal;
 
 public abstract class BitWiseOp extends ArithmeticOp {
 
-	public BitWiseOp(String op_symbol) {
-		super(op_symbol);
+	public BitWiseOp(String op_symbol, String r_symbol) {
+		super(op_symbol, r_symbol);
 	}
 
 	public STO checkOperands(STO a, STO b) {

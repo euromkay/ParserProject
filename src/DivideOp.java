@@ -1,7 +1,7 @@
 public class DivideOp extends ArithmeticOp{
 
 	public DivideOp() {
-		super(Operator.SLASH);
+		super(Operator.SLASH, "/");
 	}
 
 	public void writeSparc(STO a, STO b, STO result, Address a1, Address a2, Address res, Boolean f_flag, MyParser p) {

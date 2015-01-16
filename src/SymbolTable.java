@@ -122,12 +122,21 @@ class SymbolTable
 	}
 	private ArrayList<String> overLoadedNames = new ArrayList<String>();
 	public void add(String id) {
-		overLoadedNames.add(id);
+		if(!overLoadedNames.contains(id))
+			overLoadedNames.add(id);
 		
+	}
+	
+	public void clearOverLoad(){
+		overLoadedNames.clear();
 	}
 
 	public boolean has(String id) {
 		return overLoadedNames.contains(id);
+	}
+
+	public boolean hasStruct() {
+		return currentStruct != null;
 	}
 	
 }

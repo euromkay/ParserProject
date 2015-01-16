@@ -99,8 +99,8 @@ abstract class Type
 	}
 	
 	public static Type mergeType(Type t, Vector<STO> arraySTOs) {
-
-   	 	for(STO c: arraySTOs){
+		for(int i = arraySTOs.size() - 1; i >= 0; i--){
+   	 		STO c = arraySTOs.get(i);
    	 		t = new ArrayType(t, ((ConstSTO) c).getIntValue());
    	 	}
    	 	return t;

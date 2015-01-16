@@ -197,13 +197,18 @@ abstract class STO
 			writer.minusOp(Address.FP, tempAdd, a1);
 		}
 		
+		if(isVar()){
+			if(((VarSTO)this).isRef())
+				writer.ld(a1, a1);
+		}
+		
 		tempAdd.release();
 		return a1;
 	}
 	
 	public String stringField = "";
 	private void writeStructField(Writer w, Address result){
-		Vector<STO> v = w.symTab.getStruct().getStructType().getFields();
+		Vector<STO> v = w.symTab.getStruct().getStructType().getFuncs();
 		STO s = null;
 		
 		Integer size = 0;
@@ -247,9 +252,7 @@ abstract class STO
 
 
 	
-	public void writeComment(){
-		
-	}
+
 
 	public void store(STO from, Writer writer) {
 		Address from_a = writer.getAddressManager().getAddress();
@@ -262,11 +265,11 @@ abstract class STO
 		from_a.release();
 	}
 
-	public void store(Address value_a, Writer writer) {
+	public void store(Address from, Writer writer) {
 		Address sto_a = writer.getAddressManager().getAddress();
 		
 		writeAddress(sto_a, writer);
-		writer.store(value_a, sto_a);
+		writer.store(from, sto_a);
 		
 		sto_a.release();
 	}

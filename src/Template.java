@@ -44,7 +44,7 @@ public class Template {
 	public static final String FABS = "\tfabss\t\t\t%s, %s \n";
 
 	public static final String FSTOI = "\tfstoi\t\t%s, %s\n";
-	public static final String FITOS = "\tfitos\t\t%s, %s\n";
+	public static final String FITOS = "\tfitos\t\t\t%s, %s\n";
 	public static final String FMOVS = "\tfmovs\t\t\t%s, %s\n";
 	public static final String FCMPS = "\tfcmps\t\t\t%s, %s\n";
 	

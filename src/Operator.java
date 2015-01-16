@@ -31,8 +31,9 @@ public abstract class Operator {
 		return op_symbol;
 	}
 	
-	public Operator(String op_symbol){
+	public Operator(String op_symbol, String r_symbol){
 		this.op_symbol = op_symbol;
+		symbol = r_symbol;
 	}
 	
 	public abstract STO checkOperands(STO a, STO b);
@@ -79,6 +80,11 @@ public abstract class Operator {
 			return new MinusPreOp();
 		else
 			return new MinusPostOp();
+	}
+
+	private String symbol;
+	public String getSymbol(){
+		return symbol;
 	}
 	
 }

@@ -1,8 +1,8 @@
 
 public abstract class BooleanOp extends BinaryOp {
 
-	public BooleanOp(String op_symbol) {
-		super(op_symbol);
+	public BooleanOp(String op_symbol, String r_symbol) {
+		super(op_symbol, r_symbol);
 	}
 
 

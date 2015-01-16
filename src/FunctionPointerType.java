@@ -60,7 +60,7 @@ public class FunctionPointerType extends PointerGroupType {
 		return returnType;
 	}
 
-	private Vector<VarSTO> m_paramList;
+	private Vector<VarSTO> m_paramList = new Vector<VarSTO>();
 	public Vector<VarSTO> getParams(){
 		return m_paramList;
 	}

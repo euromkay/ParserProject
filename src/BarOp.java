@@ -1,7 +1,7 @@
 public class BarOp extends BitWiseOp{
 
 	public BarOp() {
-		super(Operator.BAR);
+		super(Operator.BAR, "|");
 	}
 
 	public void writeSparc(STO a, STO b, STO result, Address a1, Address a2, Address res, Boolean f_flag, MyParser p) {

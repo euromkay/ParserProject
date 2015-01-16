@@ -1,7 +1,7 @@
 public class MinusPostOp extends UnaryOp{
 
 	public MinusPostOp() {
-		super(Operator.MINUS_POST);
+		super(Operator.MINUS_POST, "--");
 	}
 
 	public void writeSparc(STO a, STO b, STO result, Address a1, Address a2, Address res, Boolean f_flag, MyParser p) {

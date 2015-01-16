@@ -84,7 +84,7 @@ import java.util.Date;
  * 
  * @author Evan Worley
  */
-// 12
+
 /*public static void main(String args[]) {
     Writer myAsWriter = new Writer("output.s");
 
@@ -100,7 +100,7 @@ import java.util.Date;
     myAsWriter.dispose();
 }*/
 public class Writer {
-    // 1
+
     private int indent_level = 0;
     
     // 2
@@ -219,7 +219,8 @@ public class Writer {
         
         try {
             fileWriter.write(asStmt);
-            System.out.print(asStmt);
+            if(toPrint(cont))
+            	System.out.print(asStmt);
         } catch (IOException e) {
             System.err.println(ERROR_IO_WRITE);
             e.printStackTrace();
@@ -229,12 +230,10 @@ public class Writer {
     private String convert(String template, String ... params){
         StringBuilder asStmt = new StringBuilder();
 
-        // 10
         for (int i=0; i < indent_level; i++) {
             asStmt.append(SEPARATOR);
         }
         
-        // 11
         asStmt.append(String.format(template, (Object[])params));
         
         return asStmt.toString();
@@ -284,11 +283,32 @@ public class Writer {
 			s.setAddress("%fp");
 			s.setOffset(localVarSpace.toString());
 		}
+		if(this.toPrint(fp))
+			System.out.println(s.getName() + " - " + localVarSpace);
 	}
 	
+	private static final int fp = 0, cont = 1;
+
 	
-	
-	
+	public boolean toPrint(int task){
+		boolean fp = true;
+		fp = false;
+		
+		boolean contPrint = true;
+		contPrint = false;
+		
+		if(contPrint && fp)
+			return true;
+		
+		if(task == Writer.fp){
+			return fp;
+		}
+		if(task == cont)
+			return contPrint;
+		
+		return false;
+		
+	}
 
 
 	public boolean writeLater = false;
@@ -352,7 +372,7 @@ public class Writer {
 		write(Template.SAVE, Template.SP, Template.G1, Template.SP);
 	}
 
-	//bracketed a1, nonbrack a2
+
 	public void ld(Address a1, Address a2) {
 		write(Template.LOAD, a1.toString(), a2.toString());
 		
@@ -369,7 +389,7 @@ public class Writer {
 	}
 	
 	public void set(Address a1, Address a2){
-		if(a1.isRegister() && a2.isRegister()){ // means both registers. can't set from reg to reg
+		if(a1.isRegister() && a2.isRegister()){ 
 			write(Template.MOV, a1.toString(), a2.toString());
 		}
 		else

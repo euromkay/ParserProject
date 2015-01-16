@@ -1,7 +1,7 @@
 public class PlusPostOp extends UnaryOp{
 
 	public PlusPostOp() {
-		super(Operator.PLUS_POST);
+		super(Operator.PLUS_POST, "++");
 	}
 
 	public void writeSparc(STO a, STO b, STO result, Address a1, Address a2, Address res, Boolean f_flag, MyParser p) {

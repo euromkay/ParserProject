@@ -142,7 +142,6 @@ non terminal Operator
 
 non terminal String
     GlobalDecl,
-    FuncDef,
     FuncDecl,
     ExternDecl,
     StructdefDecl,  
@@ -187,6 +186,7 @@ non terminal STO
     Designator3,
         
     ConstExpr,
+    FuncDef,
     
     OptInit,
     
@@ -276,7 +276,7 @@ GlobalDecl ::=  ExternDecl:_1
 				:}
     |           FuncDef:_1
 				{:
-					RESULT = _1;
+					RESULT = _1.getName();
 				:}
     ;
 
@@ -343,7 +343,7 @@ StructdefDecl ::=   T_STRUCTDEF T_ID_U:_1 T_LBRACE
                     OptFieldFuncsList:_5
                     {:
                         ((MyParser) parser).DoBlockClose();
-                    	((MyParser) parser).DoStructFuncCheck(_5);
+                    	((MyParser) parser).DoStructFuncCheck(_5, _3);
                     :}
                     T_RBRACE T_SEMI
     ;
@@ -363,7 +363,7 @@ FieldVarsList ::=   FieldVarDecl:_1
 
 FieldVarDecl ::=    DecoratedType:_1 T_ID:_2 OptArrayList:_3 T_SEMI
 					{:
-						RESULT = new VarSTO(_2, Type.mergeType(_1, _3));
+						RESULT = ((MyParser)parser).DoFieldVarDecl(_2, _1, _3);
 					:}
     ;
 
@@ -472,8 +472,8 @@ FuncDef ::=         T_FUNCTION T_COLON ReturnType:_1 OptRef:_2 T_ID:_3
                     :}
                     T_LBRACE OptStmtList:_5
                     {:
-                        ((MyParser) parser).DoFuncDecl_2(false, _1, _5);
-                        ((MyParser) parser).WriteFuncDeclFinish(_3);
+                        ((MyParser) parser).WriteFuncDeclFinish();
+                        RESULT = ((MyParser) parser).DoFuncDecl_2(false, _1, _5);
                     :}
                     T_RBRACE
     ;
@@ -629,13 +629,13 @@ OptStmtList ::=     StmtList:_1
 
 StmtList ::=        Stmt:_1
 					{:
-						((MyParser) parser).WriteSpace(_1);
+						//((MyParser) parser).WriteSpace(_1);
 						RESULT = new Vector<STO>();
 						RESULT.add(_1);
 					:}
     |               StmtList:_1 Stmt:_2
     				{:
-						((MyParser) parser).WriteSpace(_2);
+						//((MyParser) parser).WriteSpace(_2);
     					RESULT = _1;
     					RESULT.add(_2);
     					
@@ -731,7 +731,7 @@ ParamList ::=       ParamDecl:_1
 
 ParamDecl ::=       Type:_1 OptRef:_2 T_ID:_3 OptArrayList:_4
 					{:
-						RESULT = ((MyParser) parser).DoRefCheck(Type.mergeType(_1, _4), _2, _3);
+						RESULT = ((MyParser) parser).DoParamDecl(_1, _2, _3, _4);
 					:}
     ;
 
@@ -758,7 +758,9 @@ OptCtorCall ::=     CtorCall:_1
 					{:
 						RESULT = _1;
 					:}
-    |               /* empty */
+    |               {:
+    					RESULT = new Vector<VarSTO>();
+    				:}
     ;
 
 
@@ -819,15 +821,15 @@ WhileStmt ::=       T_WHILE:_3
 
 ForeachStmt ::=     T_FOREACH
 					{:
-						((MyParser) parser).WriteForWhileBegin("for");
+						((MyParser) parser).WriteForWhileBegin("foreach");
 					:}
 					T_LPAREN Type:_1 OptRef:_2 T_ID:_3 T_COLON Expr:_4 T_RPAREN
                     {:
                         ((MyParser) parser).DoBlockOpen();
                         VarSTO v = new VarSTO(_3, _1);
                         v.setRef(_2);
-                        RESULT = ((MyParser) parser).DoIterationVarDecl (v, _4);
-                        ((MyParser) parser).WriteForMiddle(v, _4);
+                        STO arr = ((MyParser) parser).DoIterationVarDecl (v, _4);
+                        RESULT = ((MyParser) parser).WriteForMiddle(v, arr);
                     :}
                     CodeBlock
                     {:
@@ -840,6 +842,7 @@ ForeachStmt ::=     T_FOREACH
 BreakStmt ::=       T_BREAK T_SEMI
 					{:
 						((MyParser) parser).WriteContBr(MyParser.BREAK);
+						RESULT = "break";
 					:}
     ;
 
@@ -847,6 +850,7 @@ BreakStmt ::=       T_BREAK T_SEMI
 ContinueStmt ::=    T_CONTINUE T_SEMI
 					{:
 						((MyParser) parser).WriteContBr(MyParser.CONTINUE);
+						RESULT = "continue";
 					:}
     ;
 
@@ -1175,9 +1179,9 @@ Designator ::=      T_STAR Designator:_1
                         RESULT = ((MyParser) parser).DoSizeOf(_2);
 						((MyParser) parser).WriteSizeOf(RESULT);
                     :}
-    |               T_SIZEOF T_LPAREN Type:_2 OptArrayList T_RPAREN
+    |               T_SIZEOF T_LPAREN Type:_2 OptArrayList:_3 T_RPAREN
                     {:
-                        RESULT = ((MyParser) parser).DoSizeOf(_2);
+                        RESULT = ((MyParser) parser).DoSizeOf(_2, _3);
 						((MyParser) parser).WriteSizeOf(RESULT);
                     :}
     |               T_LPAREN DecoratedType:_1 T_RPAREN Designator:_2

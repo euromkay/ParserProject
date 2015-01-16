@@ -2,10 +2,10 @@
 public class RelationOp extends BooleanOp {
 
 	public RelationOp(String op_symbol) {
-		super(op_symbol);
+		super(op_symbol, op_symbol);
 	}
 
-	@Override
+
 	public STO checkOperands(STO a, STO b) {
 		Type aType = a.getType();
 		Type bType = b.getType();
@@ -22,7 +22,7 @@ public class RelationOp extends BooleanOp {
 		else{
 			if(a instanceof ConstSTO && b instanceof ConstSTO){
 				boolean result = getResult((ConstSTO) a, (ConstSTO) b);
-				return new ConstSTO(a.getName() + b.getName(), new BoolType(), BoolType.dub(result));
+				return new ConstSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new BoolType(), BoolType.dub(result));
 			}
 			return 
 				new ExprSTO(a.getName() + b.getName(), new BoolType());
