@@ -22,18 +22,11 @@ structdef MYS_C {
 //MYS_A a5[5] : (); // OK – matches default ctor
 
 
+//function : void foo(){}
+function : void foo(int & x){}
+
 function : void main() {
-	// Local instantiations
-	//MYS_B b1; // error5n_Call – implicit 0 arg call, 1 param
-	//MYS_B b2 : (); // error5n_Call – explicit 0 arg call, 1 param
-	//MYS_B b3 : (1); // OK – int coerced to float (no overloading)
-	//MYS_B b4 : (false); // error5a_Call – not assignable
-	//MYS_B b5[7]; // error5n_Call – implicit 0 arg call, 1 param
-	//MYS_B b6[7] : (2.0); // OK – matches ctor
-	//MYS_C c1; // OK – implicit call to default ctor in MYS_C
-	//MYS_C c2 : (); // OK – explicit call to default ctor in MYS_C
-	//MYS_C c3 : (1); // error9_Illegal – no exact overload match
-	MYS_C c4 : (1, 2.2); // OK – exact match to overloaded ctor in MYS_C
-	MYS_C c5 : (1, 5); // error9_Illegal – no exact overload match
-	MYS_C c6 : (1, 2, 3); // error9_Illegal – no exact overload match
+	int x;
+	x.p;
+	x.foo();
  }
