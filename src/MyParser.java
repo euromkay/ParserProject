@@ -629,6 +629,7 @@ class MyParser extends parser {
 			generateError(ErrorMsg.error9_Decl, func.getBaseName());
 			return;
 		}
+		symTab.insert(func);
 		
 		for(VarSTO v: params){
 			symTab.insert(v);
@@ -1009,6 +1010,8 @@ class MyParser extends parser {
 	STO DoDesignator3_ID(String strID) {
 		STO sto;
 
+		
+		
 		if ((sto = symTab.access(strID)) == null) {
 			m_nNumErrors++;
 			m_errors.print(Formatter.toString(ErrorMsg.undeclared_id, strID));
@@ -1838,6 +1841,10 @@ class MyParser extends parser {
 	}
 	
 	public void WriteReturn(STO s){
+		if(s.isError())
+			return;
+		
+		
 		FuncSTO currentFunc = symTab.getFunc();
 		FunctionPointerType fT = (FunctionPointerType) currentFunc.getType();
 		
@@ -1858,9 +1865,12 @@ class MyParser extends parser {
 		writer.returnstmt();		
 	}
 	
-	public void WriteFuncCall(FuncSTO func, Vector<VarSTO> args, STO fsto){
-		if(fsto.isError())
+	public void WriteFuncCall(STO s, Vector<VarSTO> args, STO result){
+		if(result.isError())
 			return;
+	}
+	
+	private void WriteFuncCall(FuncSTO func, Vector<VarSTO> args, STO fsto){
 		if(overLoaded(func.getBaseName()))
 			func = (FuncSTO) symTab.access(FuncSTO.getName(func.getName(), args));
 		

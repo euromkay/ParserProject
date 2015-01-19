@@ -1,5 +1,39 @@
-structdef MYS_A {
+bool i;
+bool j;
+
+function : float f(int i, int j) {
+	int f;
+  return(i + j);
+  return f();
+}
+
+function : int main() { 
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*structdef MYS_A {
 	int x;
+	function : void foo(){}
 }; // Your compiler will implicitly add default ctor in this case
  
 structdef MYS_B {
@@ -14,12 +48,7 @@ structdef MYS_C {
 	MYS_C(int x, float y) {}
 };
 
-// Global instantiations
-//MYS_A a1; // OK – matches default ctor
-//MYS_A a2 : (); // OK – matches default ctor
-//MYS_A a3 : (1, 2); // error5n_Call – implicit 2 arg call, 0 param
-//MYS_A a4[5][1]; // OK – matches default ctor
-//MYS_A a5[5] : (); // OK – matches default ctor
+
 
 
 //function : void foo(){}
@@ -29,4 +58,9 @@ function : void main() {
 	int x;
 	x.p;
 	x.foo();
+	
+	MYS_B a;
+	a.foo();
  }
+ 
+ */
