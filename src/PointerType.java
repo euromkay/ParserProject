@@ -9,7 +9,7 @@ public class PointerType extends PointerGroupType {
 	public PointerType(String name, Type t, int size){
 		super(name, t, 4);
 	}
-	public boolean isPointerType(){
+	public boolean isPointer(){
 		return true;
 	}
 

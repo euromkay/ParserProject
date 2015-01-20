@@ -1101,19 +1101,19 @@ Equality ::=     T_EQU
 
 Relation ::=     T_LT
                  {:
-                 	RESULT = new RelationOp(Operator.LT);
+                 	RESULT = new ComparisonOp(Operator.LT, "<");
                  :}
     |            T_GT
                  {:
-                 	RESULT = new RelationOp(Operator.GT);
+                 	RESULT = new ComparisonOp(Operator.GT, ">");
                  :}
     |            T_LTE
                  {:
-                 	RESULT = new RelationOp(Operator.LTE);
+                 	RESULT = new ComparisonOp(Operator.LTE, "<=");
                  :}
     |            T_GTE
                  {:
-                 	RESULT = new RelationOp(Operator.GTE);
+                 	RESULT = new ComparisonOp(Operator.GTE, ">=");
                  :}
     ;
 

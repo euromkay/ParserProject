@@ -1,6 +1,9 @@
 
 public class RelationOp extends BooleanOp {
 
+	// || 
+	// &&
+	
 	public RelationOp(String op_symbol) {
 		super(op_symbol, op_symbol);
 	}
@@ -11,12 +14,10 @@ public class RelationOp extends BooleanOp {
 		Type bType = b.getType();
 		
 		if(!(aType instanceof BoolType)){
-			return 
-				new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, aType.getName(), getName()));
+			return new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, aType.getName(), getName()));
 		}
 		if(!(bType instanceof BoolType)){
-			return 
-				new ErrorSTO(Formatter.toString(ErrorMsg.error1w_Expr, bType.getName(), getName(), new BoolType().getName()));
+			return new ErrorSTO(Formatter.toString(ErrorMsg.error1w_Expr, bType.getName(), getName(), new BoolType().getName()));
 		}
 		//trying to return a float type
 		else{

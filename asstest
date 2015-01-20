@@ -1,20 +1,13 @@
-/* Check 1 (p01q.rc) */
+/* Check 1 (p01m.rc) */
 
 bool b;
 int i;
+float r;
 
 function : int main() {
-    b = b != i;
-    return 0;
- }
-
-
-/* Check 1 (p01n.rc) */
-
-bool c;
-int ii;
-
-function : int main1() {
-    c = ii > c;
-    return 0;
-}
+ b = i < r;
+ b = r <= r;
+ b = r >= i;
+ b = i > i; 
+ return 0;
+} 

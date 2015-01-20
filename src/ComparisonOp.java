@@ -1,6 +1,8 @@
 
 public class ComparisonOp extends BooleanOp {
 
+	// >=
+	
 	public ComparisonOp(String op_symbol, String r_symbol) {
 		super(op_symbol, r_symbol);
 	}

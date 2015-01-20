@@ -2175,6 +2175,9 @@ class MyParser extends parser {
 		writer.addSTO(res);  //TODO
 		//result.setAddress("ARRAY");
 		
+		if(array.getType().isPointer())
+			return;
+		
 		Address index_a = am.getAddress();
 		Address total_a = am.getAddress();
 		
