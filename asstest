@@ -1,7 +1,19 @@
-function : int main() { 
-    const int ci = 42;
-    const float foo = ci * (ci + ci) - 5 / (9 / 3 % 4);
-    const float bar = foo / 2.3 + foo;
+/* Check 14 (p14h.rc) */
 
+structdef MYS {
+    int x;
+    int y;
+    int z;
+    function : void foo() {
+        this.x = 8;
+        this.z = this.y;
+        this.foo();
+    }
+    function : void bar() {
+        this.foo();
+    }
+};
+
+function: int main() {
     return 0;
 }

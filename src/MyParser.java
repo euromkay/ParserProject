@@ -409,10 +409,10 @@ class MyParser extends parser {
 			return generateError(ErrorMsg.redeclared_id, name);
 
 		if(!t.isAssignable(init.getType()))
-			generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
+			return generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
 		
 		if(!init.isConst())
-			generateError(ErrorMsg.error8_CompileTime, name);
+			return generateError(ErrorMsg.error8_CompileTime, name);
 		
 		ConstSTO c = new ConstSTO(name, t, ((ConstSTO) init).getValue());
 		c.setIsAddressable(true);
@@ -1810,6 +1810,9 @@ class MyParser extends parser {
 	}
 	public static final String DONE = ".DONE";
 	public void WriteEqStmt_2(STO s, STO result, boolean flag){
+		if(result.isError())
+			return;
+		
 		Address a = am.getAddress();
 		writer.addSTO(result);
 		writer.ld(s.getAddress(), a);
@@ -1973,11 +1976,15 @@ class MyParser extends parser {
 	
 	Stack<String> labelList = new Stack<String>();
 	public void WriteIfStatement(STO s){
+		String label = ".iflabel" + literalCount++;
+		labelList.push(label);
+		
+		if(s.isError())
+			return;
+		
 		Address a = am.getAddress();
 		s.writeVal(a, writer);
 		writer.cmp(a, Address.G0);
-		String label = ".iflabel" + literalCount++;
-		labelList.push(label);
 		writer.be(label);
 		
 		a.release();
