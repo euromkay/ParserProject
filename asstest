@@ -1,43 +1,12 @@
-structdef MYS_A {
-	int x;
-	function : void foo(bool b){}
-	function : void foo(int & x){}
-}; // Your compiler will implicitly add default ctor in this case
-/*
-structdef MYS_B {
-	int x;
-	MYS_B(float x) {}
-};
+function : int f() {
+  return f();
+  //return(2.0);
+}/*
+function : int main() {
+  return 0;
+}
 
-structdef MYS_C {
-	int x;
-	MYS_C() {} // Explicit default ctor defined
-	MYS_C(int & x) {}
-	MYS_C(int x, float y) {}
-};
-
+function : int wrong(){
+    return false;
+}
 */
-
-int x;
-
-
-function : void foo(bool b){}
-function : void foo(int & x){}
-//function : void foo(){}
-
-function : void main() {
-	//foo(1);//error illegal
-	//foo(true);
-	//foo(x);
-	
-	int x;
-	//x.p;
-	//x.foo();
-	
-	MYS_A a;
-	//a.x;
-	a.foo(true);
-	a.foo(1);
-	a.foo(x);
-	
- }

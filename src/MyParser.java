@@ -1872,6 +1872,8 @@ class MyParser extends parser {
 	public void WriteFuncCall(STO s, Vector<VarSTO> args, STO result){
 		if(result.isError())
 			return;
+		
+		writer.addSTO(result);
 	}
 	
 	private void WriteFuncCall(FuncSTO func, Vector<VarSTO> args, STO fsto){
