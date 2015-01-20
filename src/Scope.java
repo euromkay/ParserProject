@@ -2,11 +2,14 @@
 //
 //---------------------------------------------------------------------
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Vector;
 
 class Scope
 {
 	Vector<STO> m_lstLocals;
+	HashMap<String, ArrayList<FuncSTO>> funcs = new HashMap<String, ArrayList<FuncSTO>>();
 
 	//----------------------------------------------------------------
 	//
@@ -23,6 +26,14 @@ class Scope
 	{
 		return accessLocal(strName);
 	}
+	
+	public ArrayList<FuncSTO> accessFuncs(String baseName) {
+		return accessLocalFuncs(baseName);
+	}
+
+	public ArrayList<FuncSTO> accessLocalFuncs(String baseName) {
+		return funcs.get(baseName);
+	}
 
 	//----------------------------------------------------------------
 	//
@@ -38,6 +49,9 @@ class Scope
 			if (sto.getName().equals(strName))
 				return sto;
 		}
+		if(funcs.get(strName) != null)
+			return funcs.get(strName).get(0);
+			
 
 		return null;
 	}
@@ -47,20 +61,25 @@ class Scope
 	//----------------------------------------------------------------
 	public void InsertLocal(STO sto)
 	{
+		if(sto.isFunc()){
+			String baseName = ((FuncSTO) sto).getBaseName();
+			if(funcs.containsKey(baseName))
+				funcs.get(baseName).add((FuncSTO) sto);
+			else{
+				ArrayList<FuncSTO> overloads = new ArrayList<FuncSTO>();
+				overloads.add((FuncSTO) sto);
+				funcs.put(baseName, overloads);
+			}
+				
+		}
 		m_lstLocals.addElement(sto);
-	}
-	
-	public Vector<STO> getVector(){
-		return m_lstLocals;
+		
 	}
 
-	public String getLastStructName() {
-		String name = null;
-		for(STO s : m_lstLocals){
-			if(s.getType() instanceof StructType){
-				name = s.getName();
-			}
-		}
-		return name;
-	}
+	
+	
+	
+
+
+	
 }

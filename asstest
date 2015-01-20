@@ -1,41 +1,9 @@
-bool i;
-bool j;
-
-function : float f(int i, int j) {
-	int f;
-  return(i + j);
-  return f();
-}
-
-function : int main() { 
-  return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*structdef MYS_A {
+structdef MYS_A {
 	int x;
-	function : void foo(){}
+	function : void foo(bool b){}
+	function : void foo(int & x){}
 }; // Your compiler will implicitly add default ctor in this case
- 
+/*
 structdef MYS_B {
 	int x;
 	MYS_B(float x) {}
@@ -48,19 +16,28 @@ structdef MYS_C {
 	MYS_C(int x, float y) {}
 };
 
+*/
+
+int x;
 
 
-
-//function : void foo(){}
+function : void foo(bool b){}
 function : void foo(int & x){}
+//function : void foo(){}
 
 function : void main() {
-	int x;
-	x.p;
-	x.foo();
+	//foo(1);//error illegal
+	//foo(true);
+	//foo(x);
 	
-	MYS_B a;
-	a.foo();
+	int x;
+	//x.p;
+	//x.foo();
+	
+	MYS_A a;
+	//a.x;
+	a.foo(true);
+	a.foo(1);
+	a.foo(x);
+	
  }
- 
- */

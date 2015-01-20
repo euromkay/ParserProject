@@ -12,12 +12,12 @@ class ErrorSTO extends STO
 		super(strName, new ErrorType());
 	}
 
-	public Type getType(){
-		//throw new NullPointerException();
-		return null;
-		
-	}
 	
+	public ErrorSTO(Type t) {
+		super(t.getName(), t);
+	}
+
+
 	public STO newSTO(){
 		return this;
 	}

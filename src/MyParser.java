@@ -210,6 +210,8 @@ class MyParser extends parser {
 		STO error = hasError(arraySTOs);
 		if(error != null)
 			return error;
+		if(t instanceof ErrorType)
+			return new ErrorSTO(t);
 		StructType type = (StructType) t;
 		
 		t = Type.mergeType(t, arraySTOs);
@@ -224,27 +226,27 @@ class MyParser extends parser {
 		}
 		
 		if(ctors.size() == 1){
-			FunctionPointerType fType = ctors.get(0).getFunctionType();
-			if(ctrsArgs.size() != fType.getNumParams())	//Check 5, number params expected and passed in don't match
-				return generateError(ErrorMsg.error5n_Call, ctrsArgs.size() +"", fType.getNumParams() + "");
-			error = funcCallChecker(ctrsArgs, fType, false);
+			FuncSTO f = ctors.get(0);
+			if(ctrsArgs.size() != f.getFunctionType().getNumParams())	//Check 5, number params expected and passed in don't match
+				return generateError(ErrorMsg.error5n_Call, ctrsArgs.size() +"", f.getFunctionType().getNumParams() + "");
+			error = funcCallChecker(ctrsArgs, f, false);
 			if(error != null)
 				return error;
 			
 		}else{
-			FunctionPointerType fType = null ;
+			FuncSTO f = null ;
 			String neededCtor = FuncSTO.getName(type.getName(), ctrsArgs);
 			for(FuncSTO possCtr: ctors){
 				if(possCtr.getName().equals(neededCtor)){
-					fType = possCtr.getFunctionType();
+					f = possCtr;
 					break;
 				}
 			}
 			
-			if(fType == null)
+			if(f == null)
 				return generateError(ErrorMsg.error9_Illegal, ctors.get(0).getBaseName());
 			
-			error = funcCallChecker(ctrsArgs, fType, true);
+			error = funcCallChecker(ctrsArgs, f, true);
 			if(error != null)
 				return error;
 		}
@@ -552,17 +554,24 @@ class MyParser extends parser {
 				funcList.add(func.getName());
 			}
 		}
-		
-		
+
 		String prefix = "." + struct.getName() + "_";
+		for(STO s: funcs){
+			s.setName(prefix + s.getName());
+			struct.getStructType().addFunc(s);
+		}
+		for(STO s: ctrs){
+			struct.getStructType().addFunc(s);
+		}
+		
 		for(STO s: struct.getStructType().getVars())
 			s.setName(prefix + s.getName());
 		
-		for(STO s: struct.getStructType().getFuncs())
-			s.setName(s.getName());
 		
-		symTab.clearOverLoad();
 		symTab.setStructSTO(null);
+		
+		
+		
 	}
 	
 	// ----------------------------------------------------------------
@@ -599,10 +608,6 @@ class MyParser extends parser {
 		if (symTab.accessLocal(id) != null) {
 			if(!symTab.accessLocal(id).isFunc())
 				error = generateError(ErrorMsg.redeclared_id, id);
-			else{
-				((FuncSTO) symTab.accessLocal(id)).fix();
-				symTab.add(id);
-			}	
 		}
 		
 		FuncSTO sto = new FuncSTO(id, t);
@@ -625,7 +630,8 @@ class MyParser extends parser {
 			m_nNumErrors++;
 			m_errors.print("internal: DoFormalParams says no proc!");
 		}
-		if(symTab.access(FuncSTO.getName(func.getBaseName(), params)) != null  && !symTab.hasStruct()){
+		
+		if(symTab.accessFunc(func.getBaseName(), params) != null  && !symTab.hasStruct()){
 			generateError(ErrorMsg.error9_Decl, func.getBaseName());
 			return;
 		}
@@ -635,8 +641,6 @@ class MyParser extends parser {
 			symTab.insert(v);
 		}
 		func.setParameters(params);
-		if(overLoaded(func.getBaseName()))
-			func.fix();
 		
 				
 				
@@ -836,14 +840,14 @@ class MyParser extends parser {
 		if(sto.isError())
 			return sto;
 		String baseName = ((FuncSTO)sto).getBaseName();
-		boolean overloaded = overLoaded(baseName);
+		ArrayList<FuncSTO> funcs = symTab.accessFuncs(baseName);
+		boolean overloaded = funcs.size() > 1;
 		
-		STO temp = symTab.access(FuncSTO.getName(sto.getName(), argList));
-		if(temp != null)
-			sto = temp;
-		else if(overloaded)
-			return generateError(ErrorMsg.error9_Illegal, baseName);
-		
+		if(overloaded){
+			sto = symTab.accessFunc(baseName, argList);
+			if(sto == null)
+				return generateError(ErrorMsg.error9_Illegal, baseName);
+		}
 		STO error;
 		
 		if (!(sto.getType() instanceof FunctionPointerType)) 
@@ -855,7 +859,7 @@ class MyParser extends parser {
 		if(argList.size() != fstoT.getNumParams())	//Check 5, number params expected and passed in don't match
 			error = generateError(ErrorMsg.error5n_Call, argList.size() +"", fstoT.getNumParams() + "");
 		else
-			error = funcCallChecker(argList, fstoT, overloaded);
+			error = funcCallChecker(argList, (FuncSTO) sto, overloaded);
 
 		if(error != null)
 			return error;
@@ -868,7 +872,8 @@ class MyParser extends parser {
 		return new ExprSTO(sto.getName(), fstoT.getReturnType());
 	}
 	
-	private STO funcCallChecker(Vector<VarSTO> argList, FunctionPointerType fstoT, boolean overloaded){
+	private STO funcCallChecker(Vector<VarSTO> argList, FuncSTO f, boolean overloaded){
+		FunctionPointerType fstoT = f.getFunctionType();
 		STO error = null;
 		for(int i = 0; i < argList.size() && i < fstoT.getNumParams(); i++){
 			VarSTO parameter = fstoT.get(i);
@@ -878,13 +883,13 @@ class MyParser extends parser {
 			if(isRef){ //Checking parameter declared as pass-by-reference(&) and corresponding arg types
 				if(!argument.getType().isEquivalent(parameter.getType())){
 					if(overloaded)
-						error = throwError9(fstoT.getName());
+						error = throwError9(f.getBaseName());
 					else
 						error = generateError(ErrorMsg.error5r_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
 				}
 				else if(!(argument.isModLValue()) ){//&& !(argument.getType() instanceof ArrayType)){
 					if(overloaded)
-						error = throwError9(fstoT.getName());
+						error = throwError9(f.getBaseName());
 					else
 						error = generateError(ErrorMsg.error5c_Call, parameter.getName(), parameter.getType().getName());
 				}
@@ -892,7 +897,7 @@ class MyParser extends parser {
 			else{	//Checking parameter types against those being passed in
 				if(!argument.getType().isAssignable(parameter.getType())){
 					if(overloaded)
-						error = throwError9(fstoT.getName());
+						error = throwError9(f.getBaseName());
 					else
 						error = generateError(ErrorMsg.error5a_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
 				}
@@ -906,9 +911,6 @@ class MyParser extends parser {
 		return generateError(ErrorMsg.error9_Illegal, name);
 	}
 	
-	private boolean overLoaded(String id){
-		return symTab.has(id);
-	}
 	
 	// ----------------------------------------------------------------
 	//
@@ -931,6 +933,8 @@ class MyParser extends parser {
 		if(sto instanceof ErrorSTO)
 			return sto;
 		
+		
+		
 		//Good place to do the struct checks
 		String error = null;
 		
@@ -941,8 +945,8 @@ class MyParser extends parser {
 			return new ErrorSTO(error);
 		}
 		else{	
-			//System.out.println(sto.getName());
 			StructType t = (StructType) sto.getType();
+			String fullName = "." + t.getName() + "_" + memberID;
 			
 			if(sto.getName().equals("this")){
 				STO thisSTO = symTab.isInStructScope(memberID);
@@ -955,12 +959,12 @@ class MyParser extends parser {
 				else 
 					return thisSTO;
 			}else{
-				for(STO possible: t.getFuncs()){
+				for(STO possible: t.getMembers()){
 					if(possible instanceof FuncSTO){
-						if(possible.getName().equals("." + t.getName() + "_" + memberID))
+						if(((FuncSTO) possible).getBaseName().equals(memberID))
 							return possible;
 					}
-					if(possible.getName().equals(memberID))
+					else if(possible.getName().equals(fullName))
 						return possible;
 				
 				}
@@ -1871,8 +1875,7 @@ class MyParser extends parser {
 	}
 	
 	private void WriteFuncCall(FuncSTO func, Vector<VarSTO> args, STO fsto){
-		if(overLoaded(func.getBaseName()))
-			func = (FuncSTO) symTab.access(FuncSTO.getName(func.getName(), args));
+		func = symTab.accessFunc(func.getBaseName(), args);
 		
 		writer.addSTO(fsto);
 		Vector<VarSTO> funcParams = ((FunctionPointerType) func.getType()).getParams();

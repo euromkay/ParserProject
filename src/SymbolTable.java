@@ -73,6 +73,41 @@ class SymbolTable
 		
 		return null;
 	}
+	
+	public ArrayList<FuncSTO> accessFuncs(String baseName) {
+		Stack<Scope> stk = new Stack<Scope>();
+		Scope scope;
+		ArrayList<FuncSTO> stoReturn = null;	
+
+		//reverses the order of the scopes so
+			//for the scope example, we get the local one first, as opposed to the global ones.
+		for (Enumeration<Scope> e = m_stkScopes.elements(); e.hasMoreElements();)
+		{
+			scope = e.nextElement();
+			stk.add(scope);
+		}
+
+		while(!stk.isEmpty()){
+			scope = stk.pop();
+			if ((stoReturn = scope.accessFuncs(baseName)) != null)
+				return stoReturn;
+		}
+		
+		return null;
+	}
+	
+	public FuncSTO accessFunc(String baseName, Vector<VarSTO> params) {
+		ArrayList<FuncSTO> funcs = accessFuncs(baseName);
+		if(funcs == null)
+			return null;
+		
+		String fullName = FuncSTO.getName(baseName, params);
+		for(FuncSTO f: funcs){
+			if(f.getName().equals(fullName))
+				return f;
+		}
+		return null;
+	}
 
 	//----------------------------------------------------------------
 	//
@@ -120,23 +155,16 @@ class SymbolTable
 		Scope structScope = m_stkScopes.get(1);
 		return structScope.access(id);
 	}
-	private ArrayList<String> overLoadedNames = new ArrayList<String>();
-	public void add(String id) {
-		if(!overLoadedNames.contains(id))
-			overLoadedNames.add(id);
-		
-	}
 	
-	public void clearOverLoad(){
-		overLoadedNames.clear();
-	}
-
-	public boolean has(String id) {
-		return overLoadedNames.contains(id);
-	}
 
 	public boolean hasStruct() {
 		return currentStruct != null;
 	}
+
+	
+
+	
+
+	
 	
 }

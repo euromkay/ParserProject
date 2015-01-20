@@ -45,6 +45,7 @@ class FuncSTO extends STO
 
 	public void setParameters(Vector<VarSTO> params) {
 		((FunctionPointerType) getType()).setParameters(params);
+		setName(FuncSTO.getName(getBaseName(), params));
 	}
 
 	Type returnType;

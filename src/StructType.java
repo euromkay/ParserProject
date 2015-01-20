@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Vector;
 
 
@@ -23,13 +24,8 @@ public class StructType extends CompositeType {
 	}
 
 	public Type newType() {
-		Vector<STO> list = new Vector<STO>();
-		for(STO s: vars)
-			list.add(s.newSTO());
-		StructType s = new StructType(new String(getName()));
-		s.setStructVars(list, getSize());
 		
-		return s;
+		return this;
 	}
 
 	public void setStructVars(Vector<STO> vars, int size) {
@@ -48,5 +44,13 @@ public class StructType extends CompositeType {
 	
 	public void addFunc(STO f){
 		funcs.add(f);
+	}
+	
+	public ArrayList<STO> getMembers(){
+		ArrayList<STO> members = new ArrayList<STO>();
+		members.addAll(vars);
+		members.addAll(funcs);
+		
+		return members;
 	}
 }
