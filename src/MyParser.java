@@ -1845,7 +1845,7 @@ class MyParser extends parser {
 	}
 	
 	public void WriteReturn(STO s){
-		if(s.isError())
+		if(s != null && s.isError())
 			return;
 		
 		
@@ -1955,6 +1955,9 @@ class MyParser extends parser {
 	}
 	
 	public void WriteNotOp(STO s, STO result){
+		if(result.isError())
+			return;
+		
 		writer.addSTO(result);
 		
 		Address a = am.getAddress(), _1_a = am.getAddress();
@@ -2165,6 +2168,7 @@ class MyParser extends parser {
 		VarSTO result = (VarSTO) res;
 		result.setInit(array);
 		result.setInit2(number);
+		writer.addSTO(res);  //TODO
 		//result.setAddress("ARRAY");
 		
 		Address index_a = am.getAddress();

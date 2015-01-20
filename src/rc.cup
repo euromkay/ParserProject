@@ -961,7 +961,7 @@ ExprList ::=     Expr:_1
 Expr ::=            Designator:_1 T_ASSIGN Expr:_2
                     {:
                         RESULT = ((MyParser) parser).DoAssignExpr (_1, _2);
-                        ((MyParser) parser).WriteAssignExpr(_1, _2);
+                        ((MyParser) parser).WriteAssignExpr(RESULT, _2);
                     :}
     |               Expr0:_1
                     {:

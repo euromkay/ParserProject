@@ -1,12 +1,7 @@
-function : int f() {
-  return f();
-  //return(2.0);
-}/*
-function : int main() {
-  return 0;
-}
+function : int main() { 
+    const int ci = 42;
+    const float foo = ci * (ci + ci) - 5 / (9 / 3 % 4);
+    const float bar = foo / 2.3 + foo;
 
-function : int wrong(){
-    return false;
+    return 0;
 }
-*/

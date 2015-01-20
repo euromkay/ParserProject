@@ -16,7 +16,7 @@ public abstract class UnaryOp extends Operator {
 		boolean post = operand.equals(PLUS_POST) || operand.equals(MINUS_POST);
 		if(operand.equals(PLUS_POST) || operand.equals(MINUS_PRE) || operand.equals(MINUS_POST) || operand.equals(PLUS_PRE)){
 			if(!(aType instanceof NumericType) && !(aType instanceof PointerType)){
-				return new ErrorSTO(Formatter.toString(ErrorMsg.error2_Type, aType.getName(), getName()));
+				return new ErrorSTO(Formatter.toString(ErrorMsg.error2_Type, aType.getName(), getSymbol()));
 			}
 			else if(!a.isModLValue()){
 				return new ErrorSTO(Formatter.toString(ErrorMsg.error2_Lval, getSymbol()));
@@ -32,7 +32,7 @@ public abstract class UnaryOp extends Operator {
 		}
 		else{
 			if(!(aType instanceof NumericType) && !(aType instanceof PointerType)){
-				return new ErrorSTO(Formatter.toString(ErrorMsg.error2_Type, aType.getName(), getName()));
+				return new ErrorSTO(Formatter.toString(ErrorMsg.error2_Type, aType.getName(), getSymbol()));
 			}
 			else{ 
 				if(a instanceof ConstSTO){
