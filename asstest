@@ -1,11 +1,20 @@
-const float cf = 12.34;
-int ai[20];
-float f;
-const bool fa = false;
+/* Check 1 (p01q.rc) */
+
+bool b;
+int i;
 
 function : int main() {
-    ai[(int)cf] = (int)(bool)cf;
-    ai[(int)cf + (int)cf];    // should complain on out-of-bounds
-    f = ai[(int)fa];
-    return (int)f;
+    b = b != i;
+    return 0;
+ }
+
+
+/* Check 1 (p01n.rc) */
+
+bool c;
+int ii;
+
+function : int main1() {
+    c = ii > c;
+    return 0;
 }

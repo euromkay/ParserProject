@@ -1,6 +1,9 @@
 
 public class EqualityOp extends BooleanOp{
 
+	//!=
+	//==
+	
 	public EqualityOp(String op_symbol) {
 		super(op_symbol, op_symbol);
 	}
@@ -29,12 +32,7 @@ public class EqualityOp extends BooleanOp{
 			if(aType instanceof PointerType || bType instanceof PointerType)
 				return new ErrorSTO(Formatter.toString(ErrorMsg.error17_Expr, aType.getName(), getName(), bType.getName()));
 			
-			Type t;
-			if(aType.isAssignable(new FloatType()))
-				t = bType;
-			else
-				t = aType;
-			return new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, t.getName(), getName()));
+			return new ErrorSTO(Formatter.toString(ErrorMsg.error1b_Expr, aType.getName(), getName(), bType.getName()));
 		}
 		
 	}

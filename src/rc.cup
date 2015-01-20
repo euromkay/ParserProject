@@ -1101,19 +1101,19 @@ Equality ::=     T_EQU
 
 Relation ::=     T_LT
                  {:
-                 	RESULT = new EqualityOp(Operator.LT);
+                 	RESULT = new RelationOp(Operator.LT);
                  :}
     |            T_GT
                  {:
-                 	RESULT = new EqualityOp(Operator.GT);
+                 	RESULT = new RelationOp(Operator.GT);
                  :}
     |            T_LTE
                  {:
-                 	RESULT = new EqualityOp(Operator.LTE);
+                 	RESULT = new RelationOp(Operator.LTE);
                  :}
     |            T_GTE
                  {:
-                 	RESULT = new EqualityOp(Operator.GTE);
+                 	RESULT = new RelationOp(Operator.GTE);
                  :}
     ;
 
