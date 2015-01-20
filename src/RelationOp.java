@@ -14,7 +14,7 @@ public class RelationOp extends BooleanOp {
 		Type bType = b.getType();
 		
 		if(!(aType instanceof BoolType)){
-			return new ErrorSTO(Formatter.toString(ErrorMsg.error1n_Expr, aType.getName(), getName()));
+			return new ErrorSTO(Formatter.toString(ErrorMsg.error1w_Expr, aType.getName(), getName(), new BoolType().getName()));
 		}
 		if(!(bType instanceof BoolType)){
 			return new ErrorSTO(Formatter.toString(ErrorMsg.error1w_Expr, bType.getName(), getName(), new BoolType().getName()));

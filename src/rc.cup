@@ -1001,7 +1001,7 @@ Expr1 ::=       Expr1:_1
 				:}
 				T_AND Expr2:_3
                 {:
-                	RESULT = ((MyParser) parser).DoBinaryExpr (_1, new RelationOp("&&"), _3); // may cause errors in future?
+                	RESULT = ((MyParser) parser).DoBinaryExpr (_1, new RelationOp("&&"), _3);
                 	((MyParser) parser).WriteEqStmt_2(_3, RESULT, MyParser.AND_FLAG);
                 :}
     |           Expr2:_1

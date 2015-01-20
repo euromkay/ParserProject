@@ -559,9 +559,11 @@ class MyParser extends parser {
 		for(STO s: funcs){
 			s.setName(prefix + s.getName());
 			struct.getStructType().addFunc(s);
+			symTab.insert(s);
 		}
 		for(STO s: ctrs){
 			struct.getStructType().addFunc(s);
+			symTab.insert(s);
 		}
 		
 		for(STO s: struct.getStructType().getVars())
@@ -569,7 +571,6 @@ class MyParser extends parser {
 		
 		
 		symTab.setStructSTO(null);
-		
 		
 		
 	}
@@ -830,7 +831,7 @@ class MyParser extends parser {
 		if(!s.isConst())
 			return generateError(ErrorMsg.error10c_Array);
 		BigDecimal value = ((ConstSTO) s).getValue();
-		if(value.compareTo(BigDecimal.ZERO) < 0)
+		if(value.compareTo(BigDecimal.ZERO) <= 0)
 			return generateError(ErrorMsg.error10z_Array, value.toString());
 		
 		return s;

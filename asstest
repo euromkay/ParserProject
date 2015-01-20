@@ -1,13 +1,16 @@
-/* Check 1 (p01m.rc) */
+function: void foo() {    
+    int i;
+    float f;
+    bool b;
 
-bool b;
-int i;
-float r;
+    i || i;
+    i || f;
+    i || b;
+    b || b;
+    b || i;
+    b || f;
+    f || f;
+    f || i;
+    f || b;
 
-function : int main() {
- b = i < r;
- b = r <= r;
- b = r >= i;
- b = i > i; 
- return 0;
-} 
+}
