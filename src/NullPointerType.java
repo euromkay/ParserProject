@@ -1,7 +1,6 @@
 
 public class NullPointerType extends PointerType {
 
-	@Override
 	public Type newType() {
 		return new NullPointerType();
 	}

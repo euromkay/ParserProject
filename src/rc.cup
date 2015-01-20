@@ -1261,7 +1261,7 @@ Designator3 ::=     T_LPAREN Expr:_2 T_RPAREN
                     :}
     |               T_NULLPTR
                     {:
-                        RESULT = new ExprSTO ("nullptr", new NullType());
+                        RESULT = new ExprSTO ("nullptr", new NullPointerType());
                         ((MyParser) parser).WriteNull(RESULT);
                     :}
     |               T_THIS

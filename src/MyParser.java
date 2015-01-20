@@ -408,7 +408,7 @@ class MyParser extends parser {
 		if (symTab.accessLocal(name) != null) 
 			return generateError(ErrorMsg.redeclared_id, name);
 
-		if(!t.isAssignable(init.getType()))
+		if(!init.getType().isAssignable(t))
 			return generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
 		
 		if(!init.isConst())
@@ -663,7 +663,7 @@ class MyParser extends parser {
 		
 		if(rets == 0 && !(funType instanceof VoidType))
 			if(!extern)
-				return generateError(ErrorMsg.error6a_Return_expr);
+				return generateError(ErrorMsg.error6c_Return_missing);
 		FuncSTO current = symTab.getFunc();
 		
 
@@ -787,10 +787,13 @@ class MyParser extends parser {
 				if(csto.getValue() != BoolType.FALSE)
 					return new ConstSTO(s.getName(), t, BoolType.TRUE);
 			}
-			else if(!(t instanceof FloatType)){
+			else if(!t.isFloat()){
 				String val = csto.getValue().toString();
-				int i = val.indexOf(".");
+				int i = val.length();
+				if(csto.getType().isFloat())
+					i = val.indexOf(".");
 				return new ConstSTO(s.getName(), t, val.substring(0, i));
+					
 			}
 			return new ConstSTO(s.getName(), t, ((ConstSTO) s).getValue());
 		}
@@ -1135,21 +1138,14 @@ class MyParser extends parser {
 			return sto;
 		
 		
-		String error = null;
-		if(!(sto.getType() instanceof PointerType)){
-			error = Formatter.toString(ErrorMsg.error15_ReceiverArrow, sto.getType().getName());
-			m_nNumErrors++;
-			m_errors.print(error);
-			return new ErrorSTO(error);
-		}
+		if(!(sto.getType() instanceof PointerType))
+			return generateError(ErrorMsg.error15_ReceiverArrow, sto.getType().getName());
+		
 		PointerType pt = (PointerType) sto.getType();
 		
-		if(!(pt.getSubtype() instanceof StructType)){
-			error = Formatter.toString(ErrorMsg.error15_ReceiverArrow, sto.getType().getName());
-			m_nNumErrors++;
-			m_errors.print(error);
-			return new ErrorSTO(error);
-		}
+		if(!(pt.getSubtype() instanceof StructType))
+			return generateError(ErrorMsg.error15_ReceiverArrow, sto.getType().getName());
+		
 		
 		StructType struct = (StructType) pt.getSubtype();
 		
@@ -1158,10 +1154,7 @@ class MyParser extends parser {
 				return e;		
 		}
 					
-		error = Formatter.toString(ErrorMsg.error14f_StructExp, id, sto.getType().getName());
-		m_nNumErrors++;
-		m_errors.print(error);
-		return new ErrorSTO(error);
+		return generateError(ErrorMsg.error14f_StructExp, id, ((PointerType)sto.getType()).getSubtype().getName());
 	}
 
 	public STO checkConstExpr(String id, STO _4) {
@@ -1206,22 +1199,20 @@ class MyParser extends parser {
 	}
 	
 	public String DoAllocCheck(String s, STO x){
-		if(x instanceof ErrorSTO)
+		if(x.isError())
 			return "";
 		boolean isDelete = s.equals("delete");
-		if(!x.isModLValue()){
-			m_nNumErrors++;
+		if(!x.getIsAddressable() || !x.getIsModifiable()){
 			if(!isDelete)
-				m_errors.print(ErrorMsg.error16_New_var);
+				return generateError(ErrorMsg.error16_New_var).toString();
 			else
-				m_errors.print(ErrorMsg.error16_Delete_var);
+				return generateError(ErrorMsg.error16_Delete_var).toString();
 		}
 		if(!(x.getType() instanceof PointerType)){
-			m_nNumErrors++;
 			if(!isDelete)
-				m_errors.print(Formatter.toString(ErrorMsg.error16_New, x.getType().getName()));
+				return generateError(ErrorMsg.error16_New, x.getType().getName()).toString();
 			else
-				m_errors.print(Formatter.toString(ErrorMsg.error16_Delete, x.getType().getName()));
+				return generateError(ErrorMsg.error16_Delete, x.getType().getName()).toString();
 		}
 		
 		return s + " " + x.getName();
@@ -1800,6 +1791,8 @@ class MyParser extends parser {
 	public static final boolean OR_FLAG = true, AND_FLAG = false;
 	
 	public void WriteEqStmt_1(STO s, boolean flag){
+		if(s.isError())
+			return;
 		Address a = am.getAddress();
 		writeAddress(s, a);
 		writer.cmp(a, Address.G0);
