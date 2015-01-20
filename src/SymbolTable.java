@@ -47,6 +47,12 @@ class SymbolTable
 		Scope scope = m_stkScopes.peek();
 		return scope.accessLocal(strName);
 	}
+	
+	public FuncSTO accessLocalFunc(String strName)
+	{
+		Scope scope = m_stkScopes.peek();
+		return scope.accessLocalFunc(strName);
+	}
 
 	//----------------------------------------------------------------
 	//
@@ -123,14 +129,19 @@ class SymbolTable
 		m_stkScopes.push(scope);
 		m_nLevel++;
 	}
+	
+	public void openScope(Scope p){
+		m_stkScopes.push(p);
+		m_nLevel++;
+	}
 
 	//----------------------------------------------------------------
 	//
 	//----------------------------------------------------------------
-	public void closeScope()
+	public Scope closeScope()
 	{
-		m_stkScopes.pop();
 		m_nLevel--;
+		return m_stkScopes.pop();
 	}
 
 	//----------------------------------------------------------------
@@ -159,6 +170,10 @@ class SymbolTable
 
 	public boolean hasStruct() {
 		return currentStruct != null;
+	}
+	
+	public boolean hasFunc() {
+		return m_func != null;
 	}
 
 	

@@ -2,13 +2,13 @@ import java.util.Vector;
 
 
 
-public class FunctionPointerType extends PointerGroupType {
+public class FunctionPointerType extends Type {
 	
 	
 	Type returnType;
 	
 	public FunctionPointerType(Type returnType) {
-		super(returnType.getName(), returnType, 4);
+		super(returnType.getName(), 4);
 		this.returnType = returnType;
 	}
 

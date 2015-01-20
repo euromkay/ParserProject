@@ -946,29 +946,34 @@ class MyParser extends parser {
 		}
 		else{	
 			StructType t = (StructType) sto.getType();
-			String fullName = "." + t.getName() + "_" + memberID;
+			String fullName;
+			if(symTab.getStruct() == null)
+				fullName = "." + t.getName() + "_" + memberID;
+			else
+				fullName = memberID;
 			
-			if(sto.getName().equals("this")){
-				STO thisSTO = symTab.isInStructScope(memberID);
-				if(thisSTO == null){
-					error = (Formatter.toString(ErrorMsg.error14c_StructExpThis, memberID));
-					m_nNumErrors++;
-					m_errors.print(error);
-					return new ErrorSTO(error);
-				}
-				else 
-					return thisSTO;
-			}else{
-				for(STO possible: t.getMembers()){
-					if(possible instanceof FuncSTO){
-						if(((FuncSTO) possible).getBaseName().equals(memberID))
-							return possible;
-					}
-					else if(possible.getName().equals(fullName))
+			
+			for(STO possible: t.getMembers()){
+				if(possible instanceof FuncSTO){
+					if(((FuncSTO) possible).getBaseName().equals(memberID))
 						return possible;
-				
 				}
+				else if(possible.getName().equals(fullName))
+					return possible;
+				
 			}
+			if(symTab.hasFunc()){
+				FuncSTO f = symTab.getFunc();
+				if(f.getBaseName().equals(memberID))
+					return f;
+			}
+
+			Scope p = symTab.closeScope();
+			FuncSTO s = symTab.accessLocalFunc(memberID);
+			symTab.openScope(p);
+			if(s != null)
+				return s;
+			
 		}	
 		
 		
@@ -1309,14 +1314,13 @@ class MyParser extends parser {
 			writer.align("4");
 		
 			//Initialize Default Null Value
-			VarSTO left_s = (VarSTO) left;
-			left_s.setAddress(new Address(left_s.getName()));
+			left.setAddress(new Address(left.getName()));
 				
 				
 			String skip;
-			if(isFloat(left_s))
+			if(isFloat(left))
 				skip = Template.FLOAT_VAR_DECL;
-			else if (left_s.getType().isArray())
+			else if (left.getType().isArray())
 				skip = Template.SKIP;
 			else
 				skip = Template.INT_VAR_DECL;
@@ -2246,6 +2250,8 @@ class MyParser extends parser {
 		if(result.isError())
 			return;
 		
+		writer.addSTO(result);
+		
 		StructType t = (StructType) structSTO.getType();
 		Integer size = 0;
 		for(STO member: t.getFuncs()){
@@ -2260,7 +2266,8 @@ class MyParser extends parser {
 			//result.setAddress("STRUCT");
 		}
 		else{
-			structSTO.writeAddress(Address.O0, writer);
+			if(!structSTO.isStructdef())
+				structSTO.writeAddress(Address.O0, writer);
 		}
 		if(result instanceof FuncSTO){
 			((FuncSTO) result).setInit(structSTO);

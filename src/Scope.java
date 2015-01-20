@@ -34,6 +34,14 @@ class Scope
 	public ArrayList<FuncSTO> accessLocalFuncs(String baseName) {
 		return funcs.get(baseName);
 	}
+	
+	public FuncSTO accessLocalFunc(String strName) {
+		ArrayList<FuncSTO> f = accessLocalFuncs(strName);
+		if(f == null)
+			return null;
+		
+		return f.get(0);
+	}
 
 	//----------------------------------------------------------------
 	//
@@ -75,6 +83,8 @@ class Scope
 		m_lstLocals.addElement(sto);
 		
 	}
+
+	
 
 	
 	
