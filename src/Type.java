@@ -99,11 +99,17 @@ abstract class Type
 	}
 	
 	public static Type mergeType(Type t, Vector<STO> arraySTOs) {
-		for(int i = arraySTOs.size() - 1; i >= 0; i--){
+		for(int i = 0 ; i < arraySTOs.size(); i++){
    	 		STO c = arraySTOs.get(i);
    	 		t = new ArrayType(t, ((ConstSTO) c).getIntValue());
    	 	}
    	 	return t;
+   	 	
+   	 	/*for(int i = arraySTOs.size() - 1; i >= 0; i--){
+	 		STO c = arraySTOs.get(i);
+	 		t = new ArrayType(t, ((ConstSTO) c).getIntValue());
+	 	}
+	 	return t;*/
 	}
 	
 	public static Type mergeType(Type t, int pointerSize) {

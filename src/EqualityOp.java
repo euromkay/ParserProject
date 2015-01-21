@@ -17,7 +17,7 @@ public class EqualityOp extends BooleanOp{
 			(bType instanceof PointerGroupType && aType instanceof PointerGroupType)){
 			if(bType instanceof PointerGroupType && aType instanceof PointerGroupType){
 				if(!bType.isEquivalent(aType))
-					return new ErrorSTO(Formatter.toString(ErrorMsg.error17_Expr, aType.getName(), getName(), bType.getName()));
+					return new ErrorSTO(Formatter.toString(ErrorMsg.error17_Expr, getName(), aType.getName(), bType.getName()));
 			}
 			if(a instanceof ConstSTO && b instanceof ConstSTO){
 				ConstSTO aa = (ConstSTO) a;
@@ -30,7 +30,7 @@ public class EqualityOp extends BooleanOp{
 		
 		else {
 			if(aType instanceof PointerType || bType instanceof PointerType)
-				return new ErrorSTO(Formatter.toString(ErrorMsg.error17_Expr, aType.getName(), getName(), bType.getName()));
+				return new ErrorSTO(Formatter.toString(ErrorMsg.error17_Expr, getName(), aType.getName(), bType.getName()));
 			
 			return new ErrorSTO(Formatter.toString(ErrorMsg.error1b_Expr, aType.getName(), getName(), bType.getName()));
 		}

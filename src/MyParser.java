@@ -779,11 +779,13 @@ class MyParser extends parser {
 		if(s instanceof ErrorSTO)
 			return s;
 		
-		if(!(t instanceof NumericType) && !(t instanceof BoolType) && !(t instanceof PointerType)){
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.error20_Cast,s.getType().getName(), t.getName()));
-			return new ErrorSTO(ErrorMsg.error20_Cast);
-		}
+		if(!(t instanceof NumericType) && !(t instanceof BoolType) && !(t instanceof PointerType))
+			return generateError(ErrorMsg.error20_Cast,s.getType().getName(), t.getName());
+		
+		
+		if(s.getType().isArray() || s.getType() instanceof StructType)
+			return generateError(ErrorMsg.error20_Cast, s.getType().getName(), t.getName());
+		
 		
 		if(s instanceof ConstSTO){
 			ConstSTO csto = ((ConstSTO) s);
@@ -1029,7 +1031,7 @@ class MyParser extends parser {
 		if(e.isConst() && a.getType() instanceof ArrayType){
 			ConstSTO es = (ConstSTO) e;
 			int aLength = Integer.parseInt(((ArrayType) a.getType()).getLength());
-			if(es.getIntValue() > aLength || es.getIntValue() < 0){
+			if(es.getIntValue() >= aLength || es.getIntValue() < 0){
 				m_nNumErrors++;
 				String error = Formatter.toString(ErrorMsg.error11b_ArrExp, es.getIntValue(), aLength);
 				m_errors.print(error);
@@ -1203,7 +1205,7 @@ class MyParser extends parser {
 		if(s != null)
 			return s;
 			
-		return generateError(ErrorMsg.error14f_StructExp, memberID, sto.getType().getName());
+		return generateError(ErrorMsg.error14f_StructExp, memberID, t.getName());
 	}
 
 	public STO checkConstExpr(String id, STO _4) {
@@ -2285,9 +2287,8 @@ class MyParser extends parser {
 	public void WriteArrayIndex(STO array, STO number, STO res) {
 		if(res.isError())
 			return;
-		VarSTO result = (VarSTO) res;
-		result.setInit(array);
-		result.setInit2(number);
+		//result.setInit(array);
+		//result.setInit2(number);
 		writer.addSTO(res);  //TODO
 		//result.setAddress("ARRAY");
 		

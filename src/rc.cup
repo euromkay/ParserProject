@@ -1213,6 +1213,7 @@ Designator2 ::=     Designator2:_1 T_DOT T_ID:_3
     |               Designator2:_1 T_ARROW T_ID:_3
                     {:
                         RESULT = ((MyParser) parser).DoArrowDeref(_1, _3);
+                        ((MyParser) parser).WriteArrowDeref(_1, _3, RESULT);
                     :}
     |               Designator2:_1 IncDecOp:_2
                     {:
