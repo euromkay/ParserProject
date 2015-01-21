@@ -73,7 +73,7 @@ class ConstSTO extends STO
 	public ConstSTO(String strName, Type typ)
 	{
 		super(strName, typ);
-		setIsAddressable(true);
+		setIsAddressable(false);
 		setIsModifiable(false);
 	}
 

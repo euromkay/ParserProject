@@ -1,8 +1,7 @@
-int x;
-int y[8][9][10];
 
 function : void main()
   {
-    x = y[x];
-    int z = (int) y;
+  	
+    int x = sizeof(true);
   }
+ 

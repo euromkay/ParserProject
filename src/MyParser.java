@@ -687,7 +687,7 @@ class MyParser extends parser {
 	String DoReturn(STO sto){
 		final String RETURN = "return ";
 		if(sto != null && sto.isError())
-			return "";
+			return RETURN;
 		
 		
 		FunctionPointerType fType = (FunctionPointerType) symTab.getFunc().getType();

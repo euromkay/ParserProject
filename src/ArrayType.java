@@ -5,10 +5,12 @@ public class ArrayType extends ArrointType {
 	
 	private Integer length;
 	
-	public ArrayType(Type type, int size) {
-		super(type.getName() + "[" + size + "]", type, size*type.getSize());
-		if(type.isArray()){
-			
+	public ArrayType(Type subType, int size) {
+		super(subType.getName() + "[" + size + "]", subType, size*subType.getSize());
+		if(subType.isArray()){
+			String name = subType.getName();
+			int index =name.indexOf("[");
+			setName(name.substring(0, index) + "[" + size + "]" + name.substring(index, name.length()));
 		}
 			
 		length = size;
