@@ -16,7 +16,12 @@ structdef MYC{
 
 function : void main(){
 	MYA* a1; new a1;
-	MYA* a2; new a2;
-	MYA* a3; new a3:(1,2);
+	MYA* a2; new a2 : ();
+	//MYA* a3; new a3:(1,2);
 	
+	//MYB * b1; new b1;
+	//MYB * b2; new b2 :();
+	
+	MYB * b3; new b3 : (1);
+	MYB * b4; new b4 : (false);
 }

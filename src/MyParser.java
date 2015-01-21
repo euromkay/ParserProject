@@ -488,7 +488,7 @@ class MyParser extends parser {
 		
 		if(ctorList.isEmpty()){
 			FuncSTO f = new FuncSTO(structName, new VoidType());
-			structType.addFunc(f);
+			structType.addCtor(f);
 			return;
 		}
 		
