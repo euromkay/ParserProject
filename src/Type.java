@@ -104,8 +104,8 @@ abstract class Type
    	 		t = new ArrayType(t, ((ConstSTO) c).getIntValue());
    	 	}
    	 	return t;
-   	 	
-   	 	/*for(int i = arraySTOs.size() - 1; i >= 0; i--){
+   	 	/*
+   	 	for(int i = arraySTOs.size() - 1; i >= 0; i--){
 	 		STO c = arraySTOs.get(i);
 	 		t = new ArrayType(t, ((ConstSTO) c).getIntValue());
 	 	}

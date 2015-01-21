@@ -7,6 +7,10 @@ public class ArrayType extends ArrointType {
 	
 	public ArrayType(Type type, int size) {
 		super(type.getName() + "[" + size + "]", type, size*type.getSize());
+		if(type.isArray()){
+			
+		}
+			
 		length = size;
 	}
 	

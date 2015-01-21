@@ -410,12 +410,13 @@ class MyParser extends parser {
 
 		if (symTab.accessLocal(name) != null) 
 			return generateError(ErrorMsg.redeclared_id, name);
-
-		if(!init.getType().isAssignable(t))
-			return generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
 		
 		if(!init.isConst())
 			return generateError(ErrorMsg.error8_CompileTime, name);
+		
+		if(!init.getType().isAssignable(t))
+			return generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
+		
 		
 		ConstSTO c = new ConstSTO(name, t, ((ConstSTO) init).getValue());
 		c.setIsAddressable(true);
@@ -473,7 +474,7 @@ class MyParser extends parser {
 			else{
 				list.add(id);
 				s.setOffset(structSize.toString());
-				structSize =+ s.getType().getSize();
+				structSize += s.getType().getSize();
 			}
 		}
 		
@@ -1032,10 +1033,7 @@ class MyParser extends parser {
 			ConstSTO es = (ConstSTO) e;
 			int aLength = Integer.parseInt(((ArrayType) a.getType()).getLength());
 			if(es.getIntValue() >= aLength || es.getIntValue() < 0){
-				m_nNumErrors++;
-				String error = Formatter.toString(ErrorMsg.error11b_ArrExp, es.getIntValue(), aLength);
-				m_errors.print(error);
-					return new ErrorSTO(error);
+				return generateError(ErrorMsg.error11b_ArrExp, es.getIntValue().toString(), aLength+"");
 			}
 				
 		}
@@ -2321,6 +2319,8 @@ class MyParser extends parser {
 	}
 
 	public void WriteArrowDeref(STO structSTO, String _3, STO result) {
+		if(result.isError())
+			return;
 		StructType t = (StructType) ((PointerType) structSTO.getType()).getSubtype();
 		Integer size = 0;
 		for(STO member: t.getFuncs()){

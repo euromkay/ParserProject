@@ -1,8 +1,8 @@
-function : int __main()
-{
-    const int x = 1;
+int x;
+int y[8][9][10];
 
-    int a[(int)((int*)1)];
-    int b[(int)(float)((int*)1)];
-    int c[(int)((int*)x)];
-}
+function : void main()
+  {
+    x = y[x];
+    int z = (int) y;
+  }
