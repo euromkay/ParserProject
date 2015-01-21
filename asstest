@@ -1,16 +1,22 @@
-function: void foo() {    
-    int i;
-    float f;
-    bool b;
+structdef MYA{
+	int x;
+};
 
-    i || i;
-    i || f;
-    i || b;
-    b || b;
-    b || i;
-    b || f;
-    f || f;
-    f || i;
-    f || b;
+structdef MYB{
+	int x;
+	MYB(float x){}
+};
 
+structdef MYC{
+	int x;
+	MYC(){}
+	MYC(int &x){}
+	MYC(int x, float y){}
+};
+
+function : void main(){
+	MYA* a1; new a1;
+	MYA* a2; new a2;
+	MYA* a3; new a3:(1,2);
+	
 }

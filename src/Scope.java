@@ -70,13 +70,15 @@ class Scope
 	public void InsertLocal(STO sto)
 	{
 		if(sto.isFunc()){
-			String baseName = ((FuncSTO) sto).getBaseName();
+			FuncSTO f = (FuncSTO) sto;
+			String baseName = f.getBaseName();
 			if(funcs.containsKey(baseName))
 				funcs.get(baseName).add((FuncSTO) sto);
 			else{
 				ArrayList<FuncSTO> overloads = new ArrayList<FuncSTO>();
 				overloads.add((FuncSTO) sto);
 				funcs.put(baseName, overloads);
+				f.setBrothers(overloads);
 			}
 				
 		}

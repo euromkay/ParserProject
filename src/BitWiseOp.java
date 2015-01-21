@@ -21,8 +21,12 @@ public abstract class BitWiseOp extends ArithmeticOp {
 			//Returning IntType Result
 			if(aType instanceof IntType && bType instanceof IntType){
 				if(a instanceof ConstSTO && b instanceof ConstSTO){
-					BigDecimal result = getResult((ConstSTO) a,  (ConstSTO) b);
-					return new ConstSTO(a.getName() + b.getName(), new IntType(), result);	//Result should be intType
+					try{
+						BigDecimal result = getResult((ConstSTO) a,  (ConstSTO) b);
+						return new ConstSTO(a.getName() + b.getName(), new IntType(), result);	//Result should be intType
+					}catch (ArithmeticException e){
+						return new ErrorSTO(ErrorMsg.error8_Arithmetic);
+					}
 				}
 			}
 			//Resolve to ExprSTO
@@ -37,6 +41,8 @@ public abstract class BitWiseOp extends ArithmeticOp {
 		BigDecimal result;
 		
 		if(op.equals(MOD)){
+			if(bb.getValue().equals(BigDecimal.ZERO))
+				throw new ArithmeticException();
 			result = aa.getValue().remainder(bb.getValue());
 		}
 		else if(op.equals(CARET)){	

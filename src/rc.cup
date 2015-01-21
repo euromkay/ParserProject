@@ -759,7 +759,7 @@ OptCtorCall ::=     CtorCall:_1
 						RESULT = _1;
 					:}
     |               {:
-    					RESULT = new Vector<VarSTO>();
+    					
     				:}
     ;
 
@@ -856,8 +856,8 @@ ContinueStmt ::=    T_CONTINUE T_SEMI
 
 DeleteStmt ::= 		T_DELETE Designator:_1 T_SEMI
 					{:
-						RESULT = ((MyParser) parser).DoAllocCheck("delete", _1);
-						((MyParser) parser).WriteDeleteStmt(_1);
+						((MyParser) parser).DoAllocCheck("delete", _1, null);
+						RESULT = ((MyParser) parser).WriteDeleteStmt(_1);
 					:}
 	;
 	
@@ -870,8 +870,8 @@ ExitStmt ::=        T_EXIT T_LPAREN Expr:_1 T_RPAREN T_SEMI
     
 NewStmt	 ::=		T_NEW Designator:_1 OptCtorCall:_2 T_SEMI
 					{:
-						RESULT = ((MyParser) parser).DoAllocCheck("new", _1);
-						((MyParser) parser).WriteNewStmt(_1, _2);
+						STO f = ((MyParser) parser).DoAllocCheck("new", _1, _2);
+						RESULT = ((MyParser) parser).WriteNewStmt(_1, _2, f);
 					:}
 	;
 

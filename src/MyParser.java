@@ -562,7 +562,7 @@ class MyParser extends parser {
 			symTab.insert(s);
 		}
 		for(STO s: ctrs){
-			struct.getStructType().addFunc(s);
+			struct.getStructType().addCtor(s);
 			symTab.insert(s);
 		}
 		
@@ -843,19 +843,23 @@ class MyParser extends parser {
 	STO DoFuncCall(STO sto, Vector<VarSTO> argList) {
 		if(sto.isError())
 			return sto;
-		String baseName = ((FuncSTO)sto).getBaseName();
-		ArrayList<FuncSTO> funcs = symTab.accessFuncs(baseName);
+		
+		if (!(sto.getType() instanceof FunctionPointerType)) 
+			return generateError(ErrorMsg.not_function, sto.getName());
+		
+		
+		FuncSTO fSTO = (FuncSTO) sto;
+		String baseName = fSTO.getBaseName();
+		ArrayList<FuncSTO> funcs = fSTO.getBrothers();
 		boolean overloaded = funcs.size() > 1;
 		
 		if(overloaded){
-			sto = symTab.accessFunc(baseName, argList);
+			sto = pickFunction(fSTO, argList);
 			if(sto == null)
 				return generateError(ErrorMsg.error9_Illegal, baseName);
 		}
 		STO error;
 		
-		if (!(sto.getType() instanceof FunctionPointerType)) 
-			return generateError(ErrorMsg.not_function, sto.getName());
 		
 
 		FunctionPointerType fstoT = (FunctionPointerType) sto.getType();
@@ -876,6 +880,33 @@ class MyParser extends parser {
 		return new ExprSTO(sto.getName(), fstoT.getReturnType());
 	}
 	
+	private STO pickFunction(FuncSTO s, Vector<VarSTO> argList){
+		for(FuncSTO curr: s.getBrothers()){
+			FunctionPointerType t = curr.getFunctionType();
+			if(t.getNumParams() != argList.size())
+				continue;
+			for(int i = 0; i < argList.size() && i < argList.size(); i++){
+				VarSTO parameter = t.get(i);
+				boolean isRef = parameter.isRef();
+				STO argument = argList.get(i);
+				
+				if(isRef){ //Checking parameter declared as pass-by-reference(&) and corresponding arg types
+					if(!argument.getType().isEquivalent(parameter.getType()))
+						continue;
+					else if(!(argument.isModLValue()) )
+						continue;
+				}
+				else{	//Checking parameter types against those being passed in
+					if(!argument.getType().isAssignable(parameter.getType()))
+						continue;
+				}
+			}
+			return curr;
+		}
+		
+		return null;
+	}
+	
 	private STO funcCallChecker(Vector<VarSTO> argList, FuncSTO f, boolean overloaded){
 		FunctionPointerType fstoT = f.getFunctionType();
 		STO error = null;
@@ -888,7 +919,7 @@ class MyParser extends parser {
 				if(!argument.getType().isEquivalent(parameter.getType())){
 					if(overloaded)
 						error = throwError9(f.getBaseName());
-					else
+					else //TODO
 						error = generateError(ErrorMsg.error5r_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
 				}
 				else if(!(argument.isModLValue()) ){//&& !(argument.getType() instanceof ArrayType)){
@@ -940,51 +971,40 @@ class MyParser extends parser {
 		
 		
 		//Good place to do the struct checks
-		String error = null;
 		
-		if (!(sto.getType() instanceof StructType)){
-			error = (Formatter.toString(ErrorMsg.error14t_StructExp, sto.getType().getName()));
-			m_nNumErrors++;
-			m_errors.print(error);
-			return new ErrorSTO(error);
-		}
-		else{	
-			StructType t = (StructType) sto.getType();
-			String fullName;
-			if(symTab.getStruct() == null)
-				fullName = "." + t.getName() + "_" + memberID;
-			else
-				fullName = memberID;
+		if (!(sto.getType() instanceof StructType))
+			return generateError(ErrorMsg.error14t_StructExp, sto.getType().getName());
+		
+		StructType t = (StructType) sto.getType();
+		String fullName;
+		if(symTab.getStruct() == null)
+			fullName = "." + t.getName() + "_" + memberID;
+		else
+			fullName = memberID;
 			
-			
-			for(STO possible: t.getMembers()){
-				if(possible instanceof FuncSTO){
-					if(((FuncSTO) possible).getBaseName().equals(memberID))
-						return possible;
-				}
-				else if(possible.getName().equals(fullName))
+		
+		for(STO possible: t.getMembers()){
+			if(possible instanceof FuncSTO){
+				if(((FuncSTO) possible).getBaseName().equals(memberID))
 					return possible;
+			}
+			else if(possible.getName().equals(fullName))
+				return possible;
 				
-			}
-			if(symTab.hasFunc()){
-				FuncSTO f = symTab.getFunc();
-				if(f.getBaseName().equals(memberID))
-					return f;
-			}
+		}
+		if(symTab.hasFunc()){
+			FuncSTO f = symTab.getFunc();
+			if(f.getBaseName().equals(memberID))
+				return f;
+		}
 
-			Scope p = symTab.closeScope();
-			FuncSTO s = symTab.accessLocalFunc(memberID);
-			symTab.openScope(p);
-			if(s != null)
-				return s;
+		Scope p = symTab.closeScope();
+		FuncSTO s = symTab.accessLocalFunc(memberID);
+		symTab.openScope(p);
+		if(s != null)
+			return s;
 			
-		}	
-		
-		
-		error = (Formatter.toString(ErrorMsg.error14f_StructExp, memberID, sto.getType().getName()));
-		m_nNumErrors++;
-		m_errors.print(error);
-		return new ErrorSTO(error);
+		return generateError(ErrorMsg.error14f_StructExp, memberID, sto.getType().getName());
 		
 	}
 
@@ -995,7 +1015,7 @@ class MyParser extends parser {
 		if(e.isError() || a.isError())
 			return e;
 
-		if(!(a.getType() instanceof ArrointType))
+		if(!(a.getType() instanceof ArrointType) || a.getType() instanceof NullPointerType)
 			return generateError(ErrorMsg.error11t_ArrExp, a.getType().getName());
 		
 		if(!(e.getType().isInt()))
@@ -1134,7 +1154,7 @@ class MyParser extends parser {
 		return new ExprSTO(s.getName(), new PointerType(s.getType()));
 	}
 	
-	STO DoArrowDeref(STO sto, String id){
+	public STO DoArrowDeref(STO sto, String memberID){
 		if(sto instanceof ErrorSTO)
 			return sto;
 		
@@ -1148,14 +1168,37 @@ class MyParser extends parser {
 			return generateError(ErrorMsg.error15_ReceiverArrow, sto.getType().getName());
 		
 		
-		StructType struct = (StructType) pt.getSubtype();
+		StructType t = (StructType) pt.getSubtype();
 		
-		for(STO e : struct.getFuncs()){
-			if(e.getName().equals(id))
-				return e;		
+		String fullName;
+		if(symTab.getStruct() == null)
+			fullName = "." + t.getName() + "_" + memberID;
+		else
+			fullName = memberID;
+			
+		
+		for(STO possible: t.getMembers()){
+			if(possible instanceof FuncSTO){
+				if(((FuncSTO) possible).getBaseName().equals(memberID))
+					return possible;
+			}
+			else if(possible.getName().equals(fullName))
+				return possible;
+				
 		}
-					
-		return generateError(ErrorMsg.error14f_StructExp, id, ((PointerType)sto.getType()).getSubtype().getName());
+		if(symTab.hasFunc()){
+			FuncSTO f = symTab.getFunc();
+			if(f.getBaseName().equals(memberID))
+				return f;
+		}
+
+		Scope p = symTab.closeScope();
+		FuncSTO s = symTab.accessLocalFunc(memberID);
+		symTab.openScope(p);
+		if(s != null)
+			return s;
+			
+		return generateError(ErrorMsg.error14f_StructExp, memberID, sto.getType().getName());
 	}
 
 	public STO checkConstExpr(String id, STO _4) {
@@ -1199,24 +1242,84 @@ class MyParser extends parser {
 		return list;
 	}
 	
-	public String DoAllocCheck(String s, STO x){
+	public STO DoAllocCheck(String s, STO x, Vector<STO> args){
 		if(x.isError())
-			return "";
+			return x;
 		boolean isDelete = s.equals("delete");
 		if(!x.getIsAddressable() || !x.getIsModifiable()){
 			if(!isDelete)
-				return generateError(ErrorMsg.error16_New_var).toString();
+				return generateError(ErrorMsg.error16_New_var);
 			else
-				return generateError(ErrorMsg.error16_Delete_var).toString();
+				return generateError(ErrorMsg.error16_Delete_var);
 		}
 		if(!(x.getType() instanceof PointerType)){
 			if(!isDelete)
-				return generateError(ErrorMsg.error16_New, x.getType().getName()).toString();
+				return generateError(ErrorMsg.error16_New, x.getType().getName().toString());
 			else
-				return generateError(ErrorMsg.error16_Delete, x.getType().getName()).toString();
+				return generateError(ErrorMsg.error16_Delete, x.getType().getName());
 		}
 		
-		return s + " " + x.getName();
+		//deletes don't have args, can't even parse
+		if(isDelete)
+			return null;
+
+		Type subType = ((PointerType) x.getType()).getSubtype();
+		if(args != null){
+			if(!(subType instanceof StructType))
+				return generateError(ErrorMsg.error16b_NonStructCtorCall, subType.getName().toString());
+		}
+		else
+			args = new Vector<STO>();
+		StructType struct_t = (StructType) subType;
+		
+		//only one constructor size
+		if(struct_t.getCtors().size() < 2){
+			FunctionPointerType ctr = ((FuncSTO) struct_t.getCtors().get(0)).getFunctionType();
+			if(ctr.getNumParams() != args.size())
+				return generateError(ErrorMsg.error5n_Call, args.size()+"", ctr.getNumParams() + "");
+			for(int i = 0; i < args.size() && i < args.size(); i++){
+				VarSTO parameter = ctr.get(i);
+				boolean isRef = parameter.isRef();
+				STO argument = args.get(i);
+				
+				if(isRef){ //Checking parameter declared as pass-by-reference(&) and corresponding arg types
+					if(!argument.getType().isEquivalent(parameter.getType()))
+						return generateError(ErrorMsg.error5r_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
+					else if(!(argument.isModLValue()) )
+						return generateError(ErrorMsg.error5c_Call, parameter.getName(), parameter.getType().getName());
+				}
+				else{	//Checking parameter types against those being passed in
+					if(!argument.getType().isAssignable(parameter.getType()))
+						return generateError(ErrorMsg.error5a_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
+				}
+			}
+			return struct_t.getCtors().get(0);
+		}
+		
+		for(STO poss_ctr: struct_t.getCtors()){
+			FunctionPointerType ctr = ((FuncSTO) poss_ctr).getFunctionType();
+			if(ctr.getNumParams() != args.size())
+				continue;
+			for(int i = 0; i < args.size() && i < args.size(); i++){
+				VarSTO parameter = ctr.get(i);
+				boolean isRef = parameter.isRef();
+				STO argument = args.get(i);
+				
+				if(isRef){ //Checking parameter declared as pass-by-reference(&) and corresponding arg types
+					if(!argument.getType().isEquivalent(parameter.getType()))
+						continue;
+					else if(!(argument.isModLValue()) )
+						continue;
+				}
+				else{	//Checking parameter types against those being passed in
+					if(!argument.getType().isAssignable(parameter.getType()))
+						continue;
+				}
+			}
+			return poss_ctr;
+		}
+		
+		return throwError9(struct_t.getName());
 	}
 
 	public Vector<VarSTO> DoMultiParamCheck(Vector<VarSTO> _1) {
@@ -2156,6 +2259,8 @@ class MyParser extends parser {
 		a.release();
 	}
 	public void WriteDeRef(STO s, STO result){
+		if(result.isError())
+			return;
 		writer.addSTO(result);
 		
 		Address a = am.getAddress();
@@ -2271,7 +2376,7 @@ class MyParser extends parser {
 		}
 	}
 
-	public void WriteNewStmt(STO s, Vector<VarSTO> params) {
+	public String WriteNewStmt(STO s, Vector<VarSTO> params, STO chosenFunc) {
 		Address a = am.getAddress();
 		writer.set("1", Address.O0);
 		writer.set(s.getType().getSize().toString(), Address.O1);
@@ -2279,7 +2384,8 @@ class MyParser extends parser {
 		store(s, Address.O0);
 		
 		
-		
+		if(params == null)
+			params = new Vector<VarSTO>();
 		String funcToCall = FuncSTO.getName(s.getType().getName(), params);
 		for(int i = 0; i < params.size(); i++){
 			STO p = params.get(i);
@@ -2287,9 +2393,11 @@ class MyParser extends parser {
 		}
 		
 		a.release();
+		
+		return "new " + s.getName();
 	}
 
-	public void WriteDeleteStmt(STO s) {
+	public String WriteDeleteStmt(STO s) {
 		String good = ".deleteAttempt" + literalCount++ + "good";
 		Address a = am.getAddress();
 		
@@ -2306,6 +2414,8 @@ class MyParser extends parser {
 		store(s, Address.G0);
 
 		a.release();
+		
+		return "delete " + s.getName();
 	}
 
 	

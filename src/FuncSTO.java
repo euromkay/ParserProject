@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Vector;
 
 //---------------------------------------------------------------------
@@ -101,6 +102,14 @@ class FuncSTO extends STO
 		setName(getName(getName(), getFunctionType().getParams()));
 	}
 
+	private ArrayList<FuncSTO> brothers;
+	public void setBrothers(ArrayList<FuncSTO> overloads) {
+		brothers = overloads;
+	}
+	
+	public ArrayList<FuncSTO> getBrothers(){
+		return brothers;
+	}
 	
 	
 }

@@ -6,6 +6,7 @@ public class StructType extends CompositeType {
 
 	private Vector<STO> vars = new Vector<STO>(); 
 	private Vector<STO> funcs = new Vector<STO>();
+	private Vector<STO> ctrs = new Vector<STO>();
 	
 	
 
@@ -42,8 +43,17 @@ public class StructType extends CompositeType {
 		return funcs;
 	}
 	
+	public Vector<STO> getCtors(){
+		return ctrs;
+	}
+	
 	public void addFunc(STO f){
 		funcs.add(f);
+	}
+	
+	public void addCtor(STO f){
+		ctrs.add(f);
+		addFunc(f);
 	}
 	
 	public ArrayList<STO> getMembers(){
@@ -53,4 +63,5 @@ public class StructType extends CompositeType {
 		
 		return members;
 	}
+
 }
