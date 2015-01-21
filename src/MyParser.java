@@ -225,6 +225,9 @@ class MyParser extends parser {
 				ctors.add((FuncSTO) func);
 		}
 		
+		if(ctrsArgs == null)
+			ctrsArgs = new Vector<VarSTO>();
+		
 		if(ctors.size() == 1){
 			FuncSTO f = ctors.get(0);
 			if(ctrsArgs.size() != f.getFunctionType().getNumParams())	//Check 5, number params expected and passed in don't match
@@ -785,7 +788,7 @@ class MyParser extends parser {
 		if(s instanceof ConstSTO){
 			ConstSTO csto = ((ConstSTO) s);
 			if(t instanceof BoolType){
-				if(csto.getValue() != BoolType.FALSE)
+				if(!csto.getValue().equals(BoolType.FALSE))
 					return new ConstSTO(s.getName(), t, BoolType.TRUE);
 			}
 			else if(!t.isFloat()){
@@ -793,6 +796,8 @@ class MyParser extends parser {
 				int i = val.length();
 				if(csto.getType().isFloat())
 					i = val.indexOf(".");
+				if(i == -1)
+					i = val.length();
 				return new ConstSTO(s.getName(), t, val.substring(0, i));
 					
 			}
@@ -1267,9 +1272,13 @@ class MyParser extends parser {
 		if(args != null){
 			if(!(subType instanceof StructType))
 				return generateError(ErrorMsg.error16b_NonStructCtorCall, subType.getName().toString());
+			
 		}
-		else
+		else{
+			if(!(subType instanceof StructType))
+				return null;
 			args = new Vector<STO>();
+		}
 		StructType struct_t = (StructType) subType;
 		
 		//only one constructor size
@@ -1295,7 +1304,7 @@ class MyParser extends parser {
 			}
 			return struct_t.getCtors().get(0);
 		}
-		
+		outside :
 		for(STO poss_ctr: struct_t.getCtors()){
 			FunctionPointerType ctr = ((FuncSTO) poss_ctr).getFunctionType();
 			if(ctr.getNumParams() != args.size())
@@ -1305,16 +1314,13 @@ class MyParser extends parser {
 				boolean isRef = parameter.isRef();
 				STO argument = args.get(i);
 				
+				if(!argument.getType().isEquivalent(parameter.getType()))
+					continue outside;
 				if(isRef){ //Checking parameter declared as pass-by-reference(&) and corresponding arg types
-					if(!argument.getType().isEquivalent(parameter.getType()))
-						continue;
-					else if(!(argument.isModLValue()) )
-						continue;
+					if(!(argument.isModLValue()) )
+						continue outside;
 				}
-				else{	//Checking parameter types against those being passed in
-					if(!argument.getType().isAssignable(parameter.getType()))
-						continue;
-				}
+				
 			}
 			return poss_ctr;
 		}
@@ -1940,6 +1946,8 @@ class MyParser extends parser {
 	
 	
 	public void WriteSizeOf(STO s){
+		if(s.isError())
+			return;
 		Address a = am.getAddress();
 		writer.set(((ConstSTO) s).getIntValue().toString(), a);
 		writer.addSTO(s);
@@ -2195,6 +2203,8 @@ class MyParser extends parser {
 	}
 	
 	public void WriteWhileMiddle(STO s){
+		if(s.isError())
+			return;
 		Address a = am.getAddress();
 		writer.ld(s.getAddress(), a);
 		writer.cmp(Address.G0, a);
