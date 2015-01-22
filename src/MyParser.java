@@ -491,7 +491,7 @@ class MyParser extends parser {
 		String structName = struct.getName();
 		
 		if(ctorList.isEmpty()){
-			FuncSTO f = new FuncSTO(structName, new VoidType());
+			FuncSTO f = new FuncSTO(structName, structName, new VoidType());
 			structType.addCtor(f);
 			return;
 		}
@@ -614,8 +614,11 @@ class MyParser extends parser {
 			if(!symTab.accessLocal(id).isFunc())
 				error = generateError(ErrorMsg.redeclared_id, id);
 		}
+		String lookupName = id;
+		if(symTab.hasStruct())
+			lookupName = "." + symTab.getStruct().getStructType().getName() + "_" + id; 
 		
-		FuncSTO sto = new FuncSTO(id, t);
+		FuncSTO sto = new FuncSTO(id, lookupName, t);
 		symTab.setFunc(sto);
 		symTab.openScope();
 		
@@ -660,13 +663,13 @@ class MyParser extends parser {
 	STO DoFuncDecl_2(boolean extern, Type funType, Vector<String> statements) {
 
 		
-		int rets = 0;//return statements
+		boolean hasRet = false;//return statements
 		//retExpr is each statement that might be a return (type);
 		for(String retExpr: statements)
 			if(retExpr.startsWith("return"))
-				rets ++;
+				hasRet = true;
 		
-		if(rets == 0 && !(funType instanceof VoidType))
+		if(!hasRet && !(funType instanceof VoidType))
 			if(!extern)
 				return generateError(ErrorMsg.error6c_Return_missing);
 		FuncSTO current = symTab.getFunc();
@@ -976,7 +979,8 @@ class MyParser extends parser {
 		if(sto instanceof ErrorSTO)
 			return sto;
 		
-		
+		if(sto.getType() instanceof NullPointerType)
+			return generateError(ErrorMsg.error15_Nullptr);
 		
 		//Good place to do the struct checks
 		
@@ -1012,6 +1016,11 @@ class MyParser extends parser {
 		if(s != null)
 			return s;
 			
+		
+		if(sto.getName().equals("this"))
+			return generateError(ErrorMsg.error14c_StructExpThis, memberID
+		);
+		
 		return generateError(ErrorMsg.error14f_StructExp, memberID, sto.getType().getName());
 		
 	}
@@ -1023,7 +1032,10 @@ class MyParser extends parser {
 		if(e.isError() || a.isError())
 			return e;
 
-		if(!(a.getType() instanceof ArrointType) || a.getType() instanceof NullPointerType)
+		if(a.getType() instanceof NullPointerType)
+			return generateError(ErrorMsg.error15_Nullptr);
+		
+		if(!(a.getType() instanceof ArrointType))
 			return generateError(ErrorMsg.error11t_ArrExp, a.getType().getName());
 		
 		if(!(e.getType().isInt()))
@@ -1131,18 +1143,15 @@ class MyParser extends parser {
 	STO DoDeref(STO des){
 		if(des instanceof ErrorSTO)
 			return des;
-		String error = null;
 		
-		if(!(des.getType() instanceof PointerType && !(des.getType() instanceof NullPointerType))){
-			error = Formatter.toString(ErrorMsg.error15_Receiver, des.getType().getName());
-			m_nNumErrors++;
-			m_errors.print(error);
-			return new ErrorSTO(error);
-		}
-		else{
-			PointerType pt = (PointerType) des.getType();
-			return new VarSTO(des.getName(), pt.getSubtype());
-		}
+		if(!(des.getType() instanceof PointerType))
+			return generateError(ErrorMsg.error15_Receiver, des.getType().getName());
+		if(des.getType() instanceof NullPointerType)
+			return generateError(ErrorMsg.error15_Nullptr);
+		
+		PointerType pt = (PointerType) des.getType();
+		return new VarSTO(des.getName(), pt.getSubtype());
+		
 		
 	}
 	
@@ -2356,7 +2365,7 @@ class MyParser extends parser {
 	}
 	
 	public STO doThis(){
-		return symTab.getStruct();
+		return new ExprSTO("this", symTab.getStruct().getType());
 	}
 	
 	public void WriteDot(STO structSTO, String _3, STO result) {

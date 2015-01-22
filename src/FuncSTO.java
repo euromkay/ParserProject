@@ -53,18 +53,17 @@ class FuncSTO extends STO
 	
 	
 	public STO newSTO(){
-		FuncSTO s = new FuncSTO(getName(), returnType);
-		s.isFuncMember = isFuncMember;
-		if(init != null)
-			s.init = init;
-		return super.newSTO(s);
+		return this;
 	}
 	
-	public FuncSTO(String strName, Type returnType)
+	private String lookupName;
+	
+	public FuncSTO(String strName, String lookupName, Type returnType)
 	{
 		super (new String(strName), new FunctionPointerType(returnType.newType()));
 		this.returnType = returnType.newType();
 		baseName = strName;
+		this.lookupName = lookupName;
 	}
 	
 	private String baseName;
@@ -109,6 +108,10 @@ class FuncSTO extends STO
 	
 	public ArrayList<FuncSTO> getBrothers(){
 		return brothers;
+	}
+
+	public String getLookupName() {
+		return lookupName;
 	}
 	
 	

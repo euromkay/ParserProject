@@ -71,7 +71,7 @@ class Scope
 	{
 		if(sto.isFunc()){
 			FuncSTO f = (FuncSTO) sto;
-			String baseName = f.getBaseName();
+			String baseName = f.getLookupName();
 			if(funcs.containsKey(baseName))
 				funcs.get(baseName).add((FuncSTO) sto);
 			else{
