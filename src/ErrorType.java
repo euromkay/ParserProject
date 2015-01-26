@@ -23,12 +23,17 @@ class ErrorType extends Type
 	//----------------------------------------------------------------
     public boolean isError()            { return true; }
 
-	public boolean isAssignable(Type type) {
-		return false;
-	}
 
 
 	public Type newType() {
 		return this;
+	}
+	
+	public boolean isEquivalent(Type t){
+		return true;
+	}
+	
+	public boolean isAssignable(Type t){
+		return true;
 	}
 }

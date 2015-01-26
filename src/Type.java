@@ -93,8 +93,8 @@ abstract class Type
 	public abstract Type newType();
 
 	public static Type mergeType(Type t, int pointerSize, Vector<STO> arraySTOs) {
-		t = mergeType(t, pointerSize);
 		t = mergeType(t, arraySTOs);
+		t = mergeType(t, pointerSize);
 		return t;
 	}
 	

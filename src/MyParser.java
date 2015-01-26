@@ -989,14 +989,14 @@ class MyParser extends parser {
 		
 		StructType t = (StructType) sto.getType();
 		String fullName;
-		if(symTab.getStruct() == null)
+		if(!symTab.hasStruct())
 			fullName = "." + t.getName() + "_" + memberID;
 		else
 			fullName = memberID;
 			
 		
 		for(STO possible: t.getMembers()){
-			if(possible instanceof FuncSTO){
+			if(possible.isFunc()){
 				if(((FuncSTO) possible).getBaseName().equals(memberID))
 					return possible;
 			}
@@ -1010,21 +1010,28 @@ class MyParser extends parser {
 				return f;
 		}
 
-		Scope p = symTab.closeScope();
-		FuncSTO s = symTab.accessLocalFunc(memberID);
-		symTab.openScope(p);
+		ArrayList<Scope> scopes = new ArrayList<Scope>();
+		while(symTab.m_nLevel > SymbolTable.STRUCT_LEVEL){
+			scopes.add(0, symTab.closeScope());
+		}
+		FuncSTO s = symTab.accessLocalFunc(fullName);
+		
+		for(Scope sc: scopes){
+			symTab.openScope(sc);
+		}
 		if(s != null)
 			return s;
 			
 		
 		if(sto.getName().equals("this"))
-			return generateError(ErrorMsg.error14c_StructExpThis, memberID
-		);
+			return generateError(ErrorMsg.error14c_StructExpThis, memberID);
 		
 		return generateError(ErrorMsg.error14f_StructExp, memberID, sto.getType().getName());
 		
 	}
 
+	
+	
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
@@ -2292,7 +2299,7 @@ class MyParser extends parser {
 	}
 
 	public void WriteArrayIndex(STO array, STO number, STO res) {
-		if(res.isError())
+		if(res.isError() || array.isError())
 			return;
 		//result.setInit(array);
 		//result.setInit2(number);
@@ -2387,10 +2394,11 @@ class MyParser extends parser {
 			structSTO.stringField = new String(_3);
 			//result.setAddress("STRUCT");
 		}
+		/*
 		else{
 			if(!structSTO.isStructdef())
 				structSTO.writeAddress(Address.O0, writer);
-		}
+		}*/
 		if(result instanceof FuncSTO){
 			((FuncSTO) result).setInit(structSTO);
 		}

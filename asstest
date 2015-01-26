@@ -1,28 +1,8 @@
-structdef MY1{
-	int x;
-	float y;
-	MY1 *m1;
-	function : float f(int &x){
-		return this.y;
-	}
-	function : void foo(){}
-};
+function : int __main()
+{
+    const int x = 1;
 
-structdef MY2{
-	int x;
-	float y;
-	MY1 *m1;
-	function : float f(int &x){
-		return this.y;
-	}
-	function : void foo(){}
-};
-
-function : void main(){
-	MY1 x;
-	MY2 y;
-	float f;
-	f = x.x + y.y;
-	f = x.f() + y.f();
-	f = x.foo() + y.z;
+    int a[(int)((int*)1)];
+    int b[(int)(float)((int*)1)];
+    int c[(int)((int*)x)];
 }

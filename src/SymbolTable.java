@@ -5,6 +5,7 @@ import java.util.*;
 
 class SymbolTable
 {
+	public static final int STRUCT_LEVEL = 2;
 	private Stack<Scope> m_stkScopes;
 	public int m_nLevel;
 	private Scope m_scopeGlobal;
