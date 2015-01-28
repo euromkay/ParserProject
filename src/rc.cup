@@ -105,12 +105,9 @@ non terminal
     OptGlobalDecls,
     GlobalDecls,
     
-    CtorDef,
-    DtorDef,
     
     FieldVarDecl,
     
-    CtorDtorDecl,
     FieldFuncDecl,
     
     WritePairList,
@@ -184,6 +181,10 @@ non terminal STO
     Designator,
     Designator2,
     Designator3,
+    
+    CtorDtorDecl,
+    CtorDef,
+    DtorDef,
         
     ConstExpr,
     FuncDef,
@@ -381,11 +382,13 @@ CtorDtorList ::=    CtorDtorDecl:_1
 					{:
 						RESULT = new Vector<STO>();
 						RESULT.add(_1);
+    					((MyParser) parser).AddConstructor(_1);
 					:}
     |               CtorDtorList:_2 CtorDtorDecl:_1
     				{:
     					RESULT = _2;
     					RESULT.add(_1);
+    					((MyParser) parser).AddConstructor(_1);
     				:}
     ;
 

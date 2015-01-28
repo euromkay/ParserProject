@@ -214,9 +214,12 @@ class MyParser extends parser {
 		else
 			struct.addVar(v);
 		
+		//symTab.insert(v);
 		
 		return v;
 	}
+	
+	
 	
 	STO DoVarDecl(boolean statik, Type t, String name, Vector<STO> arraySTOs, Vector<VarSTO> ctrsArgs) {
 		STO error = hasError(arraySTOs);
@@ -459,7 +462,7 @@ class MyParser extends parser {
 				m_errors.print(Formatter.toString(ErrorMsg.redeclared_id, id));
 			}
 
-			StructdefSTO sto = new StructdefSTO(id, type.newType());
+			StructdefSTO sto = new StructdefSTO(id, type);
 			symTab.insert(sto);
 		}
 	}
@@ -477,58 +480,61 @@ class MyParser extends parser {
 		symTab.insert(sto);
 	}
 	
-	
+	public void AddConstructor(STO f){
+		StructdefSTO struct = symTab.getStruct();
+		StructType structType = symTab.getStruct().getStructType();
+		String structName = struct.getName();
+		
+		
+		if(f.isError())
+			return;
+		
+		String name = ((FuncSTO) f).getName();//full mangled function name
+		name = name.substring(1 + name.indexOf("_"));
+		if(name.contains("~")){  //destructor
+			String destructorName = name.substring(1);
+			if(!structName.equals(destructorName)){
+				generateError(ErrorMsg.error13b_Dtor, name, structName);
+				return;
+			}
+			if(structType.hasDestruct()){
+				generateError(ErrorMsg.error9_Decl, "~" + structType.getName());
+				return;
+			}
+			structType.setDestruct();
+		}
+		else{
+			String baseName = ((FuncSTO) f).getBaseName();
+			if(!structName.equals(baseName)){
+				generateError(ErrorMsg.error13b_Ctor, baseName, structName);
+				return;
+			}
+			if(structType.contains_ctor(name)){
+				generateError(ErrorMsg.error9_Decl, structType.getName());
+				return;
+			}
+			structType.addCtorString(name);
+		}
+
+		symTab.getStruct().getStructType().addCtor(f);
+		//structType.addFunc(f);
+		
+	}
 	
 	void DoConstructorCheck(Vector<STO> ctorList){
 		
 		
 		StructdefSTO struct = symTab.getStruct();
-		StructType structType = symTab.getStruct().getStructType();
-		
+
 		String structName = struct.getName();
 		
 		if(ctorList.isEmpty()){
 			FuncSTO f = new FuncSTO(structName, structName, new VoidType());
 			ctorList.add(f);
+			AddConstructor(f);
 			return;
 		}
 		
-		ArrayList<String> funcs = new ArrayList<String>();
-		
-		boolean hasDestruct = false;
-		
-		for(STO f: ctorList){
-			if(f.isError())
-				return;
-			
-			String name = f.getName();//full mangled function name
-			if(name.startsWith("~")){  //destructor
-				String destructorName = name.substring(1);
-				if(!structName.equals(destructorName)){
-					generateError(ErrorMsg.error13b_Dtor, destructorName, structName);
-					continue;
-				}
-				if(hasDestruct){
-					generateError(ErrorMsg.error9_Decl, "~" + structType.getName());
-					continue;
-				}
-				hasDestruct = true;
-			}
-			else{
-				String baseName = ((FuncSTO) f).getBaseName();
-				if(!structName.equals(baseName)){
-					generateError(ErrorMsg.error13b_Ctor, baseName, structName);
-					continue;
-				}
-				if(funcs.contains(name)){
-					generateError(ErrorMsg.error9_Decl, structType.getName());
-					continue;
-				}
-				funcs.add(name);
-			}
-			
-			structType.addFunc(f);
-		}
 	}
 	
 	
@@ -556,12 +562,11 @@ class MyParser extends parser {
 
 		String prefix = "." + struct.getName() + "_";
 		for(STO s: funcs){
-			s.setName(prefix + s.getName());
 			struct.getStructType().addFunc(s);
 			symTab.insert(s);
 		}
 		for(STO s: ctrs){
-			struct.getStructType().addCtor(s);
+			//struct.getStructType().addCtor(s);
 			symTab.insert(s);
 		}
 		
@@ -606,8 +611,12 @@ class MyParser extends parser {
 	STO DoFuncDecl_1(Type t, boolean ref, String id) {
 		STO error = null;
 		if (symTab.accessLocal(id) != null) {
-			if(!symTab.accessLocal(id).isFunc())
-				error = generateError(ErrorMsg.redeclared_id, id);
+			if(!symTab.accessLocal(id).isFunc()){
+				if(symTab.hasStruct())
+					error = generateError(ErrorMsg.error13a_Struct, id);
+				else
+					error = generateError(ErrorMsg.redeclared_id, id);
+			}
 		}
 		String lookupName = id;
 		if(symTab.hasStruct())
@@ -633,24 +642,25 @@ class MyParser extends parser {
 			m_nNumErrors++;
 			m_errors.print("internal: DoFormalParams says no proc!");
 		}
+		if(symTab.hasStruct() && func.getBaseName().equals(symTab.getFunc().getName())){
+			
+		}else{
+			if(symTab.accessFunc(func.getBaseName(), params) != null  && !symTab.hasStruct()){
+				generateError(ErrorMsg.error9_Decl, func.getBaseName());
+				return;
+			}
 		
-		if(symTab.accessFunc(func.getBaseName(), params) != null  && !symTab.hasStruct()){
-			generateError(ErrorMsg.error9_Decl, func.getBaseName());
-			return;
+			if(symTab.accessFunc(func.getLookupName(), params) != null){
+				generateError(ErrorMsg.error9_Decl, func.getBaseName());
+				return;
+			}
 		}
-		
-		if(symTab.accessFunc(func.getLookupName(), params) != null){
-			generateError(ErrorMsg.error9_Decl, func.getBaseName());
-			return;
-		}
-		
 		symTab.insert(func);
 		
 		for(VarSTO v: params){
 			symTab.insert(v);
 		}
 		func.setParameters(params);
-		
 				
 				
 	}
@@ -679,6 +689,8 @@ class MyParser extends parser {
 		symTab.closeScope();
 		
 		symTab.insert(current);
+		if(symTab.hasStruct())
+			current.setName("." + symTab.getStruct().getName() + "_" + current.getName());
 		
 		symTab.setFunc(null);
 		
@@ -1287,7 +1299,7 @@ class MyParser extends parser {
 		Type subType = ((PointerType) x.getType()).getSubtype();
 		if(args != null){
 			if(!(subType instanceof StructType))
-				return generateError(ErrorMsg.error16b_NonStructCtorCall, subType.getName().toString());
+				return generateError(ErrorMsg.error16b_NonStructCtorCall, x.getType().getName().toString());
 			
 		}
 		else{
@@ -1296,7 +1308,7 @@ class MyParser extends parser {
 			args = new Vector<STO>();
 		}
 		StructType struct_t = (StructType) subType;
-		
+		STO error = null;
 		//only one constructor size
 		if(struct_t.getCtors().size() < 2){
 			FunctionPointerType ctr = ((FuncSTO) struct_t.getCtors().get(0)).getFunctionType();
@@ -1309,15 +1321,17 @@ class MyParser extends parser {
 				
 				if(isRef){ //Checking parameter declared as pass-by-reference(&) and corresponding arg types
 					if(!argument.getType().isEquivalent(parameter.getType()))
-						return generateError(ErrorMsg.error5r_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
+						error = generateError(ErrorMsg.error5r_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
 					else if(!(argument.isModLValue()) )
-						return generateError(ErrorMsg.error5c_Call, parameter.getName(), parameter.getType().getName());
+						error = generateError(ErrorMsg.error5c_Call, parameter.getName(), parameter.getType().getName());
 				}
 				else{	//Checking parameter types against those being passed in
 					if(!argument.getType().isAssignable(parameter.getType()))
-						return generateError(ErrorMsg.error5a_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
+						error = generateError(ErrorMsg.error5a_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
 				}
 			}
+			if(error != null)
+				return error;
 			return struct_t.getCtors().get(0);
 		}
 		outside :
@@ -2504,9 +2518,7 @@ class MyParser extends parser {
 	public STO DoParens(STO _2) {
 		if(_2.isError())
 			return _2;
-		STO s = _2.newSTO();
-		s.setName("(" + _2.getName() + ")");
-		return s;
+		return new ExprSTO("(" + _2.getName() + ")", _2.getType());
 	}
 	
 	

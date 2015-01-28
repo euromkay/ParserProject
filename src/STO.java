@@ -16,17 +16,7 @@ abstract class STO
 	private String offset = null;
 	boolean ret = false;
 	
-	public STO newSTO(STO s){
-		s.name = new String(name);
-		s.type = type.newType();
-		s.isAddressable = isAddressable;
-		s.isModifiable = isModifiable;
-		s.address = address;
-		if(offset != null)
-			s.offset = offset;
-		s.ret = ret;
-		return s;
-	}
+	
 
 	//----------------------------------------------------------------
 	//
@@ -140,7 +130,6 @@ abstract class STO
 	
 	
 	
-	public abstract STO newSTO();
 
 
 	

@@ -19,7 +19,7 @@ class ExprSTO extends STO
 
 	public ExprSTO(String strName, Type typ)
 	{
-		super(new String(strName), (typ == null) ? null : typ.newType());
+		super(new String(strName),typ);
 	}
 
 	//----------------------------------------------------------------
@@ -30,9 +30,6 @@ class ExprSTO extends STO
 		return true;
 	}
 	
-	public STO newSTO() {
-		return super.newSTO(new ExprSTO(getName(), getType()));
-	}
 	
 	
 }

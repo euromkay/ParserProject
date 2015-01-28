@@ -19,7 +19,7 @@ class VarSTO extends STO
 	}*/
 	public VarSTO(String strName, Type typ)
 	{
-		super(new String(strName), typ.newType());
+		super(new String(strName), typ);
 		setIsAddressable(true);
 		setIsModifiable(true);
 		// You may want to change the isModifiable and isAddressable 
@@ -29,12 +29,12 @@ class VarSTO extends STO
 	
 	
 	public VarSTO(String strName, Type typ, STO init, STO init2){
-		super(new String(strName), (typ == null) ? null : typ.newType());
+		super(strName, typ);
 		setIsAddressable(true);
 		setIsModifiable(true);
-		this.init = init.newSTO();
+		this.init = init;
 		if(init2 != null)
-			this.init2 = init2.newSTO();
+			this.init2 = init2;
 		// You may want to change the isModifiable and isAddressable 
 		// fields as necessary
 	}
@@ -56,17 +56,6 @@ class VarSTO extends STO
 	}
 	
 	
-	public STO newSTO() {
-		// TODO : is this needed?
-		VarSTO s;
-		if(init == null)
-			s = new VarSTO(getName(), getType());
-		else
-			s = new VarSTO(getName(), getType(), init, init2);
-		s.ref = ref;
-
-		return super.newSTO(s);
-	}
 	
 	public STO getInit(){
 		return init;

@@ -36,11 +36,6 @@ public class PointerType extends PointerGroupType {
 	}
 
 
-	
-	public Type newType() {
-		return new PointerType(getSubtype().newType());
-		
-	}
 
 	
 	

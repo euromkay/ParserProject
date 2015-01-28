@@ -60,8 +60,8 @@ class FuncSTO extends STO
 	
 	public FuncSTO(String strName, String lookupName, Type returnType)
 	{
-		super (new String(strName), new FunctionPointerType(returnType.newType()));
-		this.returnType = returnType.newType();
+		super (new String(strName), new FunctionPointerType(returnType));
+		this.returnType = returnType;
 		baseName = strName;
 		this.lookupName = lookupName;
 	}

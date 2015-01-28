@@ -98,16 +98,6 @@ public class FunctionPointerType extends Type {
 	public boolean isEquivalent (Type t){
 		return isAssignable(t);
 	}
-	public Type newType() {
-		FunctionPointerType f = new FunctionPointerType(returnType.newType());
-		f.setRef(ref);
-		Vector<VarSTO> list = new Vector<VarSTO>();
-		for(VarSTO sto: m_paramList)
-			list.add((VarSTO) sto.newSTO());
-		f.setParameters(list);
-		
-		return f;
-	}
 	
 
 }

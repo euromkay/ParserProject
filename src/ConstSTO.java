@@ -18,19 +18,9 @@ class ConstSTO extends STO
 	STO init, init2;
 	
 	public void setSTOInit(STO s){
-		init = s.newSTO();
+		init = s;
 	}
 	
-	public STO newSTO() {
-		
-		ConstSTO c = new ConstSTO(getName(), getType(), m_value);
-		if(init != null)
-			c.init = init.newSTO();
-		if(init2 != null)
-			c.init2 = init2.newSTO();
-		
-		return super.newSTO(c);
-	}
 
 	//----------------------------------------------------------------
 	//
@@ -137,7 +127,7 @@ class ConstSTO extends STO
 	public STO getSTOInit(){
 		if(init == null)
 			return null;
-		return init.newSTO();
+		return init;
 	}
 
 	public STO getSTOInit2() {

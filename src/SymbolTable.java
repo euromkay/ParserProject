@@ -110,7 +110,7 @@ class SymbolTable
 		
 		String fullName = FuncSTO.getName(baseName, params);
 		for(FuncSTO f: funcs){
-			if(f.getLookupName().equals(fullName))
+			if(f.getName().equals(fullName))
 				return f;
 		}
 		return null;

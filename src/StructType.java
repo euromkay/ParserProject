@@ -12,7 +12,7 @@ public class StructType extends CompositeType {
 
 	
 	public StructType(String id) {
-		super(id, -1);
+		super(id, 0);
 	}
 	
 	public boolean isAssignable(Type t){
@@ -65,10 +65,33 @@ public class StructType extends CompositeType {
 		}
 		return false;
 	}
+	
+
+	ArrayList<String> funcs_string = new ArrayList<String>();
+	public boolean contains_ctor(String name) {
+		if(funcs_string.contains(name))
+			return true;
+		
+		return false;
+	}
+	public void addCtorString(String name){
+		funcs_string.add(name);
+	}
+	
 
 	public void addVar(VarSTO v) {
 		vars.add(v);
 		v.setOffset(getSize().toString());
 		setSize(getSize() + v.getType().getSize());
+	}
+	
+	
+	private boolean hasDestruct = false;
+	public boolean hasDestruct(){
+		return hasDestruct;
+	}
+	
+	public void setDestruct(){
+		hasDestruct = true;
 	}
 }
