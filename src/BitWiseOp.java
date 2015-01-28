@@ -23,14 +23,14 @@ public abstract class BitWiseOp extends ArithmeticOp {
 				if(a instanceof ConstSTO && b instanceof ConstSTO){
 					try{
 						BigDecimal result = getResult((ConstSTO) a,  (ConstSTO) b);
-						return new ConstSTO(a.getName() + " " + getName() + " " + b.getName(), new IntType(), result);	//Result should be intType
+						return new ConstSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new IntType(), result);	//Result should be intType
 					}catch (ArithmeticException e){
 						return new ErrorSTO(ErrorMsg.error8_Arithmetic);
 					}
 				}
 			}
 			//Resolve to ExprSTO
-			return new ExprSTO(a.getName() + " " + getName() + " " + b.getName(), new IntType());
+			return new ExprSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new IntType());
 		}
 	}
 

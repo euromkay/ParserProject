@@ -13,7 +13,7 @@ public abstract class Operator {
 	public static final String GTE = ">=";
 	public static final String EQ = "==";
 	public static final String NEQ = "!=";
-	public static final String MOD = "$";
+	public static final String MOD = "%";
 	public static final String CARET = "^";
 	public static final String AMPERSAND = "&";
 	public static final String BAR = "|";
