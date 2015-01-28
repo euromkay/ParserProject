@@ -618,6 +618,15 @@ class MyParser extends parser {
 					error = generateError(ErrorMsg.redeclared_id, id);
 			}
 		}
+		if(symTab.hasStruct()){
+			for(STO s: symTab.getStruct().getStructType().getMembers()){
+				if(s.getName().equals(id)){
+					error = generateError(ErrorMsg.error13a_Struct, id);
+					break;
+				}
+			}
+		}
+		
 		String lookupName = id;
 		if(symTab.hasStruct())
 			lookupName = "." + symTab.getStruct().getStructType().getName() + "_" + id; 
@@ -642,7 +651,7 @@ class MyParser extends parser {
 			m_nNumErrors++;
 			m_errors.print("internal: DoFormalParams says no proc!");
 		}
-		if(symTab.hasStruct() && func.getBaseName().equals(symTab.getFunc().getName())){
+		if(symTab.hasStruct() && func.getBaseName().equals(symTab.getStruct().getName())){
 			
 		}else{
 			if(symTab.accessFunc(func.getBaseName(), params) != null  && !symTab.hasStruct()){
