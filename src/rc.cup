@@ -1238,6 +1238,7 @@ Designator2 ::=     Designator2:_1 T_DOT T_ID:_3
 Designator3 ::=     T_LPAREN Expr:_2 T_RPAREN
                     {:
                         RESULT = ((MyParser) parser).DoParens(_2);
+                        ((MyParser) parser).WriteParens(RESULT);
                     :}
     |               T_INT_LITERAL:_1
                     {:

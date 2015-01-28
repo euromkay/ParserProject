@@ -2520,6 +2520,11 @@ class MyParser extends parser {
 			return _2;
 		return new ExprSTO("(" + _2.getName() + ")", _2.getType());
 	}
+
+	public void WriteParens(STO result) {
+		writer.addSTO(result);
+		
+	}
 	
 	
 }
