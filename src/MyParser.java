@@ -539,7 +539,7 @@ class MyParser extends parser {
 		for(STO s: struct.getStructType().getVars()){
 			varNames.add(s.getName());
 		}
-		
+		/*
 		ArrayList<String> funcList = new ArrayList<String>();
 		
 		for(STO func_s: funcs){
@@ -552,7 +552,7 @@ class MyParser extends parser {
 			}else{
 				funcList.add(func.getName());
 			}
-		}
+		}*/
 
 		String prefix = "." + struct.getName() + "_";
 		for(STO s: funcs){
@@ -638,6 +638,12 @@ class MyParser extends parser {
 			generateError(ErrorMsg.error9_Decl, func.getBaseName());
 			return;
 		}
+		
+		if(symTab.accessFunc(func.getLookupName(), params) != null){
+			generateError(ErrorMsg.error9_Decl, func.getBaseName());
+			return;
+		}
+		
 		symTab.insert(func);
 		
 		for(VarSTO v: params){
@@ -962,15 +968,7 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	
-	Type DoFuncPtr(Type rt, Vector<VarSTO> lst, boolean ref){
-		FunctionPointerType ft = new FunctionPointerType(rt);
-		ft.setRef(ref);
-		ft.setParameters(lst);
-		
-		
-		return ft;
-	}
+
 	
 	
 	// ----------------------------------------------------------------
@@ -1100,13 +1098,13 @@ class MyParser extends parser {
 	Type DoStructType_ID(String strID) {
 		STO sto;
 
-		if ((sto = symTab.access(strID)) == null)
+		if ((sto = symTab.accessGlobal(strID)) == null)
 			return generateError(ErrorMsg.undeclared_id, strID).getType();
 		
 
-		if (!sto.isStructdef()) 
+		if (!sto.isStructdef()){ 
 			return generateError(ErrorMsg.not_type, sto.getName()).getType();
-	
+		}
 		return sto.getType();
 	}
 	
@@ -1116,10 +1114,9 @@ class MyParser extends parser {
 		if(a instanceof ErrorSTO)
 			return;
 		Type aType = a.getType();
-		if(!aType.isBool()){
-			m_nNumErrors++;
-			m_errors.print(Formatter.toString(ErrorMsg.error4_Test, aType.getName()));
-		}
+		if(!aType.isBool())
+			generateError(ErrorMsg.error4_Test, aType.getName());
+		
 				
 		
 	}
@@ -1629,8 +1626,8 @@ class MyParser extends parser {
 					v.store(length_a, writer);
 					sto.setInit(v);
 				}
-				if(sto.getType() instanceof StructType)
-					sto.setRef(true);
+				if(sto.getType() instanceof StructType);
+					//sto.setRef(true);
 				sto.setAddress(param_a);
 			}else{
 				writer.addSTO(sto);
