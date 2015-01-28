@@ -72,9 +72,10 @@ class Scope
 		if(sto.isFunc()){
 			FuncSTO f = (FuncSTO) sto;
 			String baseName = f.getLookupName();
-			if(funcs.containsKey(baseName))
+			if(funcs.containsKey(baseName)){
 				funcs.get(baseName).add((FuncSTO) sto);
-			else{
+				f.setBrothers(funcs.get(baseName));
+			}else{
 				ArrayList<FuncSTO> overloads = new ArrayList<FuncSTO>();
 				overloads.add((FuncSTO) sto);
 				funcs.put(baseName, overloads);

@@ -161,13 +161,16 @@ class MyParser extends parser {
 		
 		t = Type.mergeType(t, arraySTOs);
 		
-		if (symTab.accessLocal(name) != null) 
+		if (symTab.accessLocal(name) != null) {
+			varHelper(statik, t, name);
 			return generateError(ErrorMsg.redeclared_id, name);
-		if(init != null){
-			if(init.isError())
-				return init;
-			if(!init.getType().isAssignable(t)){
-				return generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
+		}if(init != null){
+			if(init.isError()){
+				return varHelper(statik, t, name);
+				//return init;
+			}if(!init.getType().isAssignable(t)){
+				generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
+				return varHelper(statik, t, name);
 			}
 		}
 		
@@ -921,6 +924,8 @@ class MyParser extends parser {
 			VarSTO parameter = fstoT.get(i);
 			boolean isRef = parameter.isRef();
 			STO argument = argList.get(i);
+			if(argument.isError())
+				continue;
 			
 			if(isRef){ //Checking parameter declared as pass-by-reference(&) and corresponding arg types
 				if(!argument.getType().isEquivalent(parameter.getType())){
@@ -1149,7 +1154,7 @@ class MyParser extends parser {
 		if(des instanceof ErrorSTO)
 			return des;
 		
-		if(!(des.getType() instanceof ArrointType))
+		if(!(des.getType().isPointer()))
 			return generateError(ErrorMsg.error15_Receiver, des.getType().getName());
 		if(des.getType() instanceof NullPointerType)
 			return generateError(ErrorMsg.error15_Nullptr);
@@ -1615,7 +1620,7 @@ class MyParser extends parser {
 			if(sto.isRef() || sto.getType() instanceof ArrayType || sto.getType() instanceof StructType){
 				if(sto.getType() instanceof ArrayType){
 					ArrayType aType = (ArrayType) sto.getType();
-					sto.setRef(true);
+					//sto.setRef(true);
 					
 					VarSTO v = new VarSTO("", new IntType());
 					writer.addSTO(v);
@@ -1841,6 +1846,10 @@ class MyParser extends parser {
 	}
 
 	public void WriteBinaryExpr(STO a, Operator o, STO b, STO result){
+		if(a.isError())
+			return;
+		if(b.isError())
+			return;
 		
 		writer.comment(result.getName());
 		
@@ -2130,6 +2139,8 @@ class MyParser extends parser {
 	}
 	
 	public void WriteExit(STO s){
+		if(s.isError())
+			return;
 		writer.comment("exit " + s.getName());
 		writeVal(s, Address.O0);
 		writer.call("exit");
