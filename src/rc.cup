@@ -337,7 +337,6 @@ StructdefDecl ::=   T_STRUCTDEF T_ID_U:_1 T_LBRACE
                     FieldVarsList:_4
                     OptCtorDtorList:_3
                     {:
-                    	((MyParser) parser).DoStructVarCheck(_4);
                     	((MyParser) parser).DoConstructorCheck(_3);
                     :}
                     OptFieldFuncsList:_5
@@ -410,6 +409,7 @@ CtorDef ::=         T_ID_U:_3
                     T_LPAREN OptParamList:_4 T_RPAREN
                     {:
                         ((MyParser) parser).DoFormalParams(_4);
+                        ((MyParser) parser).WriteFuncDecl(_3, _4);
                     :}
                     T_LBRACE OptStmtList:_2 T_RBRACE
                     {:
@@ -422,6 +422,7 @@ DtorDef ::=         T_TILDE T_ID_U:_3
                     {:
                         ((MyParser) parser).SaveLineNum ();
                         ((MyParser) parser).DoFuncDecl_1("~" + _3);
+                        ((MyParser) parser).WriteFuncDecl("~", new Vector<VarSTO>());
                     :}
                     T_LPAREN T_RPAREN T_LBRACE OptStmtList:_2 T_RBRACE
                     {:

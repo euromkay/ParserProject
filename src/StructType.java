@@ -29,12 +29,6 @@ public class StructType extends CompositeType {
 		return this;
 	}
 
-	public void setStructVars(Vector<STO> vars, int size) {
-		this.vars = vars;
-		setSize(size);
-		
-	}
-
 	public Vector<STO> getVars() {
 		return vars;
 	}
@@ -64,4 +58,17 @@ public class StructType extends CompositeType {
 		return members;
 	}
 
+	public boolean contains(String name) {
+		for(STO s: vars){
+			if(s.getName().equals(name))
+				return true;
+		}
+		return false;
+	}
+
+	public void addVar(VarSTO v) {
+		vars.add(v);
+		v.setOffset(getSize().toString());
+		setSize(getSize() + v.getType().getSize());
+	}
 }
