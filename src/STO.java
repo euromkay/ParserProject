@@ -157,6 +157,8 @@ abstract class STO
 	
 
 	public Address writeAddress(Address a1, Writer writer) {
+		if(getAddress() == null)
+			return a1;
 		Address tempAdd = writer.getAddressManager().getAddress();
 		/*if(getAddress().equals("STRUCT")){
 			VarSTO struct = (VarSTO) ((VarSTO) this).getInit();

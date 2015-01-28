@@ -257,7 +257,8 @@ class MyParser extends parser {
 			FuncSTO f = null ;
 			String neededCtor = FuncSTO.getName(type.getName(), ctrsArgs);
 			for(FuncSTO possCtr: ctors){
-				if(possCtr.getName().equals(neededCtor)){
+				String possName = FuncSTO.getName(possCtr.getBaseName(), possCtr.getFunctionType().getParams());
+				if(possName.equals(neededCtor)){
 					f = possCtr;
 					break;
 				}
@@ -428,18 +429,20 @@ class MyParser extends parser {
 	STO DoConstDecl(boolean statik, Type t, String name, STO init) {
 		if(init.isError())
 			return init;
-
+		ConstSTO c = new ConstSTO(name, t, BigDecimal.ONE);
 		if (symTab.accessLocal(name) != null) 
 			return generateError(ErrorMsg.redeclared_id, name);
 		
-		if(!init.isConst())
+		if(!init.isConst()){
+			symTab.insert(c);
 			return generateError(ErrorMsg.error8_CompileTime, name);
-		
-		if(!init.getType().isAssignable(t))
+		}
+		if(!init.getType().isAssignable(t)){
+			symTab.insert(c);
 			return generateError(ErrorMsg.error8_Assign, init.getType().getName(), t.getName());
+		}
 		
-		
-		ConstSTO c = new ConstSTO(name, t, ((ConstSTO) init).getValue());
+		c = new ConstSTO(name, t, ((ConstSTO) init).getValue());
 		c.setIsAddressable(true);
 		c.setSTOInit(init);
 		if(statik)
@@ -2527,6 +2530,10 @@ class MyParser extends parser {
 	public STO DoParens(STO _2) {
 		if(_2.isError())
 			return _2;
+		if(_2.isVar())
+			return new VarSTO("(" + _2.getName() + ")", _2.getType());
+		if(_2.isConst())
+			return new ConstSTO("(" + _2.getName() + ")", _2.getType(), ((ConstSTO) _2).getValue());
 		return new ExprSTO("(" + _2.getName() + ")", _2.getType());
 	}
 
