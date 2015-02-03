@@ -177,6 +177,10 @@ class SymbolTable
 		return m_func != null;
 	}
 
+	public boolean isGlobal() {
+		return !hasFunc() && !hasStruct();
+	}
+
 	
 
 	

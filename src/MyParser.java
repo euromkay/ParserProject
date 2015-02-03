@@ -311,11 +311,11 @@ class MyParser extends parser {
 		Type iterType = iter.getType();
 		if(iter.isRef()){
 			if(!aType.isEquivalent(iterType))
-				return generateError(ErrorMsg.error12r_Foreach, iterType.getName(), iter.getName(), aType.getName());
+				return generateError(ErrorMsg.error12r_Foreach, aType.getName(), iter.getName(), iter.getType().getName());
 		}
 		else{
 			if(!aType.isAssignable(iterType))
-				return generateError(ErrorMsg.error12v_Foreach, iterType.getName(), iter.getName(), aType.getName());
+				return generateError(ErrorMsg.error12v_Foreach, aType.getName(), iter.getName(), iter.getType().getName());
 			
 		}
 		
@@ -606,7 +606,7 @@ class MyParser extends parser {
 	}
 
 	STO DoFuncDecl_1(String id) {
-		return DoFuncDecl_1(symTab.getStruct().getType(), false, id);
+		return DoFuncDecl_1(new VoidType(), false, id);
 	}
 	// ----------------------------------------------------------------
 	//
@@ -722,6 +722,7 @@ class MyParser extends parser {
 		Type rType = fType.getReturnType();
 		
 		if(sto == null){
+			
 			if(!(rType instanceof VoidType)){
 				generateError(ErrorMsg.error6a_Return_expr);
 				return RETURN;
@@ -792,7 +793,7 @@ class MyParser extends parser {
 		}
 		
 		
-		return new ConstSTO("size of " + sto.getName(), new IntType(), sto.getType().getSize().toString());
+		return new ConstSTO("sizeof " + "(" +  sto.getName() + ")", new IntType(), sto.getType().getSize().toString());
 	}
 	
 	STO DoSizeOf(Type t, Vector<STO> arrayList){
@@ -810,7 +811,9 @@ class MyParser extends parser {
 		
 		if(!(t instanceof NumericType) && !(t instanceof BoolType) && !(t instanceof PointerType))
 			return generateError(ErrorMsg.error20_Cast,s.getType().getName(), t.getName());
-		
+		if(s.getType() instanceof NullPointerType){
+			return generateError(ErrorMsg.error20_Cast,s.getType().getName(), t.getName());
+		}
 		
 		if(s.getType().isArray() || s.getType() instanceof StructType)
 			return generateError(ErrorMsg.error20_Cast, s.getType().getName(), t.getName());
@@ -1407,6 +1410,10 @@ class MyParser extends parser {
 		return new ErrorSTO(error);
 	}
 	
+	public boolean isGlobal(){
+		return symTab.isGlobal();
+	}
+	
 	/************************ START ASSEMBLY WRITING *************************/
 
 	public String WriteVarDeclComment(STO left, STO right){
@@ -1423,7 +1430,10 @@ class MyParser extends parser {
 			right_t = " = " + right.getName();
 		
 		label = left_t + right_t;
-		writer.comment(label);
+		if(isGlobal())
+			writer.writeNow("!" + label + "\n");
+		else
+			writer.comment(label);
 		
 		return label;
 	}
@@ -1451,7 +1461,7 @@ class MyParser extends parser {
 		if(left.isError())
 			return;
 		
-		if(writer.isGlobal()){
+		if(isGlobal()){
 			
 			writer.changeSection(Writer.DATA);
 			writer.align("4");
@@ -1548,20 +1558,28 @@ class MyParser extends parser {
 			}
 		}
 
+		if(isGlobal())
+			writer.newLine();
 		
 	}
 	
 	public void WriteVarInit(STO left, STO right){
-		if(right == null || right.isError()){
-			writer.newLine();
+		if(right != null && right.isError()){
 			return;
 		}
 		
-		if(isIntToFloat(left, right))
-			fitos(right, left);
-		else
-			store(left, right);
-
+		if(right == null && isGlobal()){
+			Address a = am.getAddress();
+			writer.set("0", a);
+			store(left, a);
+			a.release();
+			
+		}else if(right != null){
+			if(isIntToFloat(left, right))
+				fitos(right, left);
+			else
+				store(left, right);
+		}
 		writer.newLine();
 	}
 	
@@ -1803,20 +1821,23 @@ class MyParser extends parser {
 	}
 	
 	public void WriteStringLiteral(String s) {
+		
+		writer.newLine();
+		writer.comment("\"" + s + "\"");
 		writer.changeSection(Writer.RODATA);
 		String label = "_string" + literalCount++;
 		writer.skip(Template.ASCIZ, label, "\""+s+"\"");
-		writer.newLine();
 		
 		writer.changeSection(Writer.TEXT);
-		writer.comment(s);
+		writer.newLine();
+		
 		
 	}
 	
 
 	
 	public boolean isInGlobalScope() {
-		return writer.isGlobal();
+		return isGlobal();
 	}
 	
 	public static final String BRANCH = ".branch";
@@ -1994,12 +2015,16 @@ class MyParser extends parser {
 	public void WriteSizeOf(STO s){
 		if(s.isError())
 			return;
+		writer.comment(s.getName());
+		
+		
 		Address a = am.getAddress();
 		writer.set(((ConstSTO) s).getIntValue().toString(), a);
 		writer.addSTO(s);
-		s.store(a, writer);
+		store(s, a);
 		
 		a.release();
+		writer.newLine();
 	}
 	
 	public void WriteReturn(STO s){
@@ -2131,6 +2156,7 @@ class MyParser extends parser {
 	
 	Stack<String> labelList = new Stack<String>();
 	public void WriteIfStatement(STO s){
+		writer.comment("if" + s.getName());
 		String label = ".iflabel" + literalCount++;
 		labelList.push(label);
 		

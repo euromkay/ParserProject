@@ -207,7 +207,7 @@ public class Writer {
 
     
     // 9
-    private void writeNow(String template, String ... params) {
+    void writeNow(String template, String ... params) {
         lastAction = NOW;
         
     	String asStmt;
@@ -251,11 +251,7 @@ public class Writer {
     
   
 
-	public boolean isGlobal() {
-		if(symTab == null)
-			return false;
-		return symTab.getLevel() == 1;
-	}
+	
 
 	Integer localVarSpace = 0;
 	
@@ -269,7 +265,7 @@ public class Writer {
 	public void addSTO(STO s){
 		if(s instanceof ErrorSTO)
 			return;
-		if(isGlobal()){
+		if(symTab.isGlobal()){
 			if(symTab.accessGlobal(s.getName()) != null){
 				s.setAddress(s.getName());
 			}else{
@@ -295,7 +291,7 @@ public class Writer {
 		fp = false;
 		
 		boolean contPrint = true;
-		contPrint = false;
+		//contPrint = false;
 		
 		if(contPrint && fp)
 			return true;
@@ -428,7 +424,7 @@ public class Writer {
 		if(flag)
 			fcmp(a1, a2);
 		else
-			fcmp(a1, a2);
+			cmp(a1, a2);
 	}
 
 	public void fcmp(Address a1, Address a2){
@@ -446,7 +442,7 @@ public class Writer {
 	}
 
 	public boolean isLocal() {
-		return !isGlobal();
+		return !symTab.isGlobal();
 	}
 
 	public void addOp(Address a1, Address a2, Address res) {

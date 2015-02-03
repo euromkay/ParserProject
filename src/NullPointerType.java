@@ -1,9 +1,6 @@
 
 public class NullPointerType extends PointerType {
 
-	public Type newType() {
-		return new NullPointerType();
-	}
 	public NullPointerType() {
 		super("nullptr", new NullType(), 4);
 	}

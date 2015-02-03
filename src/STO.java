@@ -249,6 +249,7 @@ abstract class STO
 		Address from_a = writer.getAddressManager().getAddress();
 		Address to_a   = writer.getAddressManager().getAddress();
 		from.writeVal(from_a, writer);
+		writeAddress(to_a, writer);
 		
 		writer.store(from_a, to_a);
 		
