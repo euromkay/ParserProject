@@ -76,7 +76,7 @@ public abstract class Operator {
 			return new PlusPostOp();
 		if(string.equals(Operator.PLUS_PRE))
 			return new PlusPreOp();
-		if(string.equals(Operator.MINUS_POST))
+		if(string.equals(Operator.MINUS_PRE))
 			return new MinusPreOp();
 		else
 			return new MinusPostOp();

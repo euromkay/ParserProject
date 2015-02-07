@@ -638,6 +638,9 @@ class MyParser extends parser {
 		symTab.setFunc(sto);
 		symTab.openScope();
 		
+		if(symTab.hasStruct())
+			sto.setIsStructMember(true);
+		
 		if(error != null)
 			return error;
 		
@@ -1591,7 +1594,7 @@ class MyParser extends parser {
 		to.store(from, writer);
 	}
 	
-	private void store(STO to, Address from){
+	public void store(STO to, Address from){
 		to.store(from, writer);
 	}
 	
@@ -1608,7 +1611,7 @@ class MyParser extends parser {
 	}
 
 	private boolean isIntToFloat(STO f, STO i){
-		return f.getType() instanceof FloatType && i.getType() instanceof IntType;
+		return f.getType().isFloat() && i.getType().isInt();
 	}
 
 	private void fitos(STO int_, STO float_){
@@ -1620,6 +1623,14 @@ class MyParser extends parser {
 		writer.store(fReg, f_add);
 		
 		f_add.release();
+	}
+	
+	private void fitos(STO int_, Address float_){
+		Address fReg = new Address("%f0");
+		
+		writeVal(int_, fReg);
+		writer.fitos(fReg, fReg);
+		writer.store(fReg, float_);
 	}
 	
 	public Integer getCodeBlockVars(Vector<VarSTO> paramList){
@@ -1638,14 +1649,15 @@ class MyParser extends parser {
 			offset++;
 		}
 		//Write Function Comment
-		writer.funcComment(fname);
+		String fullName = FuncSTO.getName(fname, paramList);
+		writer.funcComment(fullName);
 		
 		//Write Function Header
 		writer.changeSection(Writer.TEXT);
-		writer.global(fname);
-		writer.label(fname);
+		writer.global(fullName);
+		writer.label(fullName);
 		
-		writer.set("SAVE." + fname, new Address("%g1")); 
+		writer.set("SAVE." + fullName, new Address("%g1")); 
 		writer.save();
 		writer.newLine();
 		
@@ -1790,7 +1802,7 @@ class MyParser extends parser {
 		writer.addSTO(s);
 		int section = writer.getSection();
 		writer.changeSection(Writer.RODATA);
-		String label = "_float_" + s.getName() + literalCount++;
+		String label = "_float_" + literalCount++;
 		writer.skip(Template.FLOAT_VAR_DECL, label, s.getName());
 		writer.newLine();
 	
@@ -1926,8 +1938,8 @@ class MyParser extends parser {
 			res_a = Address.O0;
 			
 			a.writeVal(a1, writer);
-			if(a != b)
-				b.writeVal(a2, writer);
+			
+			b.writeVal(a2, writer);
 		}
 		o.writeSparc(a, b, result, a1, a2, res_a, f_flag, this);
 		
@@ -2031,6 +2043,11 @@ class MyParser extends parser {
 		if(s != null && s.isError())
 			return;
 		
+		String stoName = "";
+		if(s != null)
+			stoName = s.getName();
+		
+		writer.comment("return " + stoName);
 		
 		FuncSTO currentFunc = symTab.getFunc();
 		FunctionPointerType fT = (FunctionPointerType) currentFunc.getType();
@@ -2055,87 +2072,42 @@ class MyParser extends parser {
 	public void WriteFuncCall(STO s, Vector<VarSTO> args, STO result){
 		if(result.isError())
 			return;
-		
+
+		writer.comment(s.getName() + "()");
 		writer.addSTO(result);
-	}
-	
-	private void WriteFuncCall(FuncSTO func, Vector<VarSTO> args, STO fsto){
-		func = symTab.accessFunc(func.getBaseName(), args);
 		
-		writer.addSTO(fsto);
-		Vector<VarSTO> funcParams = ((FunctionPointerType) func.getType()).getParams();
-		String o = "%o";
+		FuncSTO f = (FuncSTO) s;
+		Vector<VarSTO> params = f.getFunctionType().getParams();
+		String output = "%o";
 		
-		int structOffset;
-		if(func.isMemberFunction()){
+		//takes care of the struct offset
+		int structOffset = 0;
+		if(f.isStructMember())
 			structOffset = 1;
-		}else{
-			structOffset = 0;
-		}
 		
-		
-		for(int i = 0; i < args.size(); i++){
-			Address a = new Address(o+(i + structOffset));
-			STO e = args.get(i);
-			if(funcParams.get(i).isRef() || e.getType() instanceof ArrayType || e.getType() instanceof StructType){
-				writeAddress(e, a);
+		for(int i = structOffset; i < args.size(); i++){
+			Address outReg = new Address(output+i);
+			STO arg = args.get(i);
+			VarSTO param = params.get(i);
+			if(param.isRef() || arg.getType().isArray()){// || e.getType() instanceof StructType){
+				writeAddress(arg, outReg);
 			}
 			else{
-				if(isIntToFloat(e, funcParams.get(i))){
-					VarSTO temp = new VarSTO("", new FloatType());
-					writer.addSTO(temp);
-					
-					Address temp_a = am.getAddress();
-					
-					writeAddress(temp, temp_a);
-					writeVal(e, Address.F0);
-					writer.fitos(Address.F0, Address.F0);
-					writer.store(Address.F0, temp_a);
-					writer.ld(temp_a, a);
-					
-					temp_a.release();
-				}else{
-					writeVal(e, a);
-				}
+				if(isIntToFloat(param, arg))
+					fitos(arg, outReg);
+				else
+					writeVal(arg, outReg);
 			}
-			i++;
 		}
 		
-		writer.call(func.getName());
-		if(!(func.getReturnType() instanceof VoidType))
-			fsto.store(Address.O0, writer);
+		
+		writer.call(s.getName());
+		if(f.getReturnType() instanceof VoidType)
+			store(result, Address.O0);
+		
+		writer.newLine();
 	}
 	
-	public void WriteFuncCall(VarSTO v, Vector<STO> params, STO fsto){
-		FuncSTO func = (FuncSTO) v.getInit();
-		STO structSTO = v.getInit2();
-		writer.addSTO(fsto);
-		Vector<VarSTO> funcParams = ((FunctionPointerType) func.getType()).getParams();
-		String o = "%o";
-		
-		int structOffset;
-		if(func.isMemberFunction()){
-			structOffset = 1;
-			writeAddress(structSTO, Address.O0);
-		}else{
-			structOffset = 0;
-		}
-		
-		
-		for(int i = 0; i < params.size(); i++){
-			STO e = params.get(i);
-			if(funcParams.get(i).isRef() || e.getType() instanceof ArrayType || e.getType() instanceof StructType){
-				e.writeAddress(new Address(o+(i + structOffset)), writer);
-			}
-			else
-				e.writeVal(new Address(o+(i + structOffset)), writer);
-			i++;
-		}
-		
-		writer.call(func.getName());
-		if(!(func.getReturnType() instanceof VoidType))
-			writer.store(Address.O0, fsto.getAddress());
-	}
 	
 	public void WriteNotOp(STO s, STO result){
 		if(result.isError())
@@ -2198,7 +2170,10 @@ class MyParser extends parser {
 		
 	}
 	
-	public void DoCIn(STO input){
+	public String WriteCIn(STO input){
+		String label = "cin >> " + input.getName();
+		writer.comment(label);
+		
 		Address a;
 		if(input.getType() instanceof IntType){
 			writer.call("inputInt");
@@ -2208,6 +2183,10 @@ class MyParser extends parser {
 			a = Address.F0;
 		}
 		input.store(a, writer);
+		
+		writer.newLine();
+		
+		return label;
 		
 	}
 	Stack<String> whileForList = new Stack<String>();
@@ -2563,8 +2542,13 @@ class MyParser extends parser {
 		return new ExprSTO("(" + _2.getName() + ")", _2.getType());
 	}
 
-	public void WriteParens(STO result) {
+	public void WriteParens(STO _2, STO result) {
+		writer.comment(result.getName());
 		writer.addSTO(result);
+		
+		store(result, _2);
+		
+		writer.newLine();
 		
 	}
 	

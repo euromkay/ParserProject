@@ -23,6 +23,8 @@ public abstract class BooleanOp extends BinaryOp {
 		writer.label(MyParser.BRANCH + p.literalCount + ".DONE");
 		p.literalCount++;	
 
+		p.store(result, res_a);
+		
 		res_a.release();
 	}
 

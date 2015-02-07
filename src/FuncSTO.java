@@ -71,7 +71,6 @@ class FuncSTO extends STO
 		return baseName;
 	}
 
-	boolean isFuncMember = false;
 	private STO init;
 	public STO getInit(){
 		return init;
@@ -82,12 +81,6 @@ class FuncSTO extends STO
 	}
 	
 	
-	public boolean isMemberFunction() {
-		return isFuncMember;
-	}
-	public void setIsMemberFunction(){
-		isFuncMember = true;
-	}
 
 	public static String getName(String name, Vector<VarSTO> params) {
 		for(STO p: params){
@@ -114,6 +107,16 @@ class FuncSTO extends STO
 		return lookupName;
 	}
 	
+	public boolean isStructMember(){
+		return isStructMemeber;
+	}
+	
+	private boolean isStructMemeber;
+	
+	public void setIsStructMember(boolean b){
+		isStructMemeber = b;
+	}
+
 	
 }
 	

@@ -555,40 +555,40 @@ public class Writer {
 	}
 
 	public void inc(Address a1, boolean floawt) {
-		STO s = new VoidSTO();
-		addSTO(s);
-		if(!floawt){
-			write(Template.INC, a1.toString());
-			return;
-		}
-		Address _1_a = am.getAddress();
-		set("1", _1_a);
-		store(_1_a, s.getAddress());
-		s.writeVal(Address.F2, this);
-		fitos(Address.F2, Address.F2);
-		addOp(a1, Address.F2, a1, floawt);
-		
-		_1_a.release();
-		
+		incDec(a1, floawt, Template.INC);
 	}
 	
-	public void dec(Address a1, boolean floawt) {
+	public void dec(Address a1, boolean floawt){
+		incDec(a1, floawt, Template.DEC);
+	}
+	
+	private void incDec(Address a1, boolean floawt, String template){
 		STO s = new VoidSTO();
 		addSTO(s);
 		if(!floawt){
-			write(Template.DEC, a1.toString());
+			write(template, a1.toString());
 			return;
 		}
 		Address _1_a = am.getAddress();
+		Address s_a = am.getAddress(); 
+		
 		set("1", _1_a);
-		store(_1_a, s.getAddress());
+		s.writeAddress(s_a, this);
+		
+		store(_1_a, s_a);
 		s.writeVal(Address.F2, this);
 		fitos(Address.F2, Address.F2);
-		minusOp(a1, Address.F2, a1, floawt);
+		if(template.equals(Template.INC))
+			addOp(a1, Address.F2, a1, floawt);
+		else
+			minusOp(a1, Address.F2, a1, floawt);
+			
 		
 		_1_a.release();
+		s_a.release();
 	}
-
+	
+	
 	public void fmov(String f31, String string) {
 		write(Template.FMOVS, f31, string);
 		
