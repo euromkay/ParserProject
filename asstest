@@ -1,46 +1,34 @@
-function : int main(){
-   int a = 100;
-   int b = 5; 
-   
-   if ( a <= b ) { 
-      cout << "fail1" << endl;
-   }
-   else {
-      a = a / 20;
-      
-      if ((a <= b) != (a >= b)) { 
-         cout << "fail2" << endl;
-      }
-      else {
-         if ((a - 20.0) >= 0.1){
-            cout << "fail3" << endl;
-         }
-         else {
-            int f = a;
-            if (++f == a) {
-               cout << "fail4" << endl;
-            }
-            else {
-               if (-0x84343 > a ) {
-                  cout << "fail5" << endl;
-               }
-               else {
-                  if (010 == 10){
-                     cout << "fail6" << endl;
-                  }
-                  else {
-                     if (10.5 > 10){
-                        cout << "pass" << endl;
-                     }
-                     else{
-                        cout << "fail7" << endl;
-                     }
-                  }
-               }
-            }
-         }
-      }
-   }
-   
-   return 0;
+structdef MS {
+ 	int j;
+	MS* g;
+};
+
+MS* z;
+function : void main(){
+	new z;
+	cout << z->j;
 }
+
+/*
+
+int x;
+float y;
+MS* z;
+
+function : void main(){
+ 	//cout << (((int) (((bool) (x = 1)) && true)) % 5) << endl;
+ 	new z;
+ 	cout << z->j << endl;
+ 	//new z->g;
+ 	/*cin >> y;
+ 	cin >> z->g->j;
+ 	x = (int) y;
+ 	cout << x << endl;
+ 	x = (int) (x + 5.9);
+ 	cout << x << endl;
+ 	y = (float) (int) (65.3);
+ 	cout << y << endl;
+ 	cout << (int) (z->g->j) << endl;
+ 	delete z->g;
+ 	delete z;*/
+}*/

@@ -292,7 +292,7 @@ ExternDecl ::=      T_EXTERN DecoratedBasicType:_2 T_ID:_3 OptArrayList:_4
 
 VarDecl ::=         OptStatic:_1 DecoratedType:_2 T_ID:_3 OptArrayList:_4 OptInit:_5
                     {:
-                        STO s = ((MyParser) parser).DoVarDecl (_1, _2,  _3, _4, _5);
+                        STO s = ((MyParser) parser).DoVarDecl (_1, _2, _3, _4, _5);
                         RESULT = ((MyParser) parser).WriteVarDeclComment(s, _5);
                         ((MyParser) parser).WriteVarDecl(s);
                         ((MyParser) parser).WriteVarInit(s, _5);

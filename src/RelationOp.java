@@ -26,7 +26,7 @@ public class RelationOp extends BooleanOp {
 				return new ConstSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new BoolType(), BoolType.dub(result));
 			}
 			return 
-				new ExprSTO(a.getName() + b.getName(), new BoolType());
+				new ExprSTO(a.getName() + " " + getSymbol() + " " + b.getName(), new BoolType());
 		}
 			
 		

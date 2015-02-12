@@ -967,7 +967,7 @@ class MyParser extends parser {
 				if(!argument.getType().isEquivalent(parameter.getType())){
 					if(overloaded)
 						error = throwError9(f.getBaseName());
-					else //TODO
+					else
 						error = generateError(ErrorMsg.error5r_Call, argument.getType().getName(), parameter.getName(), parameter.getType().getName());
 				}
 				else if(!(argument.isModLValue()) ){//&& !(argument.getType() instanceof ArrayType)){
@@ -1209,6 +1209,8 @@ class MyParser extends parser {
 		if(sto instanceof ErrorSTO)
 			return sto;
 		
+		String name = sto.getName() + " -> " + memberID;
+		
 		
 		if(!(sto.getType() instanceof PointerType))
 			return generateError(ErrorMsg.error15_ReceiverArrow, sto.getType().getName());
@@ -1234,7 +1236,7 @@ class MyParser extends parser {
 					return possible;
 			}
 			else if(possible.getName().equals(fullName))
-				return possible;
+				return new VarSTO(name, possible.getType());
 				
 		}
 		if(symTab.hasFunc()){
@@ -1251,7 +1253,8 @@ class MyParser extends parser {
 			
 		return generateError(ErrorMsg.error14f_StructExp, memberID, t.getName());
 	}
-
+	
+	
 	public STO checkConstExpr(String id, STO _4) {
 		if(_4.isError())
 			return _4;
@@ -1820,7 +1823,8 @@ class MyParser extends parser {
 	public static final String TRUE_S = "1", FALSE_S = "0";
 	
 	public void WriteBoolLiteral(STO s, String value) {
-		
+
+		writer.comment(s.getName());
 		//assured its local now
 		
 		Address a = am.getAddress();
@@ -1829,7 +1833,8 @@ class MyParser extends parser {
 		s.store(a, writer);
 		
 		a.release();
-		writer.comment(s.getName());
+		
+		writer.newLine();
 	}
 	
 	public void WriteStringLiteral(String s) {
@@ -1979,32 +1984,45 @@ class MyParser extends parser {
 	
 	public static final boolean OR_FLAG = true, AND_FLAG = false;
 	
-	public void WriteEqStmt_1(STO s, boolean flag){
+	public void WriteEqStmt_1(STO s, boolean or){
 		if(s.isError())
 			return;
+		
+		String label = s.getName() + " ";
+		if(or)
+			label += "||";
+		else
+			label += "&&";
+		
+		writer.comment(label + " ?? ");
+		
 		Address a = am.getAddress();
 		writeAddress(s, a);
 		writer.cmp(a, Address.G0);
 		String str = ".eq" + literalCount++;
 		labelList.add(str);
-		if(flag == OR_FLAG)
+		if(or)
 			writer.bne(str);
 		else//flag == AND_FLAG
 			writer.be(str);
 		
 		a.release();
+		
+		writer.newLine();
 	}
 	public static final String DONE = ".DONE";
-	public void WriteEqStmt_2(STO s, STO result, boolean flag){
+	public void WriteEqStmt_2(STO s, STO result, boolean or){
 		if(result.isError())
 			return;
+	
+		writer.comment(result.getName());
 		
 		Address a = am.getAddress();
 		writer.addSTO(result);
 		writer.ld(s.getAddress(), a);
 		writer.cmp(a, Address.G0);
 		String str = labelList.pop(), result1, result2;
-		if(flag == OR_FLAG){
+		if(or){
 			writer.bne(str);
 			result1 = "0";
 			result2 = "1";
@@ -2021,6 +2039,8 @@ class MyParser extends parser {
 		result.store(a, writer);
 		
 		a.release();
+		
+		writer.newLine();
 	}
 	
 	
@@ -2073,10 +2093,11 @@ class MyParser extends parser {
 		if(result.isError())
 			return;
 
-		writer.comment(s.getName() + "()");
+		FuncSTO f = (FuncSTO) s;
+		
+		writer.comment(f.getBaseName() + "()");
 		writer.addSTO(result);
 		
-		FuncSTO f = (FuncSTO) s;
 		Vector<VarSTO> params = f.getFunctionType().getParams();
 		String output = "%o";
 		
@@ -2374,6 +2395,8 @@ class MyParser extends parser {
 	public void WriteArrowDeref(STO structSTO, String _3, STO result) {
 		if(result.isError())
 			return;
+		writer.comment(result.getName());
+		
 		StructType t = (StructType) ((PointerType) structSTO.getType()).getSubtype();
 		Integer size = 0;
 		for(STO member: t.getFuncs()){
@@ -2381,19 +2404,18 @@ class MyParser extends parser {
 				break;
 			size += member.getType().getSize();
 		}
-		result.setOffset(size.toString());
 		
-		Address a = am.getAddress(), offset_a = am.getAddress();
+		Address struct = am.getAddress(), offset_a = am.getAddress();
 		
-		writeVal(structSTO, a);
-		writer.set(result.getOffset(), offset_a);
-		writer.addOp(a, offset_a, a);
-		writer.ld(a, a);
+		writeVal(structSTO, struct);
+		writer.ld(struct, struct);
+		writer.set(size.toString(), offset_a);
+		writer.addOp(struct, offset_a, struct);
 		
 		writer.addSTO(result);
-		store(result, a);
+		store(result, struct);
 		
-		a.release();
+		struct.release();
 		offset_a.release();
 		
 		if(result instanceof VarSTO){
@@ -2406,6 +2428,8 @@ class MyParser extends parser {
 		if(result instanceof FuncSTO){
 			((FuncSTO) result).setInit(structSTO);
 		}
+		
+		writer.newLine();
 	}
 	
 	public STO doThis(){
@@ -2441,24 +2465,41 @@ class MyParser extends parser {
 		}
 	}
 
+	private String stoListToString(Vector<VarSTO> params){
+		String s = "";
+		if(params == null)
+			return s;
+		for(STO sto: params){
+			s += sto.getName() + ", ";
+		}
+		return s;
+	}
+	
 	public String WriteNewStmt(STO s, Vector<VarSTO> params, STO chosenFunc) {
+		writer.comment("new " + s.getName() + stoListToString(params));
+		
 		Address a = am.getAddress();
 		writer.set("1", Address.O0);
-		writer.set(s.getType().getSize().toString(), Address.O1);
+		writer.set(((ArrointType) s.getType()).getSubtype().getSize().toString(), Address.O1);
 		writer.call("calloc");
 		store(s, Address.O0);
 		
-		
-		if(params == null)
-			params = new Vector<VarSTO>();
+
+		if(params == null){
+			writer.newLine();
+			a.release();
+			return "new + s.getName()";
+		}
+			
+			
 		String funcToCall = FuncSTO.getName(s.getType().getName(), params);
 		for(int i = 0; i < params.size(); i++){
 			STO p = params.get(i);
 			//p.write
 		}
-		
+
 		a.release();
-		
+		writer.newLine();
 		return "new " + s.getName();
 	}
 
@@ -2486,6 +2527,8 @@ class MyParser extends parser {
 	
 	//cast from pointer to int to pointer, should be okay
 	public void WriteCast(STO original, STO casted){
+		writer.comment(casted.getName());
+		
 		writer.addSTO(casted);
 		Type oT = original.getType(), cT = casted.getType();
 		if(cT.getClass() == oT.getClass() || casted.getType() instanceof PointerType){
@@ -2520,6 +2563,8 @@ class MyParser extends parser {
 				fitos(original, casted);
 			}
 		}
+		
+		writer.newLine();
 	}
 	
 	public void WriteNull(STO s){
