@@ -1089,7 +1089,7 @@ class MyParser extends parser {
 		}
 		
 		ArrointType tt = (ArrointType) a.getType();
-		return new VarSTO("", tt.getSubtype());
+		return new VarSTO(a.getName() + "[" +  e.getName() + "]", tt.getSubtype());
 	}
 
 	// ----------------------------------------------------------------
@@ -1629,11 +1629,13 @@ class MyParser extends parser {
 	}
 	
 	private void fitos(STO int_, Address float_){
+		VarSTO v = new VarSTO("", new IntType());
 		Address fReg = new Address("%f0");
 		
 		writeVal(int_, fReg);
 		writer.fitos(fReg, fReg);
-		writer.store(fReg, float_);
+		v.store(fReg, writer);
+		v.writeVal(float_, writer);
 	}
 	
 	public Integer getCodeBlockVars(Vector<VarSTO> paramList){
@@ -1673,7 +1675,7 @@ class MyParser extends parser {
 		for(int i = 0; i < paramList.size(); i++){
 			VarSTO sto = (VarSTO) paramList.get(i);
 			Address param_a = new Address(s + (i + offset));
-			if(sto.isRef() || sto.getType() instanceof ArrayType || sto.getType() instanceof StructType){
+			if(sto.getType() instanceof ArrayType || sto.getType() instanceof StructType){
 				if(sto.getType() instanceof ArrayType){
 					ArrayType aType = (ArrayType) sto.getType();
 					//sto.setRef(true);
@@ -1689,8 +1691,11 @@ class MyParser extends parser {
 					//sto.setRef(true);
 				sto.setAddress(param_a);
 			}else{
+				boolean ref = sto.isRef();
+				sto.setRef(false);
 				writer.addSTO(sto);
 				sto.store(param_a, writer);
+				sto.setRef(ref);
 			}
 		}
 		
@@ -1997,7 +2002,7 @@ class MyParser extends parser {
 		writer.comment(label + " ?? ");
 		
 		Address a = am.getAddress();
-		writeAddress(s, a);
+		writeVal(s, a);
 		writer.cmp(a, Address.G0);
 		String str = ".eq" + literalCount++;
 		labelList.add(str);
@@ -2123,10 +2128,10 @@ class MyParser extends parser {
 		
 		
 		writer.call(s.getName());
-		if(f.getReturnType() instanceof VoidType)
+		if(!(f.getReturnType() instanceof VoidType))
 			store(result, Address.O0);
-		
 		writer.newLine();
+		
 	}
 	
 	
@@ -2217,13 +2222,14 @@ class MyParser extends parser {
 		String label = "." + s + literalCount++;
 		whileForList.add(label);
 		
-		ExprSTO counter = new ExprSTO(whileForList.peek()+".counter", new IntType());
-		symTab.insert(counter);
-		writer.addSTO(counter);
-		writer.set("0", _0_a);
+		if(s.equals("for")){
+			ExprSTO counter = new ExprSTO(whileForList.peek()+".counter", new IntType());
+			symTab.insert(counter);
+			writer.addSTO(counter);
+			writer.set("0", _0_a);
 		
-		store(counter, _0_a);
-		
+			store(counter, _0_a);
+		}
 		writer.newLine();
 		writer.label(label);
 
@@ -2280,7 +2286,7 @@ class MyParser extends parser {
 		if(s.isError())
 			return;
 		Address a = am.getAddress();
-		writer.ld(s.getAddress(), a);
+		writeVal(s, a);
 		writer.cmp(Address.G0, a);
 		writer.be(whileForList.peek() + DONE);
 		
@@ -2311,9 +2317,9 @@ class MyParser extends parser {
 		
 	}
 
-	public void WriteContBr(boolean b) {
+	public void WriteContBr(boolean brake) {
 		if(whileForList.size() == 0){
-			if(b == BREAK){
+			if(brake){
 				generateError(ErrorMsg.error12_Break);
 			}else
 				generateError(ErrorMsg.error12_Continue);
@@ -2322,10 +2328,12 @@ class MyParser extends parser {
 			return;
 		
 		String s = whileForList.peek();
-		if(!b)
+		if(brake){
+			writer.comment("break");
 			s += DONE;
-		else
-			s += INCR;
+		}else{
+			writer.comment("continue");
+		}
 		writer.ba(s);
 		writer.newLine();
 	}
@@ -2359,9 +2367,12 @@ class MyParser extends parser {
 	public void WriteArrayIndex(STO array, STO number, STO res) {
 		if(res.isError() || array.isError())
 			return;
+		writer.addSTO(res);
+		
+		
+		
 		//result.setInit(array);
 		//result.setInit2(number);
-		writer.addSTO(res);  //TODO
 		//result.setAddress("ARRAY");
 		
 		if(array.getType().isPointer())
@@ -2385,11 +2396,34 @@ class MyParser extends parser {
 		writer.call("printf");
 		writer.set("1", Address.O0);
 		writer.call("exit");
+		writer.comment("done array checking");
 		writer.label(good);
+		writer.newLine();
 	
 		
 		total_a.release();
 		index_a.release();
+
+		writer.comment(res.getName());
+		
+		Address numb_a = am.getAddress();
+		writeVal(number, Address.O0);
+		writer.set(((ArrointType) array.getType()).getSubtype().getSize()+"", Address.O1);
+		writer.call(".mul");
+		writer.set(Address.O0, numb_a);
+		
+		
+		
+		Address array_a = am.getAddress();
+		writeAddress(array, array_a);
+		writer.addOp(numb_a, array_a, array_a);
+		numb_a.release();
+		store(res, array_a);
+		array_a.release();
+		
+		((VarSTO) res).setRef(true);
+		
+		writer.newLine();
 	}
 
 	public void WriteArrowDeref(STO structSTO, String _3, STO result) {

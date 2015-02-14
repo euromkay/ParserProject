@@ -1,34 +1,16 @@
-structdef MS {
- 	int j;
-	MS* g;
-};
-
-MS* z;
-function : void main(){
-	new z;
-	cout << z->j;
+function : int main(){
+   int a[10];
+   int i;
+   
+   i = 0;
+   while ( i< 10) {
+      a[i] = i;
+      cout << a[i];
+      i++;
+   }
+   
+   
+   cout << endl;
+   
+   return 0;
 }
-
-/*
-
-int x;
-float y;
-MS* z;
-
-function : void main(){
- 	//cout << (((int) (((bool) (x = 1)) && true)) % 5) << endl;
- 	new z;
- 	cout << z->j << endl;
- 	//new z->g;
- 	/*cin >> y;
- 	cin >> z->g->j;
- 	x = (int) y;
- 	cout << x << endl;
- 	x = (int) (x + 5.9);
- 	cout << x << endl;
- 	y = (float) (int) (65.3);
- 	cout << y << endl;
- 	cout << (int) (z->g->j) << endl;
- 	delete z->g;
- 	delete z;*/
-}*/
