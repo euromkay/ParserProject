@@ -1,20 +1,17 @@
+structdef NODE {
+   NODE * prev;
+   NODE * next;
+   int val;
+};
+
 function : int main(){
-   int a[10];
-   int i;
+   NODE * head;
+   new head;
    
-   i = 0;
-   while ( i< 10) {
-      a[i] = i;
-      i++;
-   }
-   
-   i = 0; 
-   while ( i< 10) {
-      cout << a[i];
-      i++;
-   }
-   
-   cout << endl;
-   
+   head->val = 10;
+   cout << head->val << endl;
+
+   delete head;
    return 0;
 }
+

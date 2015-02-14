@@ -25,7 +25,7 @@ public class EqualityOp extends BooleanOp{
 				boolean bbb = aa.getValue() == bb.getValue();
 				return new ConstSTO(a.getName() + getName() + b.getName(), new BoolType(), BoolType.dub(bbb));
 			}
-			return new ExprSTO(a.getName() + getName() + b.getName(), new BoolType());//What is the default name we need here for the strName?
+			return new ExprSTO(a.getName() + " " + getName() +" " +  b.getName(), new BoolType());//What is the default name we need here for the strName?
 		}
 		
 		else {

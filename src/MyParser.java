@@ -1187,7 +1187,7 @@ class MyParser extends parser {
 			return generateError(ErrorMsg.error15_Nullptr);
 		
 		ArrointType pt = (ArrointType) des.getType();
-		return new VarSTO(des.getName(), pt.getSubtype());
+		return new VarSTO("*" + des.getName(), pt.getSubtype());
 		
 		
 	}
@@ -1757,6 +1757,13 @@ class MyParser extends parser {
 		
 		if(left.isError() || right_s.isError())
 			return;
+		
+		if(left.getType().isStruct() && right_s.getType().isStruct()){
+			writeStructAssign(left, right_s);
+			return;
+		}
+			
+		
 		VarSTO left_s = (VarSTO) left;
 		Address left_a = am.getAddress();
 		writeAddress(left, left_a);
@@ -1789,6 +1796,15 @@ class MyParser extends parser {
 	}
 
 	
+	private void writeStructAssign(STO left, STO right_s) {
+		writeAddress(left, Address.O0);
+		writeAddress(right_s, Address.O1);
+		writer.set(left.getType().getSize().toString(), Address.O2);
+		writer.call("memcpy");
+		
+		writer.newLine();
+	}
+
 	public void WriteIntLiteral(STO s){
 		writer.comment(s.getName());
 		
@@ -2353,27 +2369,27 @@ class MyParser extends parser {
 	public void WriteDeRef(STO s, STO result){
 		if(result.isError())
 			return;
+		writer.comment(result.getName());
+		
 		writer.addSTO(result);
 		
 		Address a = am.getAddress();
-		s.writeVal(a, writer); //address in reg
-		writer.load(a, a);  //value in reg now
+		writeVal(s, a);//address in reg
+		//writer.load(a, a);  //value in reg now
 		
-		result.store(a, writer);
+		store(result, a);
 		
 		a.release();
+		
+		((VarSTO) result).setRef(true);
+		
+		writer.newLine();
 	}
 
 	public void WriteArrayIndex(STO array, STO number, STO res) {
 		if(res.isError() || array.isError())
 			return;
 		writer.addSTO(res);
-		
-		
-		
-		//result.setInit(array);
-		//result.setInit2(number);
-		//result.setAddress("ARRAY");
 		
 		if(array.getType().isPointer())
 			return;
@@ -2426,44 +2442,36 @@ class MyParser extends parser {
 		writer.newLine();
 	}
 
-	public void WriteArrowDeref(STO structSTO, String _3, STO result) {
-		if(result.isError())
+	public void WriteArrowDeref(STO s, String _3, STO res) {
+		if(res.isError())
 			return;
-		writer.comment(result.getName());
+		writer.addSTO(res);
+		writer.comment(res.getName());
 		
-		StructType t = (StructType) ((PointerType) structSTO.getType()).getSubtype();
-		Integer size = 0;
-		for(STO member: t.getFuncs()){
-			if(member.getName().equals(_3))
+		StructType structSTO = (StructType) ((ArrointType) s.getType()).getSubtype();
+		
+		Integer offset = 0;
+		for(STO poss: structSTO.getMembers()){
+			int index = poss.getName().lastIndexOf("_");
+			if(poss.getName().substring(index + 1).equals(_3))
 				break;
-			size += member.getType().getSize();
+			offset += poss.getType().getSize();
 		}
 		
-		Address struct = am.getAddress(), offset_a = am.getAddress();
+		Address numb_a = am.getAddress();
+		writer.set(offset.toString(), numb_a);
 		
-		writeVal(structSTO, struct);
-		writer.ld(struct, struct);
-		writer.set(size.toString(), offset_a);
-		writer.addOp(struct, offset_a, struct);
+		Address array_a = am.getAddress();
+		writeAddress(s, array_a);
+		writer.ld(array_a, array_a);
+		writer.addOp(numb_a, array_a, array_a);
+		numb_a.release();
+		store(res, array_a);
+		array_a.release();
 		
-		writer.addSTO(result);
-		store(result, struct);
+		((VarSTO) res).setRef(true);
 		
-		struct.release();
-		offset_a.release();
-		
-		if(result instanceof VarSTO){
-			((VarSTO) result).setInit(structSTO);
-			structSTO.stringField = new String(_3);
-			//result.setAddress("STRUCT");
-		}else{
-			structSTO.writeAddress(Address.O0, writer);
-		}
-		if(result instanceof FuncSTO){
-			((FuncSTO) result).setInit(structSTO);
-		}
-		
-		writer.newLine();
+		writer.newLine();	
 	}
 	
 	public STO doThis(){
@@ -2552,6 +2560,8 @@ class MyParser extends parser {
 		writer.set("1", Address.O0);
 		writer.call("exit");
 		writer.label(good);
+		
+		writeVal(s, Address.O0);
 		writer.call("free");
 		store(s, Address.G0);
 
@@ -2604,8 +2614,10 @@ class MyParser extends parser {
 	}
 	
 	public void WriteNull(STO s){
+		writer.comment(s.getName());
 		writer.addSTO(s);
 		s.store(Address.G0, writer);
+		writer.newLine();
 		
 	}
 
@@ -2616,6 +2628,8 @@ class MyParser extends parser {
 	public STO DoParens(STO _2) {
 		if(_2.isError())
 			return _2;
+		if(_2.getType().isStruct())
+			return _2;
 		if(_2.isVar())
 			return new VarSTO("(" + _2.getName() + ")", _2.getType());
 		if(_2.isConst())
@@ -2625,9 +2639,15 @@ class MyParser extends parser {
 
 	public void WriteParens(STO _2, STO result) {
 		writer.comment(result.getName());
+		if(_2.getType().isStruct()){
+			writer.newLine();
+			return;
+		}
+			
 		writer.addSTO(result);
 		
 		store(result, _2);
+		
 		
 		writer.newLine();
 		
