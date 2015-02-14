@@ -5,10 +5,14 @@ function : int main(){
    i = 0;
    while ( i< 10) {
       a[i] = i;
-      cout << a[i];
       i++;
    }
    
+   i = 0; 
+   while ( i< 10) {
+      cout << a[i];
+      i++;
+   }
    
    cout << endl;
    

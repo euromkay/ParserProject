@@ -117,4 +117,8 @@ abstract class Type
    	 	}
    	 	return t;
 	}
+
+	public boolean isStruct() {
+		return false;
+	}
 }

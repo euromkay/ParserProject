@@ -94,4 +94,8 @@ public class StructType extends CompositeType {
 	public void setDestruct(){
 		hasDestruct = true;
 	}
+	
+	public boolean isStruct() {
+		return true;
+	}
 }

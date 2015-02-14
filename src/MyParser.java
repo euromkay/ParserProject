@@ -1030,7 +1030,7 @@ class MyParser extends parser {
 					return possible;
 			}
 			else if(possible.getName().equals(fullName))
-				return possible;
+				return new VarSTO(sto.getName() + "." + memberID, possible.getType());
 				
 		}
 		if(symTab.hasFunc()){
@@ -1479,7 +1479,7 @@ class MyParser extends parser {
 			String skip;
 			if(isFloat(left))
 				skip = Template.FLOAT_VAR_DECL;
-			else if (left.getType().isArray())
+			else if (left.getType().isArray() || left.getType().isStruct())
 				skip = Template.SKIP;
 			else
 				skip = Template.INT_VAR_DECL;
@@ -1489,7 +1489,7 @@ class MyParser extends parser {
 			//if theres some sort of initializatoin
 			
 			Type lType = left.getType();
-			if(lType.isArray()){
+			if(lType.isArray() || lType.isStruct()){
 				val = lType.getSize().toString();
 					
 				Address lAdd = am.getAddress();
@@ -2470,33 +2470,35 @@ class MyParser extends parser {
 		return new ExprSTO("this", symTab.getStruct().getType());
 	}
 	
-	public void WriteDot(STO structSTO, String _3, STO result) {
-		if(result.isError())
+	public void WriteDot(STO s, String _3, STO res) {
+		if(res.isError())
 			return;
+		writer.addSTO(res);
+		writer.comment(res.getName());
 		
-		writer.addSTO(result);
+		StructType structSTO = (StructType) s.getType();
 		
-		StructType t = (StructType) structSTO.getType();
-		Integer size = 0;
-		for(STO member: t.getFuncs()){
-			if(member.getName().equals(_3))
+		Integer offset = 0;
+		for(STO poss: structSTO.getMembers()){
+			int index = poss.getName().lastIndexOf("_");
+			if(poss.getName().substring(index + 1).equals(_3))
 				break;
-			size += member.getType().getSize();
+			offset += poss.getType().getSize();
 		}
-		result.setOffset(size.toString());
-		if(result instanceof VarSTO){
-			((VarSTO)result).setInit(structSTO);
-			structSTO.stringField = new String(_3);
-			//result.setAddress("STRUCT");
-		}
-		/*
-		else{
-			if(!structSTO.isStructdef())
-				structSTO.writeAddress(Address.O0, writer);
-		}*/
-		if(result instanceof FuncSTO){
-			((FuncSTO) result).setInit(structSTO);
-		}
+		
+		Address numb_a = am.getAddress();
+		writer.set(offset.toString(), numb_a);
+		
+		Address array_a = am.getAddress();
+		writeAddress(s, array_a);
+		writer.addOp(numb_a, array_a, array_a);
+		numb_a.release();
+		store(res, array_a);
+		array_a.release();
+		
+		((VarSTO) res).setRef(true);
+		
+		writer.newLine();	
 	}
 
 	private String stoListToString(Vector<VarSTO> params){

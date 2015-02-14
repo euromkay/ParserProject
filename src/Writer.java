@@ -254,6 +254,7 @@ public class Writer {
 	
 
 	Integer localVarSpace = 0;
+	private Integer globalVarSpace = 0;
 	
 	public void addLocalVars(ArrayList<STO> list) {
 		for(STO s: list){
@@ -280,7 +281,7 @@ public class Writer {
 			s.setOffset(localVarSpace.toString());
 		}
 		if(this.toPrint(fp))
-			System.out.println(s.getName() + " - " + localVarSpace);
+			System.out.println(s.getName() + " - " + s.getOffset());
 	}
 	
 	private static final int fp = 0, cont = 1;
@@ -288,10 +289,10 @@ public class Writer {
 	
 	public boolean toPrint(int task){
 		boolean fp = true;
-		fp = false;
+		//fp = false;
 		
 		boolean contPrint = true;
-		//contPrint = false;
+		contPrint = false;
 		
 		if(contPrint && fp)
 			return true;
@@ -537,7 +538,6 @@ public class Writer {
 	}
 
 	private ArrayList<String> pWrites = new ArrayList<String>();
-	private Integer globalVarSpace = 0;
 
 	public void writeGlobalInits() {
 		for(String s: pWrites){
