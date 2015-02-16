@@ -7,7 +7,6 @@ import java.util.Vector;
 class VarSTO extends STO
 {
 	private boolean ref = false;
-	private STO init, init2;
 	
 	
 	//----------------------------------------------------------------
@@ -32,9 +31,6 @@ class VarSTO extends STO
 		super(strName, typ);
 		setIsAddressable(true);
 		setIsModifiable(true);
-		this.init = init;
-		if(init2 != null)
-			this.init2 = init2;
 		// You may want to change the isModifiable and isAddressable 
 		// fields as necessary
 	}
@@ -57,23 +53,6 @@ class VarSTO extends STO
 	
 	
 	
-	public STO getInit(){
-		return init;
-	}
-
-	public STO getInit2() {
-		return init2;
-	}
-
-	public void setInit2(STO index) {
-		init2 = index;
-		
-	}
-	
-	public void setInit(STO s){
-		init = s;
-	}
-
 	
 
 

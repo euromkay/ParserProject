@@ -118,5 +118,18 @@ class FuncSTO extends STO
 	}
 
 	
+	private ArrayList<Boolean> list = new ArrayList<Boolean>();
+	public void addRef(boolean ref) {
+		list.add(ref);
+	}
+
+	public void reset() {
+		for(int i = 0; i < list.size(); i++){
+			VarSTO p = getFunctionType().getParams().get(i);
+			p.setRef(list.get(i));
+		}
+	}
+
+	
 }
 	

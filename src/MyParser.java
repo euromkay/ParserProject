@@ -708,6 +708,7 @@ class MyParser extends parser {
 			current.setName("." + symTab.getStruct().getName() + "_" + current.getName());
 		
 		symTab.setFunc(null);
+		current.reset();
 		
 		return current;
 	}
@@ -1675,21 +1676,21 @@ class MyParser extends parser {
 		for(int i = 0; i < paramList.size(); i++){
 			VarSTO sto = (VarSTO) paramList.get(i);
 			Address param_a = new Address(s + (i + offset));
+			symTab.getFunc().addRef(sto.isRef());
 			if(sto.getType() instanceof ArrayType || sto.getType() instanceof StructType){
-				if(sto.getType() instanceof ArrayType){
+				/*if(sto.getType() instanceof ArrayType){
 					ArrayType aType = (ArrayType) sto.getType();
-					//sto.setRef(true);
 					
 					VarSTO v = new VarSTO("", new IntType());
 					writer.addSTO(v);
 					
 					writer.set(aType.getLength(), length_a);
 					v.store(length_a, writer);
-					sto.setInit(v);
 				}
 				if(sto.getType() instanceof StructType);
-					//sto.setRef(true);
+					//sto.setRef(true);*/
 				sto.setAddress(param_a);
+				sto.setRef(false);
 			}else{
 				boolean ref = sto.isRef();
 				sto.setRef(false);
@@ -1784,10 +1785,6 @@ class MyParser extends parser {
 			writer.store(right_a, left_a);
 		}
 
-		if(right_s instanceof FuncSTO){
-			left_s.setInit(right_s);
-			left_s.setInit2(((FuncSTO)right_s).getInit());
-		}
 		
 		writer.newLine();
 		
@@ -2131,8 +2128,19 @@ class MyParser extends parser {
 			Address outReg = new Address(output+i);
 			STO arg = args.get(i);
 			VarSTO param = params.get(i);
-			if(param.isRef() || arg.getType().isArray()){// || e.getType() instanceof StructType){
-				writeAddress(arg, outReg);
+			if(param.isRef() || arg.getType().isArray() || arg.getType().isStruct()){// || e.getType() instanceof StructType){
+				if(arg.getType().isStruct() && !param.isRef()){
+					VarSTO copy = new VarSTO("", arg.getType());
+					writer.addSTO(copy);
+					
+					writeAddress(copy, Address.O0);
+					writeAddress(arg, Address.O1);
+					writer.set(arg.getType().getSize().toString(), Address.O2);
+					writer.call("memcpy");
+					
+					writeAddress(copy, outReg);
+				}else
+					writeAddress(arg, outReg);
 			}
 			else{
 				if(isIntToFloat(param, arg))
