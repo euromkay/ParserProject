@@ -2379,7 +2379,7 @@ class MyParser extends parser {
 			return;
 		writer.comment(result.getName());
 		
-		String good = ".derefPass" + literalCount;
+		String good = ".derefPass" + literalCount++;
 		Address a = am.getAddress();
 		s.writeVal(a, writer);
 		writer.cmp(Address.G0, a);
@@ -2478,7 +2478,7 @@ class MyParser extends parser {
 			offset += poss.getType().getSize();
 		}
 		
-		String good = ".arrowPass" + literalCount;
+		String good = ".arrowPass" + literalCount++;
 		Address a = am.getAddress();
 		s.writeVal(a, writer);
 		writer.cmp(Address.G0, a);

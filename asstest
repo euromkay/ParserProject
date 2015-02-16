@@ -1,20 +1,37 @@
-structdef S{int a; int b;};
-structdef S2{S * a; S * b;};
+const int c = 10;
+structdef S{int a[c]; int b[c];};
 
-function : void foo (S2 & a){
-   cout << a.a->a << " " << a.a->b << "; ";
-   cout << a.b->a << " " << a.b->b << endl;
-   a.a->a = a.a->a + 1; 
-   a.a->b = a.a->b + 2;
-   a.b->a = a.b->a + 3; 
-   a.b->b = a.b->b + 4;
-}
+S s;
 
-S2 s;
 function : int main(){
-   foo(s);
-   foo(s);
-   foo(s);
+   int *p = &s.a[0];
 
+   int i = 0; while (i < 2 * c){
+      p[i] = i*i*i;
+   i++;}
+   
+   i = 0; while (i < c){
+      cout << s.a[i] << " ";
+   i++;}
+   i = 0; while (i < c){
+      cout << s.b[i] << " ";
+   i++;}
+   cout << endl;
+ 
+   p = &s.b[c-1];
+   i = 0; while (i < 2 * c){
+      p[-i] = i*i*i;
+   i++;}
+   
+   i = 0; 
+   while (i < c){
+      cout << s.a[i] << " ";
+      i++;
+   }
+   i = 0; while (i < c){
+      cout << s.b[i] << " ";
+   i++;}
+   cout << endl;
+   
    return 0;
 }
