@@ -2379,9 +2379,21 @@ class MyParser extends parser {
 			return;
 		writer.comment(result.getName());
 		
+		String good = ".derefPass" + literalCount;
+		Address a = am.getAddress();
+		s.writeVal(a, writer);
+		writer.cmp(Address.G0, a);
+		writer.bne(good);
+		writer.set(Template.ARRAY_DEL_FORMAT, Address.O0);
+		writer.call("printf");
+		writer.set("1", Address.O0);
+		writer.call("exit");
+		writer.label(good);
+		a.release();
+		
 		writer.addSTO(result);
 		
-		Address a = am.getAddress();
+		a = am.getAddress();
 		writeVal(s, a);//address in reg
 		//writer.load(a, a);  //value in reg now
 		
@@ -2466,16 +2478,28 @@ class MyParser extends parser {
 			offset += poss.getType().getSize();
 		}
 		
+		String good = ".arrowPass" + literalCount;
+		Address a = am.getAddress();
+		s.writeVal(a, writer);
+		writer.cmp(Address.G0, a);
+		writer.bne(good);
+		writer.set(Template.ARRAY_DEL_FORMAT, Address.O0);
+		writer.call("printf");
+		writer.set("1", Address.O0);
+		writer.call("exit");
+		writer.label(good);
+		a.release();
+		
 		Address numb_a = am.getAddress();
 		writer.set(offset.toString(), numb_a);
 		
-		Address array_a = am.getAddress();
-		writeAddress(s, array_a);
-		writer.ld(array_a, array_a);
-		writer.addOp(numb_a, array_a, array_a);
+		Address struct_a = am.getAddress();
+		writeAddress(s, struct_a);
+		writer.ld(struct_a, struct_a);
+		writer.addOp(numb_a, struct_a, struct_a);
 		numb_a.release();
-		store(res, array_a);
-		array_a.release();
+		store(res, struct_a);
+		struct_a.release();
 		
 		((VarSTO) res).setRef(true);
 		
@@ -2555,6 +2579,8 @@ class MyParser extends parser {
 		return "new " + s.getName();
 	}
 
+	
+	
 	public String WriteDeleteStmt(STO s) {
 		String good = ".deleteAttempt" + literalCount++ + "good";
 		Address a = am.getAddress();
