@@ -2156,6 +2156,7 @@ class MyParser extends parser {
 			store(result, Address.O0);
 		writer.newLine();
 		
+		((VarSTO) result).setRef(f.getFunctionType().isRef());
 	}
 	
 	
@@ -2427,7 +2428,7 @@ class MyParser extends parser {
 		writer.bl(good);
 		writer.label(bad);
 		writer.set(Template.ARRAY_ERROR_FORMAT, Address.O0);
-		writeVal(number, Address.O0);
+		writeVal(number, Address.O1);
 		writer.set(((ArrayType)array.getType()).getLength().toString(), Address.O2);
 		writer.call("printf");
 		writer.set("1", Address.O0);
