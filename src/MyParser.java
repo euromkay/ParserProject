@@ -1464,9 +1464,9 @@ class MyParser extends parser {
 		return label;
 	}
 	
-	public void WriteVarDecl(STO left){
+	public String WriteVarDecl(STO left){
 		if(left.isError())
-			return;
+			return null;
 		
 		if(isGlobal()){
 			
@@ -1517,48 +1517,8 @@ class MyParser extends parser {
 		//local
 		}else{
 			if(left.isStatic()){
-				String name = "." + symTab.getFunc().getName() + "_" + left.getName();
-				String nameBool = name + "_bool";
-				final String alreadyInitialized = name + "_finish";
-
-				left.setAddress(new Address(name));
-					
-				writer.newLine();
-				Address bool_a = am.getAddress();
 				
-				writer.set(nameBool, bool_a);
-				writer.load(bool_a, bool_a);
-				writer.cmp(bool_a, Address.G0);
-				
-					
-				writer.bne(alreadyInitialized);
-				writer.newLine();
-					
-				writer.changeSection(Writer.DATA);
-				writer.align("4");
-				
-				String type;
-				if(left.getType() instanceof FloatType)
-					type = Template.FLOAT_VAR_DECL;
-				else
-					type = Template.INT_VAR_DECL;
-					
-				writer.skip(type, name, "0");
-				writer.skip(type, nameBool, "0");
-					
-				writer.changeSection(Writer.TEXT);
-					
-				Address _1 = am.getAddress();
-					
-				writer.set(nameBool, bool_a);
-				writer.set("1", _1);
-				writer.store(_1, bool_a);
-				writer.label(alreadyInitialized);
-				writer.newLine();
-
-				_1.release();
-				bool_a.release();
-					
+				return "";
 			}
 			else{
 				writer.addSTO(left);
@@ -1568,9 +1528,10 @@ class MyParser extends parser {
 		if(isGlobal())
 			writer.newLine();
 		
+		return null;
 	}
 	
-	public void WriteVarInit(STO left, STO right){
+	public void WriteVarInit(STO left, STO right, String statName){
 		if(right != null && right.isError()){
 			return;
 		}
@@ -1587,10 +1548,55 @@ class MyParser extends parser {
 			else
 				store(left, right);
 		}
+		
+		if(statName != null){
+			String name = "." + symTab.getFunc().getName() + "_" + left.getName();
+			String nameBool = name + "_bool";
+			final String alreadyInitialized = name + "_finish";
+
+			left.setAddress(new Address(name));
+				
+			writer.newLine();
+			Address bool_a = am.getAddress();
+			
+			writer.set(nameBool, bool_a);
+			writer.load(bool_a, bool_a);
+			writer.cmp(bool_a, Address.G0);
+			
+				
+			writer.bne(alreadyInitialized);
+			writer.newLine();
+				
+			writer.changeSection(Writer.DATA);
+			writer.align("4");
+			
+			String type;
+			if(left.getType() instanceof FloatType)
+				type = Template.FLOAT_VAR_DECL;
+			else
+				type = Template.INT_VAR_DECL;
+				
+			writer.skip(type, name, "0");
+			writer.skip(type, nameBool, "0");
+				
+			writer.changeSection(Writer.TEXT);
+				
+			Address _1 = am.getAddress();
+				
+			writer.newLine();
+
+			_1.release();
+			bool_a.release();
+			writer.set(nameBool, bool_a);
+			writer.set("1", _1);
+			writer.store(_1, bool_a);
+			writer.label(alreadyInitialized);
+		}
+			
 		writer.newLine();
 	}
 	
-	public void WriteVarInit(STO left, Vector<STO> cParams){
+	public void WriteVarInit(STO left, Vector<STO> cParams, String statName){
 		//TODO
 	}
 	

@@ -294,16 +294,16 @@ VarDecl ::=         OptStatic:_1 DecoratedType:_2 T_ID:_3 OptArrayList:_4 OptIni
                     {:
                         STO s = ((MyParser) parser).DoVarDecl (_1, _2, _3, _4, _5);
                         RESULT = ((MyParser) parser).WriteVarDeclComment(s, _5);
-                        ((MyParser) parser).WriteVarDecl(s);
-                        ((MyParser) parser).WriteVarInit(s, _5);
+                        String statName = ((MyParser) parser).WriteVarDecl(s);
+                        ((MyParser) parser).WriteVarInit(s, _5, statName);
                     :}
                     T_SEMI
     |               OptStatic:_1 StructType:_2 T_ID:_3 OptArrayList:_4 OptCtorCall:_5
                     {:
                         STO s = ((MyParser) parser).DoVarDecl (_1, _2, _3, _4, _5);
                         RESULT = ((MyParser) parser).WriteVarDeclComment(s, _5);
-                        ((MyParser) parser).WriteVarDecl(s);
-                        ((MyParser) parser).WriteVarInit(s, _5);
+                        String statName = ((MyParser) parser).WriteVarDecl(s);
+                        ((MyParser) parser).WriteVarInit(s, _5, statName);
                     :}
                     T_SEMI
     ;
@@ -313,8 +313,8 @@ ConstDecl ::=       OptStatic:_1 T_CONST BasicType:_2 T_ID:_3 T_ASSIGN ConstExpr
                     {:
                         STO s = ((MyParser) parser).DoConstDecl (_1, _2, _3, _4);
                         RESULT = ((MyParser) parser).WriteVarDeclComment(s, _4);
-                        ((MyParser) parser).WriteVarDecl(s);
-                        ((MyParser) parser).WriteVarInit(s, _4);
+                        String statName = ((MyParser) parser).WriteVarDecl(s);
+                        ((MyParser) parser).WriteVarInit(s, _4, statName);
                     :}
                     T_SEMI
     ;
