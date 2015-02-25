@@ -1531,28 +1531,21 @@ class MyParser extends parser {
 		return null;
 	}
 	
-	public void WriteVarInit(STO left, STO right, String statName){
+	public void WriteVarInit(STO left, STO right, boolean statik){
 		if(right != null && right.isError()){
 			return;
 		}
+		String name = null;
+		String nameBool = null;
+		String alreadyInitialized = null;
 		
-		if(right == null && isGlobal()){
-			Address a = am.getAddress();
-			writer.set("0", a);
-			store(left, a);
-			a.release();
-			
-		}else if(right != null){
-			if(isIntToFloat(left, right))
-				fitos(right, left);
+		if(statik){
+			if(isGlobal())
+				name = left.getName();
 			else
-				store(left, right);
-		}
-		
-		if(statName != null){
-			String name = "." + symTab.getFunc().getName() + "_" + left.getName();
-			String nameBool = name + "_bool";
-			final String alreadyInitialized = name + "_finish";
+				name = "." + symTab.getFunc().getName() + "_" + left.getName();
+			nameBool = name + "_bool";
+			alreadyInitialized = name + "_finish";
 
 			left.setAddress(new Address(name));
 				
@@ -1580,23 +1573,41 @@ class MyParser extends parser {
 			writer.skip(type, nameBool, "0");
 				
 			writer.changeSection(Writer.TEXT);
+			
+			bool_a.release();
+		}
+		
+		if(right == null && isGlobal()){
+			Address a = am.getAddress();
+			writer.set("0", a);
+			store(left, a);
+			a.release();
+		}else if(right != null){
+			if(isIntToFloat(left, right))
+				fitos(right, left);
+			else
+				store(left, right);
+		}
+		
+		if(statik){
 				
 			Address _1 = am.getAddress();
+			Address bool_a = am.getAddress();
 				
 			writer.newLine();
 
-			_1.release();
-			bool_a.release();
 			writer.set(nameBool, bool_a);
 			writer.set("1", _1);
 			writer.store(_1, bool_a);
 			writer.label(alreadyInitialized);
+			_1.release();
+			bool_a.release();
 		}
 			
 		writer.newLine();
 	}
 	
-	public void WriteVarInit(STO left, Vector<STO> cParams, String statName){
+	public void WriteVarInit(STO left, Vector<STO> cParams, boolean statik){
 		//TODO
 	}
 	
@@ -1621,6 +1632,8 @@ class MyParser extends parser {
 	}
 
 	private boolean isIntToFloat(STO f, STO i){
+		if(f.isFunc())
+			return ((FuncSTO) f).getReturnType().isFloat() && i.getType().isInt();
 		return f.getType().isFloat() && i.getType().isInt();
 	}
 
@@ -2043,7 +2056,7 @@ class MyParser extends parser {
 		
 		Address a = am.getAddress();
 		writer.addSTO(result);
-		writer.ld(s.getAddress(), a);
+		writeVal(s, a);
 		writer.cmp(a, Address.G0);
 		String str = labelList.pop(), result1, result2;
 		if(or){
@@ -2104,8 +2117,12 @@ class MyParser extends parser {
 				if(isIntToFloat(currentFunc, s)){
 					writeVal(s, Address.F0);
 					writer.fitos(Address.F0, Address.F0);
-				}else
-					writeVal(s, Address.I0);
+					VarSTO v = new VarSTO("return temp for " + currentFunc.getName(), new FloatType());
+					writer.addSTO(v);
+					v.store(Address.F0, writer);
+					s = v;
+				}
+				writeVal(s, Address.I0);
 			}
 		}else
 			writer.set(Address.G0, Address.I0);

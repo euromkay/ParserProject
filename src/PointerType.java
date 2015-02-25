@@ -3,7 +3,7 @@ public class PointerType extends PointerGroupType {
 
 	
 	public PointerType(Type t) {
-		super(t.getName() + "*", t, 4);
+		super(t.getName() + "$", t, 4);
 	}
 	
 	public PointerType(String name, Type t, int size){

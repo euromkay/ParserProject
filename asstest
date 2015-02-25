@@ -1,9 +1,20 @@
-function : int addr(int &x){
-	return (int)&x;
+
+function : int foo7()
+{
+  static int sx = 5;
+  return sx; //return static int
 }
 
-function : int main(){
-	static int x;
-	cout << (int)&x == addr(x) << endl;
-	return 0;
+
+
+
+
+
+function : void main()
+{
+
+  cout << foo7() << endl;
+  
+
 }
+
