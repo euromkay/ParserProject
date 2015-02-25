@@ -2156,7 +2156,8 @@ class MyParser extends parser {
 			store(result, Address.O0);
 		writer.newLine();
 		
-		((VarSTO) result).setRef(f.getFunctionType().isRef());
+		if(f.getFunctionType().isRef())
+			((VarSTO) result).setRef(true);
 	}
 	
 	
