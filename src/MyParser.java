@@ -1571,7 +1571,8 @@ class MyParser extends parser {
 			else
 				type = Template.INT_VAR_DECL;
 				
-			writer.skip(type, name, "0");
+			if(!isGlobal())
+				writer.skip(type, name, "0");
 			writer.skip(type, nameBool, "0");
 				
 			writer.changeSection(Writer.TEXT);
