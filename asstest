@@ -1,20 +1,11 @@
 
-function : int foo7()
-{
-  static int sx = 5;
-  return sx; //return static int
+
+function : void main(){
+	int x1 = 11;
+	int x2 = 22;
+	int x3 = 33;
+	int *p = &x2;
+	p[1] = 32;
+	cout << *(++p) << endl;
+	
 }
-
-
-
-
-
-
-function : void main()
-{
-
-  cout << foo7() << endl;
-  
-
-}
-

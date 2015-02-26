@@ -1532,9 +1532,11 @@ class MyParser extends parser {
 	}
 	
 	public void WriteVarInit(STO left, STO right, boolean statik){
-		if(right != null && right.isError()){
+		if(right != null && right.isError())
 			return;
-		}
+		
+		if(left.isError())
+			return;
 		String name = null;
 		String nameBool = null;
 		String alreadyInitialized = null;
@@ -2436,51 +2438,51 @@ class MyParser extends parser {
 			return;
 		writer.addSTO(res);
 		
-		if(array.getType().isPointer())
-			return;
+		if(array.getType().isArray()){
+			
 		
-		Address index_a = am.getAddress();
-		Address total_a = am.getAddress();
-		
-		String good = "arraygood" + literalCount;
-		String bad = "arraybad" + literalCount++;
-		number.writeVal(index_a, writer);
-		writer.cmp(index_a, Address.G0);
-		writer.bl(bad);
-		writer.set(((ArrayType)array.getType()).getLength().toString(), total_a);
-		writer.cmp(index_a, total_a);
-		writer.bl(good);
-		writer.label(bad);
-		writer.set(Template.ARRAY_ERROR_FORMAT, Address.O0);
-		writeVal(number, Address.O1);
-		writer.set(((ArrayType)array.getType()).getLength().toString(), Address.O2);
-		writer.call("printf");
-		writer.set("1", Address.O0);
-		writer.call("exit");
-		writer.comment("done array checking");
-		writer.label(good);
-		writer.newLine();
+			Address index_a = am.getAddress();
+			Address total_a = am.getAddress();
+			
+			String good = "arraygood" + literalCount;
+			String bad = "arraybad" + literalCount++;
+			number.writeVal(index_a, writer);
+			writer.cmp(index_a, Address.G0);
+			writer.bl(bad);
+			writer.set(((ArrayType)array.getType()).getLength().toString(), total_a);
+			writer.cmp(index_a, total_a);
+			writer.bl(good);
+			writer.label(bad);
+			writer.set(Template.ARRAY_ERROR_FORMAT, Address.O0);
+			writeVal(number, Address.O1);
+			writer.set(((ArrayType)array.getType()).getLength().toString(), Address.O2);
+			writer.call("printf");
+			writer.set("1", Address.O0);
+			writer.call("exit");
+			writer.comment("done array checking");
+			writer.label(good);
+			writer.newLine();
 	
 		
-		total_a.release();
-		index_a.release();
-
+			total_a.release();
+			index_a.release();
+		}
 		writer.comment(res.getName());
 		
-		Address numb_a = am.getAddress();
+		Address array_a = am.getAddress();
 		writeVal(number, Address.O0);
 		writer.set(((ArrointType) array.getType()).getSubtype().getSize()+"", Address.O1);
 		writer.call(".mul");
-		writer.set(Address.O0, numb_a);
 		
-		
-		
-		Address array_a = am.getAddress();
-		writeAddress(array, array_a);
-		writer.addOp(numb_a, array_a, array_a);
-		numb_a.release();
+		if(array.getType().isPointer()){
+			writeVal(array, array_a);
+		}else{
+			writeAddress(array, array_a);
+		}
+		writer.addOp(Address.O0, array_a, array_a);
 		store(res, array_a);
 		array_a.release();
+		
 		
 		((VarSTO) res).setRef(true);
 		
