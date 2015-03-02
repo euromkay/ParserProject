@@ -416,6 +416,7 @@ CtorDef ::=         T_ID_U:_3
                     :}
                     T_LBRACE OptStmtList:_2 T_RBRACE
                     {:
+                        ((MyParser) parser).WriteFuncDeclFinish();
                         RESULT = ((MyParser) parser).DoFuncDecl_2(_2);
                     :}
     ;
@@ -429,6 +430,7 @@ DtorDef ::=         T_TILDE T_ID_U:_3
                     :}
                     T_LPAREN T_RPAREN T_LBRACE OptStmtList:_2 T_RBRACE
                     {:
+                        ((MyParser) parser).WriteFuncDeclFinish();
                         RESULT = ((MyParser) parser).DoFuncDecl_2(_2);
                     :}
     ;

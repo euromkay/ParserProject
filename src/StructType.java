@@ -4,9 +4,9 @@ import java.util.Vector;
 
 public class StructType extends CompositeType {
 
-	private Vector<STO> vars = new Vector<STO>(); 
-	private Vector<STO> funcs = new Vector<STO>();
-	private Vector<STO> ctrs = new Vector<STO>();
+	private Vector<VarSTO> vars = new Vector<VarSTO>(); 
+	private Vector<FuncSTO> funcs = new Vector<FuncSTO>();
+	private Vector<FuncSTO> ctrs = new Vector<FuncSTO>();
 	
 	
 
@@ -29,23 +29,23 @@ public class StructType extends CompositeType {
 		return this;
 	}
 
-	public Vector<STO> getVars() {
+	public Vector<VarSTO> getVars() {
 		return vars;
 	}
 	
-	public Vector<STO> getFuncs(){
+	public Vector<FuncSTO> getFuncs(){
 		return funcs;
 	}
 	
-	public Vector<STO> getCtors(){
+	public Vector<FuncSTO> getCtors(){
 		return ctrs;
 	}
 	
-	public void addFunc(STO f){
+	public void addFunc(FuncSTO f){
 		funcs.add(f);
 	}
 	
-	public void addCtor(STO f){
+	public void addCtor(FuncSTO f){
 		ctrs.add(f);
 		addFunc(f);
 	}

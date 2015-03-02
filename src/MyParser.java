@@ -519,7 +519,7 @@ class MyParser extends parser {
 			structType.addCtorString(name);
 		}
 
-		symTab.getStruct().getStructType().addCtor(f);
+		symTab.getStruct().getStructType().addCtor((FuncSTO) f);
 		//structType.addFunc(f);
 		
 	}
@@ -563,9 +563,9 @@ class MyParser extends parser {
 			}
 		}*/
 
-		String prefix = "." + struct.getName() + "_";
+		String prefix = struct.getName() + "_";
 		for(STO s: funcs){
-			struct.getStructType().addFunc(s);
+			struct.getStructType().addFunc((FuncSTO) s);
 			symTab.insert(s);
 		}
 		for(STO s: ctrs){
@@ -632,7 +632,7 @@ class MyParser extends parser {
 		
 		String lookupName = id;
 		if(symTab.hasStruct())
-			lookupName = "." + symTab.getStruct().getStructType().getName() + "_" + id; 
+			lookupName = symTab.getStruct().getStructType().getName() + "_" + id; 
 		
 		FuncSTO sto = new FuncSTO(id, lookupName, t);
 		symTab.setFunc(sto);
@@ -705,7 +705,7 @@ class MyParser extends parser {
 		
 		symTab.insert(current);
 		if(symTab.hasStruct())
-			current.setName("." + symTab.getStruct().getName() + "_" + current.getName());
+			current.setName(symTab.getStruct().getName() + "_" + current.getName());
 		
 		symTab.setFunc(null);
 		current.reset();
@@ -1020,7 +1020,7 @@ class MyParser extends parser {
 		StructType t = (StructType) sto.getType();
 		String fullName;
 		if(!symTab.hasStruct())
-			fullName = "." + t.getName() + "_" + memberID;
+			fullName = t.getName() + "_" + memberID;
 		else
 			fullName = memberID;
 			
@@ -1044,7 +1044,7 @@ class MyParser extends parser {
 		while(symTab.m_nLevel > SymbolTable.STRUCT_LEVEL){
 			scopes.add(0, symTab.closeScope());
 		}
-		FuncSTO s = symTab.accessLocalFunc("." + t.getName() + "_" + memberID);
+		FuncSTO s = symTab.accessLocalFunc(t.getName() + "_" + memberID);
 		
 		for(Scope sc: scopes){
 			symTab.openScope(sc);
@@ -1226,7 +1226,7 @@ class MyParser extends parser {
 		
 		String fullName;
 		if(symTab.getStruct() == null)
-			fullName = "." + t.getName() + "_" + memberID;
+			fullName = t.getName() + "_" + memberID;
 		else
 			fullName = memberID;
 			
@@ -1545,7 +1545,7 @@ class MyParser extends parser {
 			if(isGlobal())
 				name = left.getName();
 			else
-				name = "." + symTab.getFunc().getName() + "_" + left.getName();
+				name = symTab.getFunc().getName() + "_" + left.getName();
 			nameBool = name + "_bool";
 			alreadyInitialized = name + "_finish";
 
@@ -1610,8 +1610,94 @@ class MyParser extends parser {
 		writer.newLine();
 	}
 	
-	public void WriteVarInit(STO left, Vector<STO> cParams, boolean statik){
-		//TODO
+	public void WriteVarInit(STO left, Vector<STO> args, boolean statik){
+		
+		
+		if(left.isError())
+			return;
+		String name = null;
+		String nameBool = null;
+		String alreadyInitialized = null;
+		
+		if(statik){
+			if(isGlobal())
+				name = left.getName();
+			else
+				name = symTab.getFunc().getName() + "_" + left.getName();
+			nameBool = name + "_bool";
+			alreadyInitialized = name + "_finish";
+
+			left.setAddress(new Address(name));
+				
+			writer.newLine();
+			Address bool_a = am.getAddress();
+			
+			writer.set(nameBool, bool_a);
+			writer.load(bool_a, bool_a);
+			writer.cmp(bool_a, Address.G0);
+			
+				
+			writer.bne(alreadyInitialized);
+			writer.newLine();
+				
+			writer.changeSection(Writer.DATA);
+			writer.align("4");
+			
+		
+				
+			if(!isGlobal())
+				writer.skip(Template.SKIP, name, left.getType().getSize()+"");
+			writer.skip(Template.INT_VAR_DECL, nameBool, "0");
+				
+			writer.changeSection(Writer.TEXT);
+			
+			bool_a.release();
+		}
+		
+		if(args == null)
+			args = new Vector<STO>();
+		
+		
+		
+		FuncSTO fs = null;
+		
+		StructType struct = (StructType) symTab.access(left.getType().getName()).getType();
+		if(struct.getCtors().size() == 1){
+			fs = struct.getCtors().get(0);
+		}else{
+			for(STO poss: struct.getCtors()){
+				FuncSTO possible = (FuncSTO) poss;
+				if(possible.getFunctionType().getNumParams() != args.size())
+					continue;
+				
+				for(int i = 0; i < possible.getFunctionType().getNumParams(); i++){
+					if(!possible.getFunctionType().get(i).getType().isEquivalent(args.get(i).getType()))
+						continue;
+				}
+				fs = possible;
+				break;
+			}
+		}
+
+		writeAddress(left, Address.O0);
+		helperFuncCall(fs, true, args, fs.getFunctionType().getParams() );
+		
+		if(statik){
+				
+			Address _1 = am.getAddress();
+			Address bool_a = am.getAddress();
+				
+			writer.newLine();
+
+			writer.set(nameBool, bool_a);
+			writer.set("1", _1);
+			writer.store(_1, bool_a);
+			writer.label(alreadyInitialized);
+			_1.release();
+			bool_a.release();
+		}
+			
+		writer.newLine();
 	}
 	
 	private void store(STO to, STO from){
@@ -1673,7 +1759,8 @@ class MyParser extends parser {
 		int offset = 0;
 		
 		if(symTab.getStruct() != null){
-			fname = "."+ symTab.getStruct().getName() + "_" + fname;
+			fname = symTab.getStruct().getName() + "_" + fname;
+
 			offset++;
 		}
 		//Write Function Comment
@@ -1768,7 +1855,7 @@ class MyParser extends parser {
 		writer.returnstmt();
 		writer.newLine();
 		if(symTab.getStruct() != null){
-			fname = "."+ symTab.getStruct().getName() + "_" + fname;
+			fname = symTab.getStruct().getName() + "_" + fname;
 		}
 
 		writer.save(fname, writer.getStackSize());
@@ -2133,23 +2220,15 @@ class MyParser extends parser {
 		writer.returnstmt();		
 	}
 	
-	public void WriteFuncCall(STO s, Vector<VarSTO> args, STO result){
-		if(result.isError())
-			return;
+	private void helperFuncCall(STO func, boolean structCall, Vector<STO> args, Vector<VarSTO> params){
 
-		FuncSTO f = (FuncSTO) s;
-		
-		writer.comment(f.getBaseName() + "()");
-		writer.addSTO(result);
-		
-		Vector<VarSTO> params = f.getFunctionType().getParams();
 		String output = "%o";
 		
-		//takes care of the struct offset
-		int structOffset = 0;
-		if(f.isStructMember())
+		int structOffset;
+		if(structCall)
 			structOffset = 1;
-		
+		else
+			structOffset = 0;
 		for(int i = structOffset; i < args.size(); i++){
 			Address outReg = new Address(output+i);
 			STO arg = args.get(i);
@@ -2177,7 +2256,26 @@ class MyParser extends parser {
 		}
 		
 		
-		writer.call(s.getName());
+		writer.call(func.getName());
+	}
+	
+	public void WriteFuncCall(STO s, Vector<STO> args, STO result){
+		if(result.isError())
+			return;
+
+		FuncSTO f = (FuncSTO) s;
+		
+		writer.comment(f.getBaseName() + "()");
+		writer.addSTO(result);
+		
+		Vector<VarSTO> params = f.getFunctionType().getParams();
+		
+		//takes care of the struct offset
+		
+		
+		helperFuncCall(s, f.isStructMember(), args, params);
+		
+		
 		if(!(f.getReturnType() instanceof VoidType))
 			store(result, Address.O0);
 		writer.newLine();
@@ -2558,7 +2656,10 @@ class MyParser extends parser {
 		writer.set(offset.toString(), numb_a);
 		
 		Address array_a = am.getAddress();
-		writeAddress(s, array_a);
+		if(s.getName().startsWith("this"))
+			writer.set(Address.I0, array_a);
+		else
+			writeAddress(s, array_a);
 		writer.addOp(numb_a, array_a, array_a);
 		numb_a.release();
 		store(res, array_a);
@@ -2568,6 +2669,7 @@ class MyParser extends parser {
 		
 		writer.newLine();	
 	}
+	
 
 	private String stoListToString(Vector<VarSTO> params){
 		String s = "";

@@ -199,7 +199,7 @@ abstract class STO
 	
 	public String stringField = "";
 	private void writeStructField(Writer w, Address result){
-		Vector<STO> v = w.symTab.getStruct().getStructType().getFuncs();
+		Vector<FuncSTO> v = w.symTab.getStruct().getStructType().getFuncs();
 		STO s = null;
 		
 		Integer size = 0;

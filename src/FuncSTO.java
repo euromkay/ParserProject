@@ -51,10 +51,7 @@ class FuncSTO extends STO
 
 	Type returnType;
 	
-	
-	public STO newSTO(){
-		return this;
-	}
+
 	
 	private String lookupName;
 	
@@ -71,14 +68,6 @@ class FuncSTO extends STO
 		return baseName;
 	}
 
-	private STO init;
-	public STO getInit(){
-		return init;
-	}
-	
-	public void setInit(STO s){
-		init = s;
-	}
 	
 	
 
