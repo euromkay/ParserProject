@@ -98,4 +98,23 @@ public class StructType extends CompositeType {
 	public boolean isStruct() {
 		return true;
 	}
+	
+	private FuncSTO d;
+	public void setDestructor(FuncSTO d) {
+		this.d = d;
+	}
+	public boolean hasDestructor(){
+		return d != null;
+	}
+	public FuncSTO getDestructor(){
+		return d;
+	}
+	
+	private boolean hasConstructor = false;
+	public void setConstructor() {
+		hasConstructor = true;
+	}
+	public boolean hasConstructor(){
+		return hasConstructor;
+	}
 }

@@ -41,5 +41,7 @@ class StructdefSTO extends STO
 	public StructType getStructType(){
 		return (StructType) getType();
 	}
+
+	
 }
 

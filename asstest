@@ -1,16 +1,10 @@
-structdef S {
-	int a;
-	S(){
-		cout << "hi" << endl;
-	}
-};
+static const float x = 3.33;
+static const float y = 4.44;
 
-function : void foo(){
-	static S f;
-}
+function : void main() {
 
-function : void main()
-{
-	foo();
-	foo();
+	static const float x = 5.55;
+	static const float y = 6.66;
+
+	cout << "main" << x << y << ::x << :: y << "end" <<endl;
 }
