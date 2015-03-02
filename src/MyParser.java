@@ -606,11 +606,12 @@ class MyParser extends parser {
 	}
 
 	STO DoFuncDecl_1(String id) {
+		STO s = DoFuncDecl_1(new VoidType(), false, id);
 		if(id.startsWith("~"))
-			symTab.getStruct().setDestructor();
+			symTab.getStruct().getStructType().setDestructor(s);
 		else
-			symTab.getStruct().setConstructor();
-		return DoFuncDecl_1(new VoidType(), false, id);
+			symTab.getStruct().getStructType().setConstructor();
+		return s;
 	}
 	// ----------------------------------------------------------------
 	//

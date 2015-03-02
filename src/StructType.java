@@ -100,8 +100,10 @@ public class StructType extends CompositeType {
 	}
 	
 	private FuncSTO d;
-	public void setDestructor(FuncSTO d) {
-		this.d = d;
+	public void setDestructor(STO d) {
+		if(d.isError())
+			return;
+		this.d = (FuncSTO) d;
 	}
 	public boolean hasDestructor(){
 		return d != null;
