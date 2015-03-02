@@ -16,8 +16,8 @@ public class ArrayType extends ArrointType {
 		length = size;
 	}
 	
-	public String getLength(){
-		return length.toString();		
+	public Integer getLength(){
+		return length;		
 	}
 
 	public boolean isArray(){

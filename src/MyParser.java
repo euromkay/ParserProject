@@ -614,7 +614,7 @@ class MyParser extends parser {
 		return s;
 	}
 	// ----------------------------------------------------------------
-	//
+	// 
 	// ----------------------------------------------------------------
 	STO DoFuncDecl_1(Type t, boolean ref, String id) {
 		STO error = null;
@@ -1087,7 +1087,7 @@ class MyParser extends parser {
 		
 		if(e.isConst() && a.getType() instanceof ArrayType){
 			ConstSTO es = (ConstSTO) e;
-			int aLength = Integer.parseInt(((ArrayType) a.getType()).getLength());
+			int aLength = ((ArrayType) a.getType()).getLength();
 			if(es.getIntValue() >= aLength || es.getIntValue() < 0){
 				return generateError(ErrorMsg.error11b_ArrExp, es.getIntValue().toString(), aLength+"");
 			}
@@ -1658,8 +1658,13 @@ class MyParser extends parser {
 			
 			bool_a.release();
 		}
-
-		StructType struct = (StructType) symTab.access(left.getType().getName()).getType();
+		int count = 1;
+		Type t = left.getType();
+		while(t.isArray()){
+			count *= ((ArrayType) t).getLength();
+			t = ((ArrointType) t).getSubtype();
+		}
+		StructType struct = (StructType) t;
 		if(struct.hasConstructor()){
 			if(args == null)
 				args = new Vector<STO>();
@@ -1682,9 +1687,14 @@ class MyParser extends parser {
 					break;
 				}
 			}
-
-			writeAddress(left, Address.O0);
-			helperFuncCall(fs, true, args, fs.getFunctionType().getParams() );
+			Address a = am.getAddress();
+			for(int i = 0; i < count; i++){
+				writeAddress(left, Address.O0);;
+				writer.set(i * struct.getSize() +"", a);
+				writer.addOp(Address.O0, a, a);
+				helperFuncCall(fs, true, args, fs.getFunctionType().getParams() );
+			}
+			a.release();
 		}
 		if(statik){
 				
@@ -2686,7 +2696,10 @@ class MyParser extends parser {
 	}
 	
 	public String WriteNewStmt(STO s, Vector<STO> params, STO chosenFunc) {
-		writer.comment("new " + s.getName() + stoListToString(((FuncSTO) chosenFunc).getFunctionType().getParams()));
+		String label = "new " + s.getName();
+		if(chosenFunc != null)
+			label += stoListToString(((FuncSTO) chosenFunc).getFunctionType().getParams());
+		writer.comment(label);
 		
 		Address a = am.getAddress();
 		writer.set("1", Address.O0);
