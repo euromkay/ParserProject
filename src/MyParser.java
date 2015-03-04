@@ -221,7 +221,7 @@ class MyParser extends parser {
 	
 	
 	
-	STO DoVarDecl(boolean statik, Type t, String name, Vector<STO> arraySTOs, Vector<VarSTO> ctrsArgs) {
+	STO DoVarDecl(boolean statik, Type t, String name, Vector<STO> arraySTOs, Vector<STO> ctrsArgs) {
 		STO error = hasError(arraySTOs);
 		if(error != null)
 			return error;
@@ -240,7 +240,7 @@ class MyParser extends parser {
 		}
 		
 		if(ctrsArgs == null)
-			ctrsArgs = new Vector<VarSTO>();
+			ctrsArgs = new Vector<STO>();
 		
 		if(ctors.size() == 1){
 			FuncSTO f = ctors.get(0);
@@ -255,7 +255,7 @@ class MyParser extends parser {
 			
 		}else{
 			FuncSTO f = null ;
-			String neededCtor = FuncSTO.getName(type.getName(), ctrsArgs);
+			String neededCtor = FuncSTO.getName(type.getName(), ctrsArgs, null);
 			for(FuncSTO possCtr: ctors){
 				String possName = FuncSTO.getName(possCtr.getBaseName(), possCtr.getFunctionType().getParams());
 				if(possName.equals(neededCtor)){
@@ -892,7 +892,7 @@ class MyParser extends parser {
 	// ----------------------------------------------------------------
 	//
 	// ----------------------------------------------------------------
-	STO DoFuncCall(STO sto, Vector<VarSTO> argList) {
+	STO DoFuncCall(STO sto, Vector<STO> argList) {
 		if(sto.isError())
 			return sto;
 		
@@ -932,7 +932,7 @@ class MyParser extends parser {
 		return new ExprSTO(sto.getName(), fstoT.getReturnType());
 	}
 	
-	private STO pickFunction(FuncSTO s, Vector<VarSTO> argList){
+	private FuncSTO pickFunction(FuncSTO s, Vector<STO> argList){
 		fromHere:
 			
 		for(FuncSTO curr: s.getBrothers()){
@@ -959,7 +959,7 @@ class MyParser extends parser {
 		return null;
 	}
 	
-	private STO funcCallChecker(Vector<VarSTO> argList, FuncSTO f, boolean overloaded){
+	private STO funcCallChecker(Vector<STO> argList, FuncSTO f, boolean overloaded){
 		FunctionPointerType fstoT = f.getFunctionType();
 		STO error = null;
 		for(int i = 0; i < argList.size() && i < fstoT.getNumParams(); i++){
@@ -1692,7 +1692,7 @@ class MyParser extends parser {
 				writeAddress(left, Address.O0);;
 				writer.set(i * struct.getSize() +"", a);
 				writer.addOp(Address.O0, a, a);
-				helperFuncCall(fs, true, args, fs.getFunctionType().getParams() );
+				helperFuncCall(fs, true, args);
 			}
 			a.release();
 		}
@@ -2234,8 +2234,9 @@ class MyParser extends parser {
 		writer.returnstmt();		
 	}
 	
-	private void helperFuncCall(STO func, boolean structCall, Vector<STO> args, Vector<VarSTO> params){
-
+	private void helperFuncCall(FuncSTO func, boolean structCall, Vector<STO> args ){
+		Vector<VarSTO> params = func.getFunctionType().getParams();
+		
 		String output = "%o";
 		
 		int structOffset;
@@ -2282,12 +2283,10 @@ class MyParser extends parser {
 		writer.comment(f.getBaseName() + "()");
 		writer.addSTO(result);
 		
-		Vector<VarSTO> params = f.getFunctionType().getParams();
-		
 		//takes care of the struct offset
 		
 		
-		helperFuncCall(s, f.isStructMember(), args, params);
+		helperFuncCall(pickFunction((FuncSTO) s, args), f.isStructMember(), args);
 		
 		
 		if(!(f.getReturnType() instanceof VoidType))
@@ -2697,7 +2696,7 @@ class MyParser extends parser {
 		return s;
 	}
 	
-	public String WriteNewStmt(STO s, Vector<STO> params, STO chosenFunc) {
+	public String WriteNewStmt(STO s, Vector<STO> args, STO chosenFunc) {
 		String label = "new " + s.getName();
 		if(chosenFunc != null)
 			label += stoListToString(((FuncSTO) chosenFunc).getFunctionType().getParams());
@@ -2711,11 +2710,11 @@ class MyParser extends parser {
 		a.release();
 		
 		if(((ArrointType) s.getType()).getSubtype().isStruct()){
-			if(params == null)
-				params = new Vector<STO>();
+			if(args == null)
+				args = new Vector<STO>();
 			if(((ArrointType) s.getType()).getSubtype().isStruct())
 				if( ((StructType) ((ArrointType) s.getType()).getSubtype()).hasConstructor() )
-					helperFuncCall(chosenFunc, true, params, ((FuncSTO) chosenFunc).getFunctionType().getParams());
+					helperFuncCall((FuncSTO) chosenFunc, true, args);
 		}
 		writer.newLine();
 		return "new " + s.getName();

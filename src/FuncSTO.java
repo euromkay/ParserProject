@@ -78,6 +78,14 @@ class FuncSTO extends STO
 		
 		return name;
 	}
+	public static String getName(String name, Vector<STO> list, STO s) {
+		for(STO p: list){
+			name += "_" + p.getType().getName();
+		}
+		
+		return name;
+	}
+	
 
 	public void fix() {
 		setName(getName(getName(), getFunctionType().getParams()));
@@ -118,6 +126,8 @@ class FuncSTO extends STO
 			p.setRef(list.get(i));
 		}
 	}
+
+	
 
 	
 }
