@@ -933,6 +933,9 @@ class MyParser extends parser {
 	}
 	
 	private FuncSTO pickFunction(FuncSTO s, Vector<STO> argList){
+		if(s.getBrothers().size() == 1)
+			return s;
+		
 		fromHere:
 			
 		for(FuncSTO curr: s.getBrothers()){
@@ -2496,6 +2499,9 @@ class MyParser extends parser {
 			s += DONE;
 		}else{
 			writer.comment("continue");
+			String t = s.substring(1);
+			if(t.startsWith("for"))
+				s += INCR;
 		}
 		writer.ba(s);
 		writer.newLine();
