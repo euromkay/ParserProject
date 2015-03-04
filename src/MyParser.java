@@ -1208,7 +1208,7 @@ class MyParser extends parser {
 			m_errors.print(error);
 			return new ErrorSTO(error);
 		}
-		return new ExprSTO(s.getName(), new PointerType(s.getType()));
+		return new ExprSTO("&" + s.getName(), new PointerType(s.getType()));
 	}
 	
 	public STO DoArrowDeref(STO sto, String memberID){
@@ -2386,7 +2386,7 @@ class MyParser extends parser {
 		String label = "." + s + literalCount++;
 		whileForList.add(label);
 		
-		if(s.equals("for")){
+		if(s.equals("foreach")){
 			ExprSTO counter = new ExprSTO(whileForList.peek()+".counter", new IntType());
 			symTab.insert(counter);
 			writer.addSTO(counter);
@@ -2505,7 +2505,7 @@ class MyParser extends parser {
 	public void WriteAmpersand(STO given, STO result){
 		if(result.isError())
 			return;
-		
+		writer.comment(result.getName());
 		Address a = am.getAddress();
 		writer.addSTO(result);
 		
@@ -2513,6 +2513,8 @@ class MyParser extends parser {
 		result.store(a, writer);
 		
 		a.release();
+		
+		writer.newLine();
 	}
 	public void WriteDeRef(STO s, STO result){
 		if(result.isError())
@@ -2810,8 +2812,10 @@ class MyParser extends parser {
 			return _2;
 		if(_2.getType().isStruct())
 			return _2;
-		if(_2.isVar())
+		if(_2.isVar()){
 			return new VarSTO("(" + _2.getName() + ")", _2.getType());
+			
+		}
 		if(_2.isConst())
 			return new ConstSTO("(" + _2.getName() + ")", _2.getType(), ((ConstSTO) _2).getValue());
 		return new ExprSTO("(" + _2.getName() + ")", _2.getType());
@@ -2826,8 +2830,19 @@ class MyParser extends parser {
 			
 		writer.addSTO(result);
 		
+		boolean b = false;
+		if(_2.isVar()){
+			b = ((VarSTO) _2).isRef();
+			((VarSTO) _2).setRef(false);
+		}
 		store(result, _2);
 		
+		if(_2.isVar()){
+			((VarSTO) _2).setRef(b);
+		}
+		
+		if(_2.isVar() && result.isVar())
+			((VarSTO) result).setRef(((VarSTO) _2).isRef());
 		
 		writer.newLine();
 		
