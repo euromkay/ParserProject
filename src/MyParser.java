@@ -2642,7 +2642,6 @@ class MyParser extends parser {
 		*/
 		if(!var){
 			writeVal(s, Address.O0);
-			writer.ld(Address.O0, Address.O0);
 			return;
 		}
 		

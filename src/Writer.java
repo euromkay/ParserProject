@@ -292,7 +292,7 @@ public class Writer {
 		fp = false;
 		
 		boolean contPrint = true;
-		contPrint = false;
+		//contPrint = false;
 		
 		if(contPrint && fp)
 			return true;

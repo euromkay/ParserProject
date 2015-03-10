@@ -1,8 +1,7 @@
 structdef M {
   int i;
   M* next;
-  function : M* & nex() {
-    cout << "next returns " << this.next << endl;
+  function : M* nex() {
     return this.next;
   }
 };
@@ -16,15 +15,12 @@ function : void main() {
   m2.next = &m3;
   m3.next = &m1;
 
-	cout << &m1 << endl << &m2 << endl << &m3 << endl;
-	cout << m1.next << endl << m2.next << endl << m3.next << endl;
 
   m1.nex()->i = 17;
-  cout << m2.i << endl;
   m1.nex()->nex()->i = 27;
-  cout << m3.i << endl;
   m1.nex()->nex()->nex()->i = 3;
-  cout << m1.i << endl;
+  
+  cout << m1.i << endl << m2.i << endl << m3.i << endl;
 
   /*m1.getNext()->getNext()->next = &m2;
 
