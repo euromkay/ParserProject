@@ -2614,17 +2614,20 @@ class MyParser extends parser {
 			return;
 		writer.addSTO(res);
 		writer.comment(res.getName());
-		
 		StructType structSTO = (StructType) ((ArrointType) s.getType()).getSubtype();
 		
+		boolean var = false;
+		
 		Integer offset = 0;
-		for(STO poss: structSTO.getMembers()){
+		for(STO poss: structSTO.getVars()){
 			int index = poss.getName().lastIndexOf("_");
-			if(poss.getName().substring(index + 1).equals(_3))
+			if(poss.getName().substring(index + 1).equals(_3)){
+				var = true;
 				break;
+			}
 			offset += poss.getType().getSize();
 		}
-		
+		/*
 		String good = ".arrowPass" + literalCount++;
 		Address a = am.getAddress();
 		s.writeVal(a, writer);
@@ -2636,6 +2639,12 @@ class MyParser extends parser {
 		writer.call("exit");
 		writer.label(good);
 		a.release();
+		*/
+		if(!var){
+			writeVal(s, Address.O0);
+			writer.ld(Address.O0, Address.O0);
+			return;
+		}
 		
 		Address numb_a = am.getAddress();
 		writer.set(offset.toString(), numb_a);
@@ -2648,7 +2657,7 @@ class MyParser extends parser {
 		store(res, struct_a);
 		struct_a.release();
 		
-		((VarSTO) res).setRef(true);
+		res.setRef(true);
 		
 		writer.newLine();	
 	}
@@ -2664,29 +2673,38 @@ class MyParser extends parser {
 		writer.comment(res.getName());
 		
 		StructType structSTO = (StructType) s.getType();
-		
+
+		boolean found = false;
 		Integer offset = 0;
-		for(STO poss: structSTO.getMembers()){
+		for(STO poss: structSTO.getVars()){
 			int index = poss.getName().lastIndexOf("_");
-			if(poss.getName().substring(index + 1).equals(_3))
+			if(poss.getName().substring(index + 1).equals(_3)){
+				found = true;
 				break;
+			}
 			offset += poss.getType().getSize();
 		}
 		
 		Address numb_a = am.getAddress();
-		writer.set(offset.toString(), numb_a);
+		if(found)
+			writer.set(offset.toString(), numb_a);
+		
 		
 		Address array_a = am.getAddress();
 		if(s.getName().startsWith("this"))
 			writer.set(Address.I0, array_a);
 		else
 			writeAddress(s, array_a);
-		writer.addOp(numb_a, array_a, array_a);
+		if(found)
+			writer.addOp(numb_a, array_a, array_a);
 		numb_a.release();
 		store(res, array_a);
 		array_a.release();
 		
-		((VarSTO) res).setRef(true);
+		if(res.isVar())
+			((VarSTO) res).setRef(true);
+		
+		writeAddress(s, Address.O0);
 		
 		writer.newLine();	
 	}
@@ -2764,7 +2782,7 @@ class MyParser extends parser {
 		
 		writer.addSTO(casted);
 		Type oT = original.getType(), cT = casted.getType();
-		if(cT.getClass() == oT.getClass() || casted.getType() instanceof PointerType){
+		if(cT.getClass() == (oT.getClass()) || casted.getType() instanceof PointerType){
 			store(casted, original);
 		}
 		if(cT instanceof BoolType){
@@ -2790,10 +2808,15 @@ class MyParser extends parser {
 				writeVal(original, Address.F0);
 				writer.fstoi(Template.F0, Template.F0);
 				casted.store(Address.F0, writer);
+			}else{
+				store(casted, original);
 			}
 		}else if(cT instanceof FloatType){
 			if(oT instanceof IntType || oT instanceof BoolType){
 				fitos(original, casted);
+			}
+			else{
+				store(casted, original);
 			}
 		}
 		
@@ -2827,6 +2850,8 @@ class MyParser extends parser {
 	}
 
 	public void WriteParens(STO _2, STO result) {
+		if(_2.isError())
+			return;
 		writer.comment(result.getName());
 		if(_2.getType().isStruct()){
 			writer.newLine();

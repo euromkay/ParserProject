@@ -16,8 +16,15 @@ abstract class STO
 	private String offset = null;
 	boolean ret = false;
 	
-	
 
+	private boolean ref = false;
+	public void setRef(Boolean ref) {
+		this.ref = ref;
+	}
+
+	public boolean isRef() {
+		return ref;
+	}
 	//----------------------------------------------------------------
 	//
 	//----------------------------------------------------------------
@@ -188,10 +195,9 @@ abstract class STO
 			writer.minusOp(Address.FP, tempAdd, a1);
 		}
 		
-		if(isVar()){
-			if(((VarSTO)this).isRef())
-				writer.ld(a1, a1);
-		}
+		if(isRef())
+			writer.ld(a1, a1);
+		
 		
 		tempAdd.release();
 		return a1;

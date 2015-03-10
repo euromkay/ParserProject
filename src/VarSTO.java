@@ -6,7 +6,6 @@ import java.util.Vector;
 
 class VarSTO extends STO
 {
-	private boolean ref = false;
 	
 	
 	//----------------------------------------------------------------
@@ -43,13 +42,7 @@ class VarSTO extends STO
 		return true;
 	}
 
-	public void setRef(Boolean ref) {
-		this.ref = ref;
-	}
-
-	public boolean isRef() {
-		return ref;
-	}
+	
 	
 	
 	
