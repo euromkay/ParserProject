@@ -1,31 +1,34 @@
-structdef M {
-  int i;
-  M* next;
-  function : M* nex() {
-    return this.next;
-  }
+structdef MS {
+  int a;
+  int b;
 };
 
-M m1;
-M m2;
-M m3;
+structdef MS2 {
+  MS * a;
+  float b[5];
+  MS * c;
+  int d[5];
+};
+
+MS2 r;
+
+function : void f (MS2 &r, int i, float &b) {
+   b = -b;
+   i = i + 1;
+   r.d[i] = i;
+   r.b[i] = b;
+   cout << i << " " << b << "\n";
+}
+
+int i;
 
 function : void main() {
-  m1.next = &m2;
-  m2.next = &m3;
-  m3.next = &m1;
-
-
-  m1.nex()->i = 17;
-  m1.nex()->nex()->i = 27;
-  m1.nex()->nex()->nex()->i = 3;
-  
-  cout << m1.i << endl << m2.i << endl << m3.i << endl;
-
-  /*m1.getNext()->getNext()->next = &m2;
-
-  m1.getNext()->i = 33;
-  m1.getNext()->getNext()->i = 44;
-  m1.getNext()->getNext()->getNext()->i = 55;
-  cout << m1.i << " " << m2.i << " " << m3.i << endl;*/
+   i = 1;
+   r.d[0] = i;
+   cout << r.d[0] << " " << r.d[i] << " " << r.b[i] << "\n";
+   r.b[i] = 9999.75;
+   f(r, r.d[0], r.b[i]);
+   cout << r.d[0] << " " << r.d[i] << " " << r.b[i] << "\n";
+   cout << r.d[i+1] << " " << r.b[i+1] << "\n";
+   cout << r.c->a << endl;
 }

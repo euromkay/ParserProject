@@ -2247,10 +2247,10 @@ class MyParser extends parser {
 			structOffset = 1;
 		else
 			structOffset = 0;
-		for(int i = structOffset; i < args.size(); i++){
+		for(int i = structOffset; i < args.size() + structOffset; i++){
 			Address outReg = new Address(output+i);
-			STO arg = args.get(i);
-			VarSTO param = params.get(i);
+			STO arg = args.get(i - structOffset);
+			VarSTO param = params.get(i - structOffset);
 			if(param.isRef() || arg.getType().isArray() || arg.getType().isStruct()){// || e.getType() instanceof StructType){
 				if(arg.getType().isStruct() && !param.isRef()){
 					VarSTO copy = new VarSTO("", arg.getType());
@@ -2627,7 +2627,7 @@ class MyParser extends parser {
 			}
 			offset += poss.getType().getSize();
 		}
-		/*
+		
 		String good = ".arrowPass" + literalCount++;
 		Address a = am.getAddress();
 		s.writeVal(a, writer);
@@ -2639,7 +2639,7 @@ class MyParser extends parser {
 		writer.call("exit");
 		writer.label(good);
 		a.release();
-		*/
+		
 		if(!var){
 			writeVal(s, Address.O0);
 			return;
@@ -2683,28 +2683,30 @@ class MyParser extends parser {
 			}
 			offset += poss.getType().getSize();
 		}
+		if(!found){
+			writeAddress(s, Address.O0);
+		}else{
 		
-		Address numb_a = am.getAddress();
-		if(found)
+			Address numb_a = am.getAddress();
+		
 			writer.set(offset.toString(), numb_a);
 		
 		
-		Address array_a = am.getAddress();
-		if(s.getName().startsWith("this"))
-			writer.set(Address.I0, array_a);
-		else
-			writeAddress(s, array_a);
-		if(found)
+			Address array_a = am.getAddress();
+			if(s.getName().startsWith("this"))
+				writer.set(Address.I0, array_a);
+			else
+				writeAddress(s, array_a);
+		
 			writer.addOp(numb_a, array_a, array_a);
-		numb_a.release();
-		store(res, array_a);
-		array_a.release();
+			numb_a.release();
+			store(res, array_a);
+			array_a.release();
 		
-		if(res.isVar())
-			((VarSTO) res).setRef(true);
+			if(res.isVar())
+				((VarSTO) res).setRef(true);
 		
-		writeAddress(s, Address.O0);
-		
+		}
 		writer.newLine();	
 	}
 	
