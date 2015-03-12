@@ -605,6 +605,11 @@ class MyParser extends parser {
 		return s;
 	}
 
+	STO DoFuncDecl_1(boolean ext, String id) {
+		STO s = DoFuncDecl_1(new VoidType(), false, id);
+		return s;
+	}
+	
 	STO DoFuncDecl_1(String id) {
 		STO s = DoFuncDecl_1(new VoidType(), false, id);
 		if(id.startsWith("~"))
@@ -696,9 +701,10 @@ class MyParser extends parser {
 		
 		boolean hasRet = false;//return statements
 		//retExpr is each statement that might be a return (type);
-		for(String retExpr: statements)
-			if(retExpr.startsWith("return"))
-				hasRet = true;
+		if(!extern)
+			for(String retExpr: statements)
+				if(retExpr.startsWith("return"))
+					hasRet = true;
 		
 		if(!hasRet && !(funType instanceof VoidType))
 			if(!extern)
