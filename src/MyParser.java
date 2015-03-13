@@ -605,8 +605,10 @@ class MyParser extends parser {
 		return s;
 	}
 
-	STO DoFuncDecl_1(boolean ext, String id) {
+	STO DoFuncDecl_1(boolean ext, Type _1, String id) {
 		STO s = DoFuncDecl_1(new VoidType(), false, id);
+		FuncSTO f = (FuncSTO) s;
+		f.getFunctionType().setReturnType(_1);
 		return s;
 	}
 	

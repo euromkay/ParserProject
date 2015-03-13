@@ -98,6 +98,10 @@ public class FunctionPointerType extends Type {
 	public boolean isEquivalent (Type t){
 		return isAssignable(t);
 	}
+	public void setReturnType(Type _1) {
+		returnType = _1;
+		
+	}
 	
 
 }

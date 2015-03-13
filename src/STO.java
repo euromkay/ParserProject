@@ -271,5 +271,10 @@ abstract class STO
 		
 		sto_a.release();
 	}
+
+	public void setType(Type _1) {
+		type = _1;
+		
+	}
 	
 }
