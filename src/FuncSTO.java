@@ -50,7 +50,7 @@ class FuncSTO extends STO
 	}
 
 	Type returnType;
-	
+	boolean extern;
 
 	
 	private String lookupName;

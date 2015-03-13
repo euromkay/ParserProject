@@ -280,11 +280,7 @@ class MyParser extends parser {
 		return varHelper(statik, t, name);
 	}
 	
-	private boolean isCtor(String structName,FuncSTO s){
-		String cTor = s.getBaseName();
-		
-		return cTor.equals(structName);
-	}
+
 	
 	private STO varHelper(boolean statik, Type t, String name){
 		VarSTO v = new VarSTO(name, t);
@@ -608,6 +604,7 @@ class MyParser extends parser {
 	STO DoFuncDecl_1(boolean ext, Type _1, String id) {
 		STO s = DoFuncDecl_1(new VoidType(), false, id);
 		FuncSTO f = (FuncSTO) s;
+		f.extern = true;
 		f.getFunctionType().setReturnType(_1);
 		return s;
 	}
@@ -2281,8 +2278,10 @@ class MyParser extends parser {
 			}
 		}
 		
-		
-		writer.call(func.getName());
+		if(func.extern)
+			writer.call(func.getBaseName());
+		else
+			writer.call(func.getName());
 	}
 	
 	public void WriteFuncCall(STO s, Vector<STO> args, STO result){

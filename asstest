@@ -1,5 +1,5 @@
-extern function : int foo();
+extern function : int foo(bool z);
 
 function : void main(){
-	int x = foo();
+	int x = foo(true);
 } 
